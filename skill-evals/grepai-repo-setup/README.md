@@ -13,4 +13,4 @@
 
 ## Local smoke check
 
-A registered project produced the same source match through MCP and the host CLI. The sandbox CLI received a loopback connection refusal. The CLI without workspace selection reported an empty embedding provider. The sampled source location matched the current checkout. The Git status and the two configuration file digests matched before and after the probe. This check covers access in the observed contexts. It does not establish complete index freshness or exercise registration writes.
+A registered project produced the same source match through MCP and the host CLI. The sandbox CLI received a loopback connection refusal. The CLI without workspace selection reported an empty embedding provider. The sampled source location matched the current checkout. The Git status and the two configuration file digests matched before and after the probe. This historical access check did not verify that GrepAI avoided backend initialization. Current doctor qualification uses metadata unless the exact probe route has independently proven non-mutating behavior.

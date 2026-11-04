@@ -90,7 +90,7 @@
       "byteLength": 756,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "88fcf0f98e53ea2d4e20f8f817715958ea81a24d416dbd97cd770719dbf9a4ba"
+      "sha256": "2b00d417c672d8b08bf6a1f8c5a223f0d95b8656fd0e66d771ae6090699c14aa"
     },
     {
       "byteLength": 2128,
@@ -2358,7 +2358,7 @@
       "byteLength": 12657,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/SKILL.md",
-      "sha256": "733e6b6c2fbc5a4f165c0ec6a37ee278ebc737649b85ab4c529ea62db769ca21"
+      "sha256": "28c4c3e88865dc952b85c9107f19871b42d2b744becc2a72d41c4b7caef4beb5"
     },
     {
       "byteLength": 488,
@@ -2517,10 +2517,10 @@
       "sha256": "da9200fba5d8aa25357880eb9412a57d3c90470a0c0afb5fcb2f235d55dd7227"
     },
     {
-      "byteLength": 47380,
+      "byteLength": 47463,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/scripts/knowledge/reconcile.mjs",
-      "sha256": "211b13db186e21f146836830ff4cf8d45c990ec36adc74358eeb05beee9b8c9f"
+      "sha256": "a745fd667c0ca081e3a7c0b4d0f129808c382ecffd464b8fe8d694a39793b94d"
     },
     {
       "byteLength": 11030,
@@ -2885,9 +2885,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.20.1"
+    "version": "1.20.2"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "0ed508f284da0c4c80ae6e597823551bff75731d888d7c0d92a2f87579cf4e02"
+  "treeHash": "e09285a6574932c1c96f8b5fd7a2eb84724c8d477dfe17a4962c9f801409f080"
 }

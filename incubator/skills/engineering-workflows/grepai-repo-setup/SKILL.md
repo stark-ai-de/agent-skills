@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.1.2"
+  version: "0.1.3"
   internal: true
 ---
 
@@ -43,14 +43,13 @@ Select **setup** for explicit onboarding and **doctor** for health checks or fai
 2. If the exact root is absent and eligible, use the managed owner's supported discovery or registration path. If discovery is automatic, recheck once and report pending if it has not registered the root. Do not add entries directly to a managed workspace or run broad reconciliation from a repo setup request.
 3. For an unmanaged workspace, inspect its policy and the installed `grepai workspace add --help` before registering the authorized exact root with `grepai workspace add <workspace> <absolute-root>`. Respect exclusions and the configured data destination. Re-read membership after success or an uncertain result. Use the actual assigned ID. An existing exact registration is a no-op.
 4. Update the applicable repository guidance in place. Document the workspace, how to look up the exact project ID, the MCP search arguments, and the CLI `--workspace` and `--project` flags. Reuse equivalent guidance and preserve unrelated edits. When policy or registration blocks setup, report the prerequisite instead of writing instructions that claim readiness.
-5. Run the bounded search check below. If vectors are pending, leave indexing with the existing owner and report setup as pending verification.
+5. Check membership and available index metadata. Use the gated search check below only when the exact access route is verified non-mutating. Otherwise report search as pending verification and route indexing to the workspace owner.
 
 ### Doctor
 
-1. Resolve the workspace and exact project. Report tool availability, membership and available index evidence separately. Use workspace index status if useful. Symbol availability and watcher liveness do not prove vector coverage or freshness.
-2. In Codex, prefer `grepai_search` with `workspace` and `projects` set to the resolved workspace and single project ID. Omit the local `root` override. Use one non-sensitive query about a known indexed source area, the workspace's qualified query format if specified, compact results and a limit of 1–3. Check a returned path and line against current source.
-3. If the CLI route needs diagnosis, use its installed help and a bounded `grepai search --workspace <workspace> --project <project-id> --json --compact -n 1 <query>` in that context. Compare MCP, sandbox CLI and host CLI separately. Use the normal host permission route for an equivalent read-only probe when authorized. If host evidence is unavailable, leave host access unverified.
-4. Classify the observed failure. Local mode with an empty provider calls for an explicit workspace search. A sandbox loopback refusal describes that execution context. A reachable provider can still reject the configured model or expose incompatible index metadata. Report the specific evidence and refer any repairs to the owner. No hits from one query leave search readiness unverified.
+1. Resolve the workspace and exact project. Inspect configuration, registered paths, index metadata, and provider and watcher status through known read-only routes. Symbol availability and watcher liveness do not establish vector freshness.
+2. Treat each MCP, sandbox CLI and host CLI route separately. Before an active search, verify that the installed version, effective backend and permissions prevent store initialization, schema migrations, index changes and local persistent writes. GrepAI workspace search in qualified 1.1.x and observed 1.2.0 can initialize Qdrant or PostgreSQL. A successful collection GET or a small query limit does not establish safety. If the route is unverified or read-only access rejects initialization, skip the search and report its readiness as unverified. Route initialization and repairs to the workspace owner.
+3. For a proven non-mutating route only, use a non-sensitive query with a limit of 1–3. Select the exact workspace and project ID with MCP `workspace`/`projects` or CLI `--workspace`/`--project`. Omit MCP `root` overrides. Compare a returned path and line with the current source. Local-mode provider errors and sandbox loopback refusal are separate from host search readiness.
 
 ## Safety rules
 

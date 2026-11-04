@@ -47,7 +47,8 @@
     "enabled": false,
     "maxSeconds": 180,
     "cooldownSeconds": 3600,
-    "disabledMcpServers": []
+    "model": "ADOPTED_OPENAI_MODEL",
+    "executableSha256": "VERIFIED_CODEX_EXECUTABLE_SHA256"
   },
   "embeddingModelDigest": "REPLACE_WITH_VERIFIED_SHA256_DIGEST",
   "vueProcessing": false,

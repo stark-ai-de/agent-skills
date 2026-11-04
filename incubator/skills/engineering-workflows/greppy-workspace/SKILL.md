@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.2.1"
+  version: "0.2.2"
   internal: true
 ---
 
@@ -44,7 +44,7 @@ Use one private configuration based on `assets/workspace.example.json`. Resolve 
 
 ### doctor
 
-Run `python3 scripts/workspace.py doctor --config /absolute/private/workspace.json`. Report shared search, analysis tool availability, Karakeep account reads, and record maintenance separately. The summary covers search and configured record maintenance. A matching search sample proves usability for that sample, with full index freshness unverified. A failed maintenance service can supersede a successful receipt. Separate account connectivity from declared write authority and project-document readiness. Graph freshness is unchecked. Offer the CodeGraph owner's doctor for the selected root, honoring its approval gate before any probe that could open or migrate a graph. If sandbox isolation blocks local probes, report the access limitation and use the normal permission route for equivalent read-only checks.
+Run `python3 scripts/workspace.py doctor --config /absolute/private/workspace.json`. Report shared search, analysis tool availability, Karakeep account reads, and record maintenance separately. The summary covers search and configured record maintenance. Doctor checks search infrastructure through metadata and service evidence. It leaves query usability and full index freshness unverified. A failed maintenance service can supersede a successful receipt. Separate account connectivity from declared write authority and project-document readiness. Graph freshness is unchecked. Offer the CodeGraph owner's doctor for the selected root, honoring its approval gate before any probe that could open or migrate a graph. If sandbox isolation blocks local probes, report the access limitation and use the normal permission route for equivalent read-only checks.
 
 ### maintain
 

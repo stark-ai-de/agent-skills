@@ -187,16 +187,22 @@ def discover(c, previous=None):
     excluded = [Path(p).resolve() for p in c['excludePaths']] + [Path(c['operationsRoot']), Path(c['stateRoot'])]
     seen, candidates, aliases, errors = set(), [], [], []
     deadline = time.monotonic() + c.get('scanSeconds', 120)
+    registered = {Path(x['path']) for x in old if x['status'] == 'active'}
+
+    def scan_error(error):
+        raise error
+
     def allowed(p):
         return any(beneath(p, root) for root in roots) and not any(beneath(p, x) for x in excluded)
     def visit(root):
-        for directory, dirs, files in os.walk(root, followlinks=False):
+        for directory, dirs, files in os.walk(root, followlinks=False, onerror=scan_error):
             if time.monotonic() > deadline:
                 raise TimeoutError('Discovery deadline exceeded; registry remains unchanged')
             p = Path(directory)
-            if not allowed(p):
+            if p in seen or not allowed(p):
                 dirs[:] = []
                 continue
+            seen.add(p)
             dirs[:] = sorted(d for d in dirs if d not in PRUNE and d not in c.get('pruneNames', ['.worktrees']))
             for d in list(dirs):
                 link = p / d
@@ -206,15 +212,15 @@ def discover(c, previous=None):
                     aliases.append({'path': str(link), 'target': str(target), 'eligible': allowed(target)})
                     if allowed(target) and target not in seen:
                         visit(target)
-            if p in seen:
-                dirs[:] = []
-                continue
-            seen.add(p)
             marker = p / '.git'
-            if not marker.exists():
+            try:
+                marker.lstat()
+            except FileNotFoundError:
                 continue
             actual = git(p, 'rev-parse', '--show-toplevel', check=False)
             if not actual or Path(actual).resolve() != p:
+                if p in registered:
+                    raise RuntimeError(f'Cannot verify registered Git root {p}; discovery incomplete')
                 errors.append({'path': str(p), 'reason': 'invalid_git_marker'})
                 continue
             common = Path(git(p, 'rev-parse', '--path-format=absolute', '--git-common-dir')).resolve()
@@ -260,20 +266,31 @@ def discover(c, previous=None):
             'aliases': aliases, 'errors': errors}
 
 
-def project_ignores(root, all_roots, extra=()):
+def explicit_exclusions(c):
+    return tuple(Path(p) for p in [*c['excludePaths'], c['operationsRoot'], c['stateRoot']])
+
+
+def literal_ignore(path):
+    if any(ch in path.as_posix() for ch in ('\r', '\n')):
+        raise ValueError('Line breaks are not supported in managed ignore paths')
+    return '/' + ''.join(('\\' if ch in '\\*?[] ' else '') + ch for ch in path.as_posix())
+
+
+def project_ignores(root, all_roots, extra=(), excluded=()):
     ignores = list(HARD_IGNORE) + list(extra)
+    ignores.extend(literal_ignore(p.relative_to(root)) for p in excluded if p != root and beneath(p, root))
     for other in all_roots:
         if other != root and beneath(other, root):
             relative = other.relative_to(root)
             if not any(fnmatch.fnmatchcase(part, pattern) for part in relative.parts for pattern in ignores):
-                ignores.append('/' + str(relative) + '/')
+                ignores.append(literal_ignore(relative) + '/')
     for directory, dirs, files in os.walk(root, followlinks=False):
         p = Path(directory)
         dirs[:] = [d for d in dirs if d not in PRUNE and d != '.worktrees' and d not in extra]
         for name in dirs + files:
             f = p / name
             if f.is_symlink():
-                ignores.append('/' + f.relative_to(root).as_posix())
+                ignores.append(literal_ignore(f.relative_to(root)))
         if '.grepaiignore' in files:
             # Upstream negation overrides configured exclusions. Refuse that ambiguity.
             if any(s.strip().startswith('!') for s in (p / '.grepaiignore').read_text().splitlines()):
@@ -336,6 +353,7 @@ def purge_excluded(c, entries):
     # Repository nesting is static during this writer-stopped scan.
     nested = {name: tuple(other for other in names.values() if other != root and beneath(other, root))
               for name, root in names.items()}
+    excluded_paths = explicit_exclusions(c)
     patterns = list(HARD_IGNORE) + c.get('pruneNames', [])
     ignored_name = re.compile('|'.join(fnmatch.translate(pattern) for pattern in patterns) or r'(?!)')
     def excluded(file):
@@ -349,7 +367,7 @@ def purge_excluded(c, entries):
             return True
         root = names[parts[1]]
         candidate = root / rel
-        if any(beneath(candidate, other) for other in nested[parts[1]]):
+        if any(beneath(candidate, other) for other in (*nested[parts[1]], *excluded_paths)):
             return True
         # Recheck filesystem links for each point; do not cache a safe path.
         while True:
@@ -459,6 +477,14 @@ def verify_model_identity(c):
 
 
 def reconcile(c, config_path, apply=False, migrate_from=None):
+    state = Path(c['stateRoot'])
+    recovery = state / 'reconcile-pending.json'
+    pending = read(recovery, {})
+    service = c.get('watchService')
+    scope = {'workspace': c['workspace'], 'backend': c['qdrant'], 'service': service,
+             'configDigest': digest(c)}
+    if pending and pending.get('scope') != scope:
+        raise ValueError('Pending reconciliation scope changed; restore its adopted config first')
     old = read(c['registry'], {'schemaVersion': 1, 'projects': []})
     new = discover(c, old)
     entries = [x for x in new['projects'] if x['status'] == 'active']
@@ -479,6 +505,7 @@ def reconcile(c, config_path, apply=False, migrate_from=None):
     changed = bool(migration) or ws.get('projects') != desired or not ws_file.exists()
     configs = []
     all_roots = [Path(x['path']) for x in new['projects']]
+    excluded = explicit_exclusions(c)
     for entry in entries:
         root = Path(entry['path'])
         f = root / '.grepai/config.yaml'
@@ -487,7 +514,7 @@ def reconcile(c, config_path, apply=False, migrate_from=None):
         current = load_yaml(f.read_text()) if f.exists() else {'version': 1}
         before = json.dumps(current, sort_keys=True, default=str)
         repair_legacy_timestamp(current)
-        generated = project_ignores(root, all_roots, c.get('pruneNames', []))
+        generated = project_ignores(root, all_roots, c.get('pruneNames', []), excluded)
         existing = set(current.get('ignore') or [])
         # Drop only redundant absolute exclusions already covered by hard rules.
         # This cannot weaken ignore scope and avoids restarting on every new worktree.
@@ -507,21 +534,44 @@ def reconcile(c, config_path, apply=False, migrate_from=None):
             configs.append((f, yaml.safe_dump(current, sort_keys=False)))
     changed = changed or bool(configs)
     removed = {x['name'] for x in old['projects'] if x.get('status') in ['active', 'retired'] and not x.get('vectorsPurged')} - {x['name'] for x in entries}
+    removed = (removed | set(pending.get('retired', []))) - {x['name'] for x in entries}
     summary = {'status': 'planned', 'projects': len(entries), 'excluded': sum(x['status'] == 'excluded' for x in new['projects']),
-               'membershipChanged': ws.get('projects') != desired, 'configChanges': len(configs), 'retireNamespaces': sorted(removed), 'migration': migration}
+               'membershipChanged': ws.get('projects') != desired, 'configChanges': len(configs),
+               'retireNamespaces': sorted(removed), 'migration': migration, 'recoveryPending': bool(pending)}
     if not apply:
         return summary
     verify_model_identity(c)
     if migration:
         verify_migration_target(c)
+    running = False
+    if service:
+        status = run(['systemctl', '--user', 'is-active', '--quiet', service], check=False).returncode
+        if status not in (0, 3):
+            raise RuntimeError('Cannot verify the adopted watcher state')
+        running = status == 0
+    purge_ignores = changed or pending.get('purgeExcluded', False)
+    restore = pending.get('restoreWatcher', False)
+    if purge_ignores or removed:
+        restore = restore or running
+        pending = {'scope': scope, 'restoreWatcher': restore, 'retired': sorted(removed),
+                   'purgeExcluded': purge_ignores}
+        atomic(recovery, pending)
+        if running:
+            run(['systemctl', '--user', 'stop', service], timeout=180)
+            running = False
+        if competing_writers(c, entries):
+            raise RuntimeError('An unmanaged grepai watcher is running; establish ownership before changes')
+    if migration:
+        backup(c, Path(c['registry']))
+        # grepai keys model metadata by workspace/project, not collection.
+        # Preserve it as part of the old vector space's rollback evidence.
+        meta_root = ws_file.parent / 'index-meta' / c['workspace']
+        if meta_root.is_dir():
+            for meta_file in meta_root.glob('*.json'):
+                if meta_file.is_symlink():
+                    raise ValueError('Index metadata must not traverse symlinks')
+                backup(c, meta_file)
     payload_index = ensure_file_path_index(c)
-    service = c.get('watchService')
-    running = service and run(['systemctl', '--user', 'is-active', '--quiet', service], check=False).returncode == 0
-    if changed and running:
-        run(['systemctl', '--user', 'stop', service], timeout=180)
-    # Refuse competing independent writers; grepai also acquires project writer locks.
-    if changed and competing_writers(c, entries):
-        raise RuntimeError('An unmanaged grepai watcher is running; establish ownership before changes')
     for f, contents in configs:
         backup(c, f)
         atomic(f, contents)
@@ -543,25 +593,23 @@ def reconcile(c, config_path, apply=False, migrate_from=None):
         atomic(ws_file, yaml.safe_dump(wsc, sort_keys=False))
     # Remove stale vector namespaces even if the source directory has disappeared.
     purged = purge_retired(c, removed) if removed else 0
-    ignored_purged = purge_excluded(c, entries) if changed else 0
+    ignored_purged = purge_excluded(c, entries) if purge_ignores else 0
     for entry in new['projects']:
         if entry['name'] in removed:
             entry['vectorsPurged'] = True
-    if migration:
-        backup(c, Path(c['registry']))
-        # grepai keys model metadata by workspace/project, not collection.
-        # Preserve it as part of the old vector space's rollback evidence.
-        meta_root = ws_file.parent / 'index-meta' / c['workspace']
-        if meta_root.is_dir():
-            for meta_file in meta_root.glob('*.json'):
-                if meta_file.is_symlink():
-                    raise ValueError('Index metadata must not traverse symlinks')
-                backup(c, meta_file)
     atomic(c['registry'], new)
-    if changed and running:
+    if pending:
+        atomic(recovery, {'scope': scope, 'restoreWatcher': restore, 'retired': [], 'purgeExcluded': False})
+    restarted = restore and not running
+    if restarted:
+        if competing_writers(c, entries):
+            raise RuntimeError('Cannot restore the watcher while an unmanaged writer is running')
         run(['systemctl', '--user', 'start', service], timeout=30)
-    summary.update(status='reconciled', filePathIndex=payload_index, purgedPoints=purged, excludedPointsPurged=ignored_purged, watcherRestarted=bool(changed and running), at=stamp())
-    atomic(Path(c['stateRoot']) / 'last-reconcile.json', summary)
+    summary.update(status='reconciled', filePathIndex=payload_index, purgedPoints=purged,
+                   excludedPointsPurged=ignored_purged, watcherRestarted=restarted, recoveryPending=False, at=stamp())
+    atomic(state / 'last-reconcile.json', summary)
+    if pending:
+        recovery.unlink()
     return summary
 
 
@@ -681,8 +729,6 @@ def maintenance_health(c, checks, knowledge):
         outcome['reason'] = 'missing_grant'
     elif grant.get('writerAuthorized') is not True:
         outcome['reason'] = 'writer_not_authorized'
-    elif (c.get('agent') or {}).get('enabled') and not checks['codex']:
-        outcome['reason'] = 'assessment_runner_missing'
     elif service_issue:
         outcome['status'], outcome['reason'] = service_issue
     elif receipt_issue:
@@ -698,7 +744,8 @@ def doctor(c):
     checks, warnings = {}, []
     checks['vueProcessing'] = c.get('vueProcessing', 'project_default')
     for executable in ['git', 'grepai', 'codegraph', 'ast-grep', 'codex']:
-        checks[executable] = shutil.which(executable)
+        command = (c.get('codexExecutable') or 'codex') if executable == 'codex' else executable
+        checks[executable] = shutil.which(command)
         if executable in {'git', 'grepai'} and not checks[executable]:
             warnings.append('missing_executable:' + executable)
     for name, address in [('ollama', c['embedding']['endpoint'] + '/api/tags'),
@@ -752,30 +799,6 @@ def doctor(c):
     checks['indexMetadata'] = metadata
     if metadata['mismatched']: warnings.append('index_model_metadata_mismatch')
     if metadata['missing']: warnings.append('index_model_metadata_missing')
-    samples = []
-    try:
-        found = json.loads(run(['grepai', 'search', '--workspace', c['workspace'], '--json', '-n', '5',
-                               c.get('doctorQuery', 'retry with exponential backoff')], timeout=60).stdout)
-        for hit in found:
-            parts = hit['file_path'].split('/', 2)
-            project = next((x for x in active if len(parts) == 3 and x['name'] == parts[1]), None)
-            sample = {k: hit[k] for k in ['file_path', 'start_line', 'end_line']}
-            sample['currentSourceMatches'] = False
-            if project:
-                relative = Path(parts[2])
-                source = Path(project['path']) / relative
-                if not relative.is_absolute() and '..' not in relative.parts and source.is_file() and not source.is_symlink():
-                    lines = source.read_text().splitlines()
-                    start, end = hit['start_line'], hit['end_line']
-                    content = hit.get('content', '').split('\n\n', 1)[-1]
-                    sample['currentSourceMatches'] = 1 <= start <= end <= len(lines) and '\n'.join(lines[start - 1:end]).strip() == content.strip()
-                if any(part in HARD_IGNORE for part in relative.parts): warnings.append('excluded_index_hit:' + parts[2])
-            if not sample['currentSourceMatches']: warnings.append('stale_search_sample:' + hit['file_path'])
-            samples.append(sample)
-        if not samples: warnings.append('empty_search')
-    except Exception as error:
-        checks['searchError'] = {'type': type(error).__name__, 'message': str(error)[-2000:]}
-        warnings.append('search_probe_failed:' + type(error).__name__)
     state = Path(c['stateRoot'])
     last = read(state / 'last-reconcile.json', {})
     if last.get('at'):
@@ -784,14 +807,27 @@ def doctor(c):
     else: warnings.append('no_reconcile_receipt')
     knowledge = knowledge_health(c)
     records, receipt = maintenance_health(c, checks, knowledge)
+    if read(state / 'reconcile-pending.json', {}):
+        warnings.append('reconciliation_pending')
+    assessment = {'status': 'not_configured'}
+    if c.get('recordsCommand') and (c.get('agent') or {}).get('enabled'):
+        if not checks['codex']:
+            assessment = {'status': 'pending', 'reason': 'assessment_runner_missing'}
+        else:
+            agent_receipt = receipt.get('agent') if isinstance(receipt, dict) else None
+            assessment = {'status': 'unverified', 'reason': 'assessment_unverified'}
+            if isinstance(agent_receipt, dict):
+                assessment['lastRun'] = agent_receipt
+                if agent_receipt.get('status') == 'pending':
+                    assessment.update(status='pending', reason=agent_receipt.get('reason'))
     health = {
-        'search': {'status': 'attention' if warnings else 'ready',
-                   'usable': any(sample['currentSourceMatches'] for sample in samples),
-                   'indexFreshness': 'unverified'},
+        'search': {'status': 'attention' if warnings else 'unverified',
+                   'usable': False, 'reason': 'metadata_only', 'indexFreshness': 'unverified'},
         'analysis': {'status': 'unverified' if checks['codegraph'] and checks['ast-grep'] else 'unavailable',
                      'graphFreshness': 'unchecked', 'next': 'codegraph-ast-grep doctor'},
         'knowledge': knowledge,
         'records': records,
+        'assessment': assessment,
     }
     status_scope = ['search']
     if c.get('recordsCommand'):
@@ -800,12 +836,12 @@ def doctor(c):
             warnings.append('record_maintenance:' + records.get('reason', records['status']))
     return {'status': 'attention' if warnings else 'healthy', 'at': stamp(), 'activeProjects': len(active),
         'capabilities': health, 'statusScope': status_scope,
-        'checks': checks, 'sourceSamples': samples, 'warnings': sorted(set(warnings)), 'lastReconcile': last,
+        'checks': checks, 'sourceSamples': [], 'warnings': sorted(set(warnings)), 'lastReconcile': last,
         'lastNotification': read(state / 'last-notify.json', {}),
         'lastRecordMaintenance': receipt,
         'agentCheckpoints': read(state / 'agent-checkpoints.json', {}),
-        'limits': ['Search samples do not prove every file is current.',
-                   'HNSW vector count may be zero for small/unoptimized segments; successful search is checked separately.',
+        'limits': ['Metadata does not verify query usability or complete index freshness.',
+                   'HNSW vector count may be zero for small/unoptimized segments.',
                    'CodeGraph freshness is per repository and is not checked or migrated by this command.',
                    'Vue processing choices require source-line qualification; raw-source mode does not qualify compiled-template relationships.']}
 

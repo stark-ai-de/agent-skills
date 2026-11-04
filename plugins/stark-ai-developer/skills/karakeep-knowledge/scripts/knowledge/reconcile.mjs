@@ -822,14 +822,17 @@ export async function apply({
       }
       let record = store.entries[item.key],
         current = null;
-      const checkDependencies = async () => {
+      const checkDeadline = () =>
         requireThat(
           Date.now() < codeDeadline,
           "code_budget",
           "Code-record run reached its time bound; resume remaining work.",
         );
+      const checkDependencies = async () => {
+        checkDeadline();
         await verifyCodeRecord(item, p);
-        return verifyDependencies(item, op, data, inspection, store, api, freshSources);
+        await verifyDependencies(item, op, data, inspection, store, api, freshSources);
+        checkDeadline();
       };
       try {
         await checkDependencies();

@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from urllib.error import HTTPError
 from unittest.mock import patch
 import yaml
 
@@ -75,11 +76,7 @@ class WorkspaceTests(unittest.TestCase):
         core = {"git", "grepai", "node"}
 
         def command(args, **kwargs):
-            if args[0] == "grepai":
-                self.assertEqual(args[1], "search")
-                out = json.dumps([{"file_path": "fixture/doctor/source.py", "start_line": 1,
-                                   "end_line": 2, "content": (repo / "source.py").read_text()}])
-            elif args[0] == "node":
+            if args[0] == "node":
                 self.assertEqual(args[2:5], ["status", "--policy", str(policy)])
                 out = json.dumps({**owner, "accountReadChecked": "--online" in args})
             elif args[:3] == ["systemctl", "--user", "is-active"]:
@@ -92,9 +89,14 @@ class WorkspaceTests(unittest.TestCase):
                 self.fail(f"Unexpected doctor command: {args}")
             return subprocess.CompletedProcess(args, 0, stdout=out, stderr="")
 
-        def http(url):
+        collection_missing = False
+
+        def http(url, method="GET"):
+            self.assertEqual(method, "GET")
             if url.endswith("/api/tags"):
                 return {"models": [{"name": "fixture:latest"}]}
+            if collection_missing:
+                raise HTTPError(url, 404, "missing", None, None)
             return {"result": {"status": "green", "config": {"params": {"vectors": {"size": 768}}}}}
 
         def snapshot():
@@ -104,8 +106,10 @@ class WorkspaceTests(unittest.TestCase):
             before = snapshot()
             result = w.doctor(self.c)
             self.assertEqual(before, snapshot())
-            self.assertTrue(result["capabilities"]["search"]["usable"])
-            self.assertEqual(result["capabilities"]["search"]["status"], "ready")
+            self.assertFalse(result["capabilities"]["search"]["usable"])
+            self.assertEqual(result["sourceSamples"], [])
+            self.assertEqual(result["capabilities"]["search"]["status"],
+                             "attention" if collection_missing else "unverified")
             self.assertEqual(result["capabilities"]["analysis"]["graphFreshness"], "unchecked")
             return result
 
@@ -116,6 +120,9 @@ class WorkspaceTests(unittest.TestCase):
             self.assertEqual(result["statusScope"], ["search"])
             self.assertEqual(result["capabilities"]["analysis"]["status"], "unavailable")
             self.assertEqual(result["capabilities"]["records"]["status"], "not_configured")
+            collection_missing = True
+            self.assertFalse(doctor()["checks"]["qdrant"]["reachable"])
+            collection_missing = False
 
             self.c.update(recordsCommand=["node", "records.mjs"], maintenanceTimer="records.timer",
                           knowledgeRoot=str(helper.parent.parent), codePolicy=str(policy))
@@ -140,10 +147,122 @@ class WorkspaceTests(unittest.TestCase):
             service.update(Result="success", ExecMainStatus="0",
                            ExecMainStartTimestamp=f"@{int(now.timestamp()) + 1}")
             self.assertEqual(doctor()["capabilities"]["records"]["reason"], "receipt_predates_service_run")
+            service["ExecMainStartTimestamp"] = f"@{int(now.timestamp()) - 2}"
+            runner = self.base / "custom-codex"
+            runner.touch()
+            runner.chmod(0o700)
+            self.c.update(codexExecutable=str(runner), agent={"enabled": True})
+            core.add(str(runner))
+            result = doctor()
+            self.assertEqual(result["checks"]["codex"], str(runner))
+            self.assertEqual(result["capabilities"]["assessment"]["status"], "unverified")
+            core.remove(str(runner))
+            core.add("codex")
+            result = doctor()
+            self.assertIsNone(result["checks"]["codex"])
+            self.assertEqual(result["capabilities"]["assessment"]["reason"], "assessment_runner_missing")
+            self.assertEqual(result["capabilities"]["records"]["status"], "ready")
             grant["granted"] = False
             self.assertEqual(doctor()["capabilities"]["records"]["reason"], "missing_grant")
             del owner["codeRecords"]
             self.assertEqual(doctor()["capabilities"]["records"]["reason"], "owner_incompatible")
+
+    def test_failed_purge_and_restart_resume_from_recovery_receipt(self):
+        self.repo("project")
+        with patch.object(w, "competing_writers", return_value=False), \
+                patch.object(w, "purge_excluded", return_value=0):
+            w.reconcile(self.c, "fixture", True)
+        self.c.update(watchService="watch.fixture.service", pruneNames=["new-exclusion"])
+        recovery = Path(self.c["stateRoot"]) / "reconcile-pending.json"
+        actual_run = w.run
+        active = True
+        restart_fails = True
+        calls = []
+
+        def control(args, **kwargs):
+            nonlocal active
+            if args[0] != "systemctl":
+                return actual_run(args, **kwargs)
+            action = args[2]
+            calls.append(action)
+            if action == "stop":
+                self.assertTrue(w.read(recovery)["restoreWatcher"])
+                active = False
+            if action == "start":
+                self.assertFalse(w.read(recovery)["purgeExcluded"])
+                if restart_fails:
+                    raise RuntimeError("restart failed")
+                active = True
+            return subprocess.CompletedProcess(args, 0 if active else 3, stdout="", stderr="")
+
+        with patch.object(w, "run", side_effect=control), \
+                patch.object(w, "competing_writers", return_value=False), \
+                patch.object(w, "purge_excluded", side_effect=[RuntimeError("purge failed"), 1]) as purge:
+            with self.assertRaisesRegex(RuntimeError, "purge failed"):
+                w.reconcile(self.c, "fixture", True)
+            self.assertFalse(active)
+            self.assertTrue(w.read(recovery)["purgeExcluded"])
+            with self.assertRaisesRegex(ValueError, "scope changed"):
+                w.reconcile({**self.c, "pruneNames": []}, "fixture", True)
+            with self.assertRaisesRegex(RuntimeError, "restart failed"):
+                w.reconcile(self.c, "fixture", True)
+            self.assertEqual(purge.call_count, 2)
+            self.assertTrue(recovery.is_file())
+            restart_fails = False
+            result = w.reconcile(self.c, "fixture", True)
+            self.assertEqual(purge.call_count, 2)
+        self.assertTrue(active)
+        self.assertEqual(calls.count("stop"), 1)
+        self.assertEqual(result["status"], "reconciled")
+        self.assertEqual(result["configChanges"], 0)
+        self.assertTrue(result["watcherRestarted"])
+        self.assertFalse(recovery.exists())
+
+    def test_nested_explicit_exclusions_share_literal_ignore_and_purge_scope(self):
+        root = self.repo("parent")
+        excluded = root / "private[1]"
+        operations = root / "operations"
+        state = root / "state"
+        self.c.update(excludePaths=[str(excluded)], operationsRoot=str(operations), stateRoot=str(state))
+        ignored = w.project_ignores(root, [root], excluded=w.explicit_exclusions(self.c))
+        self.assertIn(r"/private\[1\]", ignored)
+        self.assertIn("/operations", ignored)
+        self.assertIn("/state", ignored)
+        entry = {"name": "parent", "path": str(root)}
+        candidates = ["fixture/parent/private[1]/file.py", "fixture/parent/private1/file.py",
+                      "fixture/parent/operations/notes.py", "fixture/parent/operations2/file.py",
+                      "fixture/parent/state/state.py", "other/parent/private[1]/file.py"]
+        selected = []
+        def purge(_, predicate):
+            selected.extend(file for file in candidates if predicate(file))
+            return len(selected)
+        with patch.object(w, "purge_matching", side_effect=purge):
+            w.purge_excluded(self.c, [entry])
+        self.assertEqual(selected, [candidates[i] for i in (0, 2, 4)])
+
+    def test_discovery_handles_alias_cycles_and_rejects_partial_scan(self):
+        root = self.repo("project")
+        (root / "self").symlink_to(root, target_is_directory=True)
+        old = w.discover(self.c)
+        self.assertEqual(len(old["projects"]), 1)
+        self.assertEqual(len(old["aliases"]), 1)
+        w.atomic(self.c["registry"], old)
+        baseline = Path(self.c["registry"]).read_bytes()
+
+        def broken_walk(*args, onerror, **kwargs):
+            onerror(PermissionError("inaccessible directory"))
+            yield
+
+        with patch.object(w.os, "walk", side_effect=broken_walk), \
+                patch.object(w, "purge_retired") as purge:
+            with self.assertRaisesRegex(PermissionError, "inaccessible"):
+                w.reconcile(self.c, "fixture", True)
+            purge.assert_not_called()
+        with patch.object(w, "git", return_value=""), patch.object(w, "purge_retired") as purge:
+            with self.assertRaisesRegex(RuntimeError, "registered Git root"):
+                w.reconcile(self.c, "fixture", True)
+            purge.assert_not_called()
+        self.assertEqual(Path(self.c["registry"]).read_bytes(), baseline)
 
     def test_current_invocation_warning_is_visible_despite_progress_output(self):
         invocation = 'a' * 32

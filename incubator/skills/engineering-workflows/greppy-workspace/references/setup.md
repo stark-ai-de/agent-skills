@@ -18,7 +18,7 @@ Existing symlinks are excluded during reconciliation. grepai 1.1 can follow a ne
 
 ## Recovery
 
-Stop only the owned timers and watcher before restoring a config backup. Restore the affected file atomically, then reconcile and restart the owned service. Do not restore unrelated user configuration wholesale. Retired vector namespaces are removed by exact workspace/project prefix, with bounded Qdrant scrolling. If purge fails, the watcher remains stopped and the old registry remains a recovery input; resolve the storage failure and rerun. Never rebuild or delete another collection as a shortcut.
+Stop only the owned timers and watcher before restoring a config backup. Restore the affected file atomically, then reconcile and restart the owned service. Do not restore unrelated user configuration wholesale. Retired vector namespaces are removed by exact workspace/project prefix, with bounded Qdrant scrolling. If purge fails, the watcher remains stopped. Resolve the storage failure and rerun with the same adopted configuration. The private reconcile-pending.json receipt keeps the pending exclusions and the prior watcher state until successful recovery. Never rebuild or delete another collection as a shortcut.
 
 ## Exclusion-scan cost
 

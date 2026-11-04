@@ -10,10 +10,32 @@ The owner recomputes the actual source root, regular-file bytes, line range and 
 
 - `workspace.py notify` accepts a real Codex completion event, records only registered repository ID/time, and coalesces events per repository. The operations root and `GREPPY_MAINTENANCE_RUN=1` are ignored.
 - Discovery timer: reconcile new/moved/removed roots and generated ignore config; restart the owned watcher only on change.
-- Maintenance timer: reconcile known sources, inspect/plan/apply at most the policy batch limit, and optionally assess one eligible queue item using `codex exec --sandbox read-only --ephemeral --output-schema ...`. The runner inherits the user's configured model/provider/auth, disables connector startups and its own notify/hook callbacks, has a bounded runtime/output and a per-repository cooldown. It never runs on every file save.
+- Maintenance timer: reconcile known sources, inspect/plan/apply at most the policy batch limit, and optionally assess one eligible queue item with the qualified runner below. The runner has bounded runtime/output and a per-repository cooldown. It never runs on every file save.
 - Source assessment may return zero candidates. Failures remain `needs_agent`; only a newer completion after cooldown permits another automatic assessment. Receipt logs are private. Owner lock contention remains pending until the existing writer finishes. Never interpret an unverified create as a safe retry.
 
 Inspect `last-reconcile.json`, `last-record-maintenance.json`, `last-notify.json`, `agent-checkpoints.json`, `agent-runs/` and owner operation receipts. A delivered notification, an executed timer, a successful runner and a verified remote write are separate evidence. `--no-agent` on `records.mjs` performs deterministic record maintenance without model calls.
+
+## Qualify the optional assessor
+
+Use the existing stock OpenAI Codex login and the explicitly adopted model. In
+the private `agent` settings record `model` and `executableSha256` for the exact
+qualified `codexExecutable` (default `codex`). Qualify the CLI offline with a
+mock provider and an inert MCP fixture before recording the digest. Verify that
+the private non-project launch directory, `--ignore-user-config`, read-only
+sandbox, disabled approvals, apps, plugins, hooks and notifications exclude
+repo-local configuration and inherited tools. The assessment names the selected
+repository in its input. Custom provider routing needs a separate qualification.
+
+At each eligible attempt, the adapter checks the binary digest and requires an
+empty configured MCP roster from that executable with the same overrides and
+a neutral directory. The roster probe includes user configuration, so this is
+intentionally conservative. Existing configured servers, even disabled ones,
+leave the assessment pending. A merged empty MCP table does not clear inherited
+entries. Never broaden tool or account access to satisfy this check.
+
+When the guard cannot establish the route, the event stays eligible for later
+qualification and deterministic maintenance continues. Once an attempt starts,
+its checkpoint is durable, even if the process or candidate validation fails.
 
 ## Data flow
 
