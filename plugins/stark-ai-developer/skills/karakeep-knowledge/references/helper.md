@@ -113,6 +113,11 @@ node /installed/karakeep-knowledge/scripts/knowledge.mjs status --policy /privat
 node /installed/karakeep-knowledge/scripts/knowledge.mjs resume --policy /private/project.json --operation UUID_FROM_RECEIPT
 ```
 
+The status response includes `codeRecords` support, the selected policy's grant,
+and local writer authorization for that grant. `accountReadChecked` is true only
+after a successful `--online` account check. This read does not verify a write
+or adopt a grant. Use `check --repo` separately for project-document readiness.
+
 `inspect --offline` creates unverified local evidence, not an apply-ready plan.
 Collection inspection omits `--repo`. `check --config FILE` selects a descriptor.
 `status` without `--online` reads only local state. `resume --recover-lock` additionally
