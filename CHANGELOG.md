@@ -12,6 +12,20 @@
 
 ### Removed
 
+## 0.34.0 (2026-11-07)
+
+## What's Changed
+* fix(review-fix-swarm): capture native reviewer receipts by @servrox in https://github.com/stark-ai-de/agent-skills/pull/180
+* feat: prefer native visualization for visual reports by @servrox in https://github.com/stark-ai-de/agent-skills/pull/179
+* feat: guide visual reports one topic at a time by @servrox in https://github.com/stark-ai-de/agent-skills/pull/178
+* fix: preserve closed report sources in print by @servrox in https://github.com/stark-ai-de/agent-skills/pull/187
+* feat: add optional visualizations to CodeGraph skill by @servrox in https://github.com/stark-ai-de/agent-skills/pull/176
+* feat: add optional visualizations to Codex spec interviewer by @servrox in https://github.com/stark-ai-de/agent-skills/pull/177
+* fix: qualify dependency updates and resolve audit findings by @servrox in https://github.com/stark-ai-de/agent-skills/pull/188
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.33.0...v0.34.0
+
 ## 0.33.0 (2026-11-05)
 
 ## What's Changed
