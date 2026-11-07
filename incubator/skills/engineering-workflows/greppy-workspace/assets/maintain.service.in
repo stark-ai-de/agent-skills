@@ -1,0 +1,9 @@
+[Unit]
+Description=Bounded code reuse record maintenance
+[Service]
+Type=oneshot
+ExecStart=@PYTHON@ @SKILL@/scripts/workspace.py maintain --config @CONFIG@ --apply
+TimeoutStartSec=480
+KillMode=control-group
+UMask=0077
+Nice=10

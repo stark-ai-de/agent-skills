@@ -1,0 +1,8 @@
+interface:
+  display_name: "Greppy Workspace"
+  short_description: "Set up local code search and source-backed reuse records"
+  default_prompt: "Use $greppy-workspace to set up, diagnose, or maintain my local cross-repository code search. Select the clear route, inspect existing tools and actual hardware before choosing an inference variant, keep doctor read-only, and distinguish observed qualification from pending evidence."
+policy:
+  products:
+    - CODEX
+  allow_implicit_invocation: true

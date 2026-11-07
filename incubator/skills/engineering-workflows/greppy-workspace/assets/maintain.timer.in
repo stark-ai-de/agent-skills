@@ -1,0 +1,8 @@
+[Unit]
+Description=Periodically maintain code reuse records
+[Timer]
+OnBootSec=3min
+OnUnitInactiveSec=15min
+Unit=@PREFIX@-maintain.service
+[Install]
+WantedBy=timers.target
