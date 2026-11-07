@@ -10,7 +10,7 @@ CodeGraph found a large caller graph and a bounded ast-grep rewrite opportunity.
 
 ## Expected Behavior
 
-- Use a native visualization only when a callable current-session capability is established; do not create a Page, HTML file, or app.
+- Use a native visualization only when a callable current-session capability is established. Permit files required by its documented rendering contract, including an HTML fragment; do not create a standalone HTML report, Page, or app as a fallback.
 - Keep source-backed nodes, edges, matches, scope, and uncertainty aligned with the complete textual result.
 - A displayed button is not an action channel. Treat a click as a user request only when the host documents and actually delivers that event.
 - Before a delivered action, revalidate its target, scope, and current source state and apply existing approval rules.
@@ -22,8 +22,9 @@ CodeGraph found a large caller graph and a bounded ast-grep rewrite opportunity.
 - A simple lookup stays concise text even when visualization is available.
 - Missing, failed, non-callable or unconfirmed rendering returns the complete text result and action request without retries.
 - With display but no action bridge, a visible button cannot execute the action.
+- A native capability that requires an HTML fragment file can render the source-backed graph. Without a documented action callback, preserve the complete text result and manually submittable rewrite request; do not wire the fragment to repository mutation.
 - A documented delivered click can request bounded analysis or a bounded approved rewrite; show operation, root, scope and expected writes first.
 - Ambiguous or changed scope follows existing approval boundaries; stale state is rechecked.
 - Duplicate clicks and unknown completion do not cause a blind replay.
-- Filtering or rendering never changes the repository or creates an HTML report, Page, app or service.
+- Filtering or rendering never changes the repository or creates a standalone HTML report, Page, app or service as a fallback; a required native rendering input is allowed.
 - Repeated setup remains idempotent; updates respect offline and installation provenance; missing tools remain reported; doctor does not repair.

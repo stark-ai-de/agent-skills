@@ -6,6 +6,7 @@ import { load } from "js-yaml";
 
 const suite = "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing";
 const skill = "skills/engineering-workflows/codegraph-ast-grep";
+const historicalRuntime = "skill-evals/codegraph-ast-grep/behavioral-baseline/v0.3.4/runtime";
 const ids = [
   "direct-setup",
   "direct-update",
@@ -70,12 +71,9 @@ function json(root, relative, errors) {
 }
 
 function candidateHash(root, errors) {
-  const directory = path.join(
-    root,
-    "skill-evals/codegraph-ast-grep/behavioral-baseline/v0.3.4/runtime",
-  );
+  const directory = path.join(root, historicalRuntime);
   if (!fs.existsSync(directory) || !fs.lstatSync(directory).isDirectory()) {
-    errors.push(`${skill}: missing candidate directory`);
+    errors.push(`${historicalRuntime}: missing candidate directory`);
     return "";
   }
   const files = [];
@@ -202,12 +200,12 @@ export function validateRoutingCapture(root) {
   ) {
     errors.push(`${manifestPath}: capture provenance is incomplete`);
   }
+  const starterPath = `${historicalRuntime}/agents/openai.yaml`;
   let starter = "";
   try {
-    starter = load(read(root, `${skill}/agents/openai.yaml`, errors).text)?.interface
-      ?.default_prompt;
+    starter = load(read(root, starterPath, errors).text)?.interface?.default_prompt;
   } catch {
-    errors.push(`${skill}/agents/openai.yaml: invalid YAML for capture binding`);
+    errors.push(`${starterPath}: invalid YAML for capture binding`);
   }
   if (typeof starter !== "string" || !starter)
     errors.push(`${manifestPath}: starter text unavailable`);

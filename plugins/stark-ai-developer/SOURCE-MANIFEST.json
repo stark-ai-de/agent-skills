@@ -1779,10 +1779,10 @@
       "sha256": "d01b7692c5a25a4ecb9f4ec1d4956e576f940d6e567f9c6cf9e181d9b5012d40"
     },
     {
-      "byteLength": 12509,
+      "byteLength": 12741,
       "mode": "0644",
       "path": "skills/codegraph-ast-grep/references/usage-playbook.md",
-      "sha256": "0579e3aff8fe74ab30c4a5a909bcd7735f762ca2e8c0d06e02dd191c1574d99f"
+      "sha256": "d0fcd8846dfdd74ef5a13385fe298e95ed13d1c422d807fd82283f17dd567368"
     },
     {
       "byteLength": 18071,
@@ -2901,5 +2901,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "94ba28bb3b73d97b07d44f8cc27297a822e31e7a4a9cd7e53432caf2e3efcfbc"
+  "treeHash": "5bd544181fa85d6be9366f9c1567449316646f1a48b0cf7b174b7f7a00b18ec3"
 }

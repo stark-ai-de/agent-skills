@@ -128,7 +128,7 @@ Do not paste full configs, broad graph dumps, or hundreds of match lines. Summar
 
 ## Optional Visualizations and Actions
 
-This reference applies to setup, update, doctor, and internal coding behaviors after setup. Visualization and action delivery are separate capabilities. Discover them from current host instructions and callable interfaces for this turn. Documentation, product names, or a prior turn do not prove availability. Unknown means unavailable for the current response. Do not install a renderer, create a Page, generate HTML, or start a service as a fallback.
+This reference applies to setup, update, doctor, and internal coding behaviors after setup. Visualization and action delivery are separate capabilities. Discover them from current host instructions and callable interfaces for this turn. Documentation, product names, or a prior turn do not prove availability. Unknown means unavailable for the current response. Follow the established native capability's documented rendering contract, including an HTML fragment file when required. Such a rendering input does not establish an action bridge or authorize repository writes. Do not install a renderer, create a Page, generate a standalone HTML report, or start a service as a fallback.
 
 ### Choose a useful view
 
