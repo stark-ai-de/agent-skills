@@ -12,6 +12,15 @@
 
 ### Removed
 
+## 0.34.0 (2026-11-07)
+
+## What's Changed
+* fix(review-fix-swarm): capture native reviewer receipts by @servrox in https://github.com/stark-ai-de/agent-skills/pull/180
+* feat: prefer native visualization for visual reports by @servrox in https://github.com/stark-ai-de/agent-skills/pull/179
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.33.0...v0.34.0
+
 ## 0.33.0 (2026-11-05)
 
 ## What's Changed
