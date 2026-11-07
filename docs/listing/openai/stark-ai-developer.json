@@ -40,7 +40,9 @@
     },
     "assets": {
       "logo": "site/public/logo.png",
-      "composerIcon": "site/public/logo-dark.png"
+      "logoDark": "site/public/logo-dark.png",
+      "composerIcon": "docs/listing/openai/assets/chatgpt-composer-icon-light.png",
+      "composerIconDark": "docs/listing/openai/assets/chatgpt-composer-icon-dark.png"
     }
   },
   "publisher": {

@@ -3,11 +3,12 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { spawnSync } from "node:child_process";
 
 import { unzipSync } from "fflate";
 
 import { createDirectoryArchive } from "../lib/plugin-projections.mjs";
-import { withOpenAiStage } from "../lib/openai-projection.mjs";
+import { validateOpenAiProjection, withOpenAiStage } from "../lib/openai-projection.mjs";
 import { decodedPngInfo } from "./lib/visual-assertions.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -82,31 +83,79 @@ assert.equal(pixelDigests.size, bundle.skills.length);
 
 const archiveRoot = fs.mkdtempSync(path.join(os.tmpdir(), "agent-skills-openai-icons-"));
 try {
-  withOpenAiStage(repositoryRoot, (staged) => {
-    const archivePath = path.join(archiveRoot, "openai.zip");
-    createDirectoryArchive({ sourceRoot: staged.stage, output: archivePath });
-    const archive = unzipSync(fs.readFileSync(archivePath));
-    for (const skill of bundle.skills) {
-      const sourceBytes = fs.readFileSync(
-        path.join(repositoryRoot, skill.source, "assets/openai-icon.png"),
-      );
-      const archiveBytes = archive[`skills/${skill.name}/assets/openai-icon.png`];
-      assert.ok(archiveBytes, `${skill.name} icon must be present in openai.zip`);
-      assert.equal(Buffer.compare(sourceBytes, Buffer.from(archiveBytes)), 0);
-    }
-    for (const [archiveName, sourceRelative] of [
-      ["assets/logo.png", listing.plugin.assets.logo],
-      ["assets/composer-icon.png", listing.plugin.assets.composerIcon],
-    ]) {
-      const sourceBytes = fs.readFileSync(path.join(repositoryRoot, sourceRelative));
-      assert.equal(
-        Buffer.compare(sourceBytes, fs.readFileSync(path.join(staged.stage, archiveName))),
-        0,
-        `${archiveName} staged bytes`,
-      );
-      assert.equal(Buffer.compare(sourceBytes, Buffer.from(archive[archiveName])), 0);
-    }
-  });
+  for (const profile of ["existing-skills-only", "new-remote"]) {
+    withOpenAiStage(
+      repositoryRoot,
+      (staged) => {
+        const manifest = JSON.parse(
+          fs.readFileSync(path.join(staged.stage, ".codex-plugin/plugin.json"), "utf8"),
+        );
+        assert.equal(manifest.interface.logoDark, "./assets/logo-dark.png");
+        assert.equal(manifest.interface.composerIconDark, "./assets/composer-icon-dark.png");
+        const archivePath = path.join(archiveRoot, "openai.zip");
+        createDirectoryArchive({ sourceRoot: staged.stage, output: archivePath });
+        const archive = unzipSync(fs.readFileSync(archivePath));
+        for (const skill of bundle.skills) {
+          const sourceBytes = fs.readFileSync(
+            path.join(repositoryRoot, skill.source, "assets/openai-icon.png"),
+          );
+          const archiveBytes = archive[`skills/${skill.name}/assets/openai-icon.png`];
+          assert.ok(archiveBytes, `${skill.name} icon must be present in openai.zip`);
+          assert.equal(Buffer.compare(sourceBytes, Buffer.from(archiveBytes)), 0);
+        }
+        for (const [archiveName, sourceRelative] of [
+          ["assets/logo.png", listing.plugin.assets.logo],
+          ["assets/logo-dark.png", listing.plugin.assets.logoDark],
+          ["assets/composer-icon.png", listing.plugin.assets.composerIcon],
+          ["assets/composer-icon-dark.png", listing.plugin.assets.composerIconDark],
+        ]) {
+          const sourceBytes = fs.readFileSync(path.join(repositoryRoot, sourceRelative));
+          assert.equal(
+            Buffer.compare(sourceBytes, fs.readFileSync(path.join(staged.stage, archiveName))),
+            0,
+            `${archiveName} staged bytes`,
+          );
+          assert.equal(Buffer.compare(sourceBytes, Buffer.from(archive[archiveName])), 0);
+        }
+        const validateArchive = () =>
+          spawnSync(
+            process.execPath,
+            [
+              path.join(repositoryRoot, "scripts/plugin/validate-openai-submission.mjs"),
+              "--archive",
+              archivePath,
+              "--profile",
+              profile,
+            ],
+            { cwd: repositoryRoot, encoding: "utf8" },
+          );
+        const valid = validateArchive();
+        assert.equal(valid.status, 0, valid.stderr || valid.stdout);
+        fs.copyFileSync(
+          path.join(repositoryRoot, listing.plugin.assets.composerIcon),
+          path.join(staged.stage, "assets/composer-icon-dark.png"),
+        );
+        assert.ok(
+          validateOpenAiProjection({
+            root: repositoryRoot,
+            targetRoot: staged.stage,
+            bundle,
+            listing: staged.listing,
+          }).errors.some((error) =>
+            error.includes("image mismatch: assets/composer-icon-dark.png"),
+          ),
+        );
+        createDirectoryArchive({ sourceRoot: staged.stage, output: archivePath });
+        const tampered = validateArchive();
+        assert.notEqual(tampered.status, 0, "a substituted dark Composer image must be rejected");
+        assert.match(
+          tampered.stderr + tampered.stdout,
+          /archive changed assets\/composer-icon-dark\.png/,
+        );
+      },
+      { profile },
+    );
+  }
 } finally {
   fs.rmSync(archiveRoot, { recursive: true, force: true });
 }

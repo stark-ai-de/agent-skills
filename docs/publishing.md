@@ -612,25 +612,85 @@ security routes return HTTP 200.
 5. Verify all packaged skill icons. If the portal ignores package metadata,
    restore the reviewed `radar`, `chat`, `bolt`, `hierarchy`, `search`, `pen`,
    `code`, and `chart` glyphs.
-6. Keep the existing light and dark Plugin Info logos unchanged.
+6. Verify the imported light and dark Plugin Info logos against the canonical
+   image sources.
 7. Follow the [Composer icon handoff](listing/openai/stark-ai-developer-first-publication.md#composer-icon-handoff)
-   to upload the separate light/dark Composer PNGs and restore Plugin Info logos
-   only if the package upload reset them. The ZIP's single `composerIcon` field
-   does not document a way to select both theme variants.
+   to verify the packaged `composerIcon` and `composerIconDark` PNGs. Use the
+   documented fallback only for older archives or incomplete portal imports.
 8. Review automated scans and every portal warning, including
    `manifest_normalized` if shown.
 9. Add no more than three realistic starter prompts.
-10. Add at least six positive and three negative tests for v1.
+10. For initial remote MCP review, provide exactly five positive and three
+    negative cases, a reviewer-accessible video, and credentials only if needed.
+    Skills-only plugins do not need MCP review cases or a demo. Follow the
+    [review metadata handoff](listing/openai/mcp-review-prefill.md) for package
+    imports and secure reviewer access. Verify the video remains representative.
 11. Add release notes and complete policy attestations only after listing,
     skills, prompts, tests, and privacy claims are confirmed.
 12. Submit for review. Treat non-blocking `skill_metadata_ignored` warnings as
     expected when `SKILL.md` carries `metadata:`.
 13. Track requested changes as release-blocking issues; update source artifacts
     first, regenerate, retest, and resubmit.
-14. After approval, explicitly publish from the portal.
+14. Keep the current version published during review. After approval, explicitly
+    publish the replacement from the portal; do not unpublish the old version first.
 15. Verify light/dark rendering after propagation and confirm the listing appears
     in the universal Plugins Directory shared by
     ChatGPT and Codex. There is no separate Codex public directory URL.
+
+### MCP updates after publication
+
+Official guidance checked 2026-11-07:
+[submission](https://developers.openai.com/plugins/deploy/submission),
+[published MCP metadata versions](https://developers.openai.com/plugins/deploy/app-review#how-published-mcp-metadata-versions-work),
+and [plugin guidelines](https://developers.openai.com/plugins/plugin-guidelines).
+This date records verification, not when OpenAI introduced each behavior.
+
+Package review and continuous tool review are separate. A scan stores the draft's
+MCP metadata for initial review. After publication OpenAI scans the live server
+daily; **MCPs → Issues → Rescan** requests an earlier scan when available.
+Inspect **Live definition**, **Held update**, and **Issues found** per tool.
+A tool passing its checks does not approve an unrelated package version.
+
+| Change                                                                                                                        | Action and user-visible result                                                                                                 |
+| ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| New tool                                                                                                                      | Deploy, then wait for its automated checks; unavailable until it passes.                                                       |
+| Changed tool description, schema, annotation, security scheme, `_meta`, UI resource reference or linked resource metadata/CSP | Deploy and inspect the scan. The previous definition remains live until the update passes; passing tools update independently. |
+| Deleted tool                                                                                                                  | Removed from the published list when a scan detects its deletion, without waiting for automated checks.                        |
+| Shared MCP server `instructions`                                                                                              | Deploy; reviewed with affected tools and held if the required checks or instruction findings prevent approval.                 |
+| Compatible content at the same published UI resource URI                                                                      | Deploy; no new version or scan required. Cached UI content may persist for up to one hour.                                     |
+| Compatible server-only fix, live results, result `_meta` or business data                                                     | Deploy; calls use the live implementation without a package release.                                                           |
+| Listing information, packaged images or bundled skills                                                                        | Upload a complete new ZIP to the existing listing, complete review and explicitly publish the approved replacement.            |
+
+Continuous review preserves metadata, not an old server implementation. Keep
+published input schemas and UI resource URIs working while changes are held.
+If a deployment breaks the live contract, restore a compatible server rather
+than waiting for review. An incomplete automated check is not approval. Server
+deployment remains a separately authorized operation.
+
+Expose each callable operation as its own tool; do not hide extra operations
+behind discovery plus a generic executor. Verify that every tool advertises
+explicit boolean `readOnlyHint`, `destructiveHint` and `openWorldHint` values
+matching its actual behavior. This service exposes only
+`validate_skill_metadata` and `validate_plugin_manifest`; the existing MCP
+transport tests verify both tools and all three annotations. Annotation
+justifications are no longer required by the plugin guidelines; the app-review
+page retains older justification wording. Do not use prose to override an
+incorrect server annotation: fix the advertised value and rescan. Follow any
+current portal requests for clarification without inventing a package field.
+
+Fix valid findings on the server and rescan. Appeal only when the finding is
+incorrect: an appeal covers the scan's held tool changes together and pauses
+automatic updates. Withdraw the appeal before deploying fixes and rescanning.
+It does not cover package changes, authentication or shared server instructions.
+
+Preserve the existing MCP URL for normal releases. The submission guide says
+URL changes are unsupported in the current update flow and require support;
+app-review describes a new-version route for path-only changes, while a changed
+origin (`scheme`, `hostname` or `port`) requires a new plugin. These statements
+are unresolved provider guidance, not permission to migrate a listing. Confirm
+the supported route with OpenAI before an authorized URL change. Adding MCP to
+an existing skills-only plugin remains unsupported; maintain the two existing
+identities required by ADR-0076.
 
 ## Release Update Process
 
