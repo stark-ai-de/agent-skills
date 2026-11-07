@@ -1,0 +1,14 @@
+interface:
+  display_name: "Compact Dark Theme"
+  short_description: "Reusable dark theme with neon cyan/lime for agent visualizations"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  default_prompt: >-
+    Use the compact-dark-theme skill to create a dark-themed HTML visualization.
+    Apply the CSS variables and layout rules. For Telegram Mini Apps, follow
+    the telegram-mini-app reference overrides.
+policy:
+  products:
+    - CHAT
+    - CODEX
+  allow_implicit_invocation: true
