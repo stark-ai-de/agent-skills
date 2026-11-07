@@ -17,6 +17,33 @@ import { recipes, exampleReport } from "../assets/report-recipes.mjs";
 import { workingReport, readerStatusLines } from "../scripts/lib/report-state.mjs";
 const cli = fileURLToPath(new URL("../scripts/render-report.mjs", import.meta.url));
 
+test("presentation contract prefers suitable native view and preserves complete HTML fallback", async () => {
+  const skill = await readFile(new URL("../SKILL.md", import.meta.url), "utf8");
+  const contract = await readFile(
+    new URL("../references/report-contract.md", import.meta.url),
+    "utf8",
+  );
+  assert.match(skill, /prefer.*native.*visualization/i);
+  assert.match(contract, /current.*host.*callable/i);
+  assert.match(contract, /same validated.*snapshot/i);
+  assert.match(contract, /HTML.*fallback/i);
+  assert.match(contract, /(?:unavailable|fails|insufficient).*HTML/i);
+  assert.match(contract, /(?:concise|short).*reader/i);
+  assert.match(contract, /(?:verified|observed).*display/i);
+  const scenarios = [
+    [/native.*primary/i, "native primary presentation"],
+    [/caveat.*evidence status/i, "missing caveats require HTML"],
+    [/queued.*not proof/i, "queued rendering is not display evidence"],
+    [/explicitly requests standalone HTML/i, "explicit HTML request wins"],
+    [/managed preview.*always stay/i, "managed routes remain available"],
+    [/private material.*authorized host/i, "private data stays within authorization"],
+    [/no duplicated orientation/i, "concision without repetition"],
+  ];
+  for (const [pattern, scenario] of scenarios) {
+    assert.match(`${skill}\n${contract}`, pattern, scenario);
+  }
+});
+
 for (const recipe of recipes) {
   test(`${recipe.id}: ${recipe.title}; complete deterministic offline outputs`, async () => {
     const report = exampleReport(recipe.id);
