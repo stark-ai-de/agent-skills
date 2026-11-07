@@ -7,7 +7,7 @@ status: "accepted"
 owner: "stark-ai-de"
 repo: "agent-skills"
 created: "2026-10-16"
-updated: "2026-10-16"
+updated: "2026-11-07"
 source_request: "Review PR 146, address outstanding feedback, document the feature, test, and update the existing PR last."
 ---
 
@@ -42,7 +42,8 @@ changes and actual HYBRID/Cloud qualification are outside this slice.
   mutation invalidates all affected review results and blocks triage. Missing
   enforced isolation produces BLOCKED before reviewer execution.
 - Before launching a review round, establish a private, durable native-event or
-  transcript capture route. Reconcile each child creation and completion before
+  transcript capture route. Reconcile native child creation and completion and,
+  in HYBRID, the external Pi invocation, completion and review result before
   cleanup; an ephemeral coordinator narrative alone cannot prove reviewer work.
 - Wait for all reviewers, verify/deduplicate claims and classify candidates as
   apply, retain or defer with evidence. Exactly one authorized fixer writes after
