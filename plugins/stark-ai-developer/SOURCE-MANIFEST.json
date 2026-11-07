@@ -90,7 +90,7 @@
       "byteLength": 756,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "1163aac592dbe1385f242c98b8e2c333b470701682f8fafb01566a3d0270f904"
+      "sha256": "a69504fedbbab7eddf78f9e0ff3748c9a5c04858f1ee490512b4d28763218aae"
     },
     {
       "byteLength": 2128,
@@ -2616,7 +2616,7 @@
       "byteLength": 11772,
       "mode": "0644",
       "path": "skills/visual-reports/SKILL.md",
-      "sha256": "140e9f90d6ff0189c835ca4c8b7e550657634b0522e2b46b423654537b5d14bd"
+      "sha256": "76c08165ba2a36771298da4a94b0a1b8ae900e1cdff8d73b734db719d52fb3cc"
     },
     {
       "byteLength": 779,
@@ -2673,10 +2673,10 @@
       "sha256": "9c1be070642545f686a4dcc9984e0d3d7db6cb195fe8d21f6392efcf2f84ba3d"
     },
     {
-      "byteLength": 16667,
+      "byteLength": 16744,
       "mode": "0644",
       "path": "skills/visual-reports/assets/report-runtime.css",
-      "sha256": "a86f2dd25d10a1ceed83ab5fd484a95bd4c454fa36f01d9011d32c8295bf169d"
+      "sha256": "493b47dc54e798bc17e5fe5edd665913d26778236d01ddace503175ce9761874"
     },
     {
       "byteLength": 24505,
@@ -2853,10 +2853,10 @@
       "sha256": "d0035ec0ead44c570a1c88c39a93a7c30212c5c0cd7ec37efdaa7569553706a2"
     },
     {
-      "byteLength": 18326,
+      "byteLength": 21624,
       "mode": "0644",
       "path": "skills/visual-reports/tests/browser-topics.mjs",
-      "sha256": "67f596a235d5f994d01b5e88a0606fd60eff35b45d02d2c5bc2d0426ac092438"
+      "sha256": "3b76d891aceb06fe63e5f163877298202d844021af5011c3b8f03dc5fb6f6701"
     },
     {
       "byteLength": 5077,
@@ -2897,9 +2897,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.21.0"
+    "version": "1.21.1"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "3ad0d9109743b09fe74cf86120583a2e0cb335cd3b0fcdca3a02a23b7ec10e17"
+  "treeHash": "6199596285462c3408fdc3c6a7146a358e2758dc483c02d397963504ff2e57c1"
 }
