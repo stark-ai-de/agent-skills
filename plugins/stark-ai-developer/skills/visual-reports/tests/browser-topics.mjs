@@ -15,14 +15,23 @@ const report = parseMarkdown(
   await readFile(new URL("../assets/completion-example.md", import.meta.url), "utf8"),
 );
 const comparison = exampleReport("r01");
-report.sections.push(comparison.sections.find((section) => section.kind === "comparison"));
+const comparisonSection = comparison.sections.find((section) => section.kind === "comparison");
+const optionCondition = 'Requires an "annual" contract & approval';
+comparisonSection.data.options[0].note = optionCondition;
+const sortable = exampleReport("r05").sections.find((section) => section.kind === "table");
+sortable.data.rows = [
+  { id: "charlie", cells: { name: "Charlie", value: 10, state: "Beta" } },
+  { id: "alpha", cells: { name: "Alpha", value: 2, state: "Gamma" } },
+  { id: "bravo", cells: { name: "Bravo", value: 1, state: "Alpha" } },
+];
+report.sections.push(comparisonSection, sortable);
 report.sources.push(...comparison.sources);
 report.topics = [
   { id: "start", title: "Ergebnis", shortTitle: "Start", sectionIds: ["summary"] },
   { id: "metrics", title: "Messwerte", shortTitle: "Werte", sectionIds: ["latency", "capacity"] },
   { id: "cost", title: "Kosten", sectionIds: ["cost"] },
   { id: "flow", title: "Datenfluss", shortTitle: "Ablauf", sectionIds: ["flow", "schedule"] },
-  { id: "review", title: "Prüfung", sectionIds: ["observations", "compare"] },
+  { id: "review", title: "Prüfung", sectionIds: ["observations", "compare", "tokens"] },
 ];
 const rendered = await renderReport(report);
 const directory = await mkdtemp(path.join(tmpdir(), "visual-report-topics-"));
@@ -104,9 +113,10 @@ try {
       `document.querySelector(${JSON.stringify(selector)}).scrollIntoView({block:'center'})`,
     );
     const point = await evaluate(
-      `(()=>{const r=document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2,w:r.width,h:r.height}})()`,
+      `(()=>{const el=document.querySelector(${JSON.stringify(selector)}),r=el.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;return {x,y,w:r.width,h:r.height,hit:el.contains(document.elementFromPoint(x,y))}})()`,
     );
     assert(point.w > 0 && point.h > 0, `Control is not visible: ${selector}`);
+    assert.equal(point.hit, true, `Control is clipped or covered: ${selector}`);
     await page("Input.dispatchMouseEvent", {
       type: "mousePressed",
       x: point.x,
@@ -122,17 +132,17 @@ try {
       clickCount: 1,
     });
   }
-  async function press(key, keyCode) {
+  async function press(key, keyCode, code = key) {
     await page("Input.dispatchKeyEvent", {
       type: "keyDown",
       key,
-      code: key,
+      code,
       windowsVirtualKeyCode: keyCode,
     });
     await page("Input.dispatchKeyEvent", {
       type: "keyUp",
       key,
-      code: key,
+      code,
       windowsVirtualKeyCode: keyCode,
     });
   }
@@ -211,7 +221,36 @@ try {
   await click('.topic-tabs label[for="topic-select-review"]');
   await evaluate(`window.visualReportView.restore(${JSON.stringify(captured)})`);
   assert.equal((await state()).checked, "metrics", "managed preview restores selected topic");
-  for (const width of [650, 390, 320]) {
+  const sortedNames = [
+    ["Alpha", "Bravo", "Charlie"],
+    ["Bravo", "Alpha", "Charlie"],
+    ["Bravo", "Charlie", "Alpha"],
+  ];
+  async function assertSort(column, direction, width) {
+    const actual = await evaluate(
+      `(()=>({names:[...document.querySelectorAll('#block-tokens tbody tr')].map(row=>row.cells[0].textContent),direction:document.querySelector('#block-tokens [data-sort="${column}"]').closest('th').getAttribute('aria-sort')}))()`,
+    );
+    assert.deepEqual(
+      actual,
+      {
+        names: direction === "ascending" ? sortedNames[column] : [...sortedNames[column]].reverse(),
+        direction,
+      },
+      `column ${column}, ${direction}, width ${width}`,
+    );
+  }
+  async function assertOptionCondition() {
+    const labels = await evaluate(
+      `[...document.querySelectorAll('#block-compare td[data-option="a"]')].map(cell=>({label:cell.dataset.label,content:getComputedStyle(cell,'::before').content,display:getComputedStyle(cell,'::before').display}))`,
+    );
+    assert.equal(labels.length, comparisonSection.data.criteria.length);
+    for (const label of labels) {
+      assert.ok(label.label.includes(optionCondition));
+      assert.ok(label.content.includes("annual"), "condition is rendered in the responsive label");
+      assert.equal(label.display, "block");
+    }
+  }
+  for (const width of [700, 650, 390, 320]) {
     await page("Emulation.setDeviceMetricsOverride", {
       width,
       height: 900,
@@ -219,8 +258,28 @@ try {
       mobile: false,
     });
     await click('.topic-tabs label[for="topic-select-review"]');
+    for (let column = 0; column < sortedNames.length; column++) {
+      const selector = `#block-tokens [data-sort="${column}"]`;
+      await click(selector);
+      await assertSort(column, "ascending", width);
+      await press("Enter", 13);
+      await assertSort(column, "descending", width);
+      await press(" ", 32, "Space");
+      await assertSort(column, "ascending", width);
+      await press(" ", 32, "Space");
+      await assertSort(column, "descending", width);
+      if (column < sortedNames.length - 1) {
+        await press("Tab", 9);
+        assert.equal(
+          await evaluate("document.activeElement.dataset.sort"),
+          String(column + 1),
+          "keyboard focus reaches the next visible sort control",
+        );
+      }
+    }
+    await assertOptionCondition();
     const layout = await evaluate(
-      `(()=>{const nav=document.querySelector('.topic-tabs'),table=document.querySelector('#block-compare table'),region=table.closest('.scroll');return {page:document.documentElement.scrollWidth>innerWidth+1,nav:nav.scrollWidth>nav.clientWidth+1,table:region.scrollWidth>region.clientWidth+1,labels:[...nav.querySelectorAll('label')].every(x=>x.scrollWidth<=x.clientWidth+1),visible:[...document.querySelectorAll('.topic-panel')].filter(x=>getComputedStyle(x).display!=='none').length}})()`,
+      `(()=>{const nav=document.querySelector('.topic-tabs'),tables=[...document.querySelectorAll('#topic-page-review .scroll')];return {page:document.documentElement.scrollWidth>innerWidth+1,nav:nav.scrollWidth>nav.clientWidth+1,table:tables.some(region=>region.scrollWidth>region.clientWidth+1),labels:[...nav.querySelectorAll('label')].every(x=>x.scrollWidth<=x.clientWidth+1),visible:[...document.querySelectorAll('.topic-panel')].filter(x=>getComputedStyle(x).display!=='none').length}})()`,
     );
     assert.deepEqual(
       layout,
@@ -315,6 +374,7 @@ try {
   assert.equal((await state()).sliderHidden, true);
   await click('.topic-tabs label[for="topic-select-review"]');
   assert.deepEqual((await state()).visible, ["topic-page-review"]);
+  await assertOptionCondition();
   await click('.topic-tabs label[for="topic-select-flow"]');
   await click('#block-flow a[href="#source-fixture"]');
   assert.equal(
@@ -338,7 +398,9 @@ try {
       tabsAndArrows: "pass",
       sliderAndKeyboard: "pass",
       deepLinkAndRestore: "pass",
-      responsive: [650, 390, 320],
+      responsive: [700, 650, 390, 320],
+      mobileSortPointerAndKeyboard: "pass",
+      mobileOptionConditions: "pass",
       noJsAndOffline: "pass",
       printAndData: "pass",
       browserExceptions: 0,

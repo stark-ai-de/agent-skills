@@ -151,6 +151,7 @@ export async function loadPolicy(file) {
       "listIds",
       "tags",
       "approvedAggregates",
+      "codeRecords",
       "maxContentBytes",
       "approval",
     ],
@@ -210,7 +211,10 @@ export async function loadPolicy(file) {
       );
   }
   for (const [values, allowed] of [
-    [p.kinds, ["source", "document", "session", "finding", "overview", "dossier", "dataset"]],
+    [
+      p.kinds,
+      ["source", "document", "session", "finding", "overview", "dossier", "dataset", "code-record"],
+    ],
     [p.operations, ["create", "update", "membership", "tag"]],
   ])
     requireThat(
@@ -276,6 +280,10 @@ export async function loadPolicy(file) {
     p.repo.remoteName ??= "origin";
     requireThat(/^[a-zA-Z0-9_-]+$/u.test(p.repo.remoteName), "policy", "Invalid remote name.");
   } else requireThat(!p.repo, "policy", "Collection policies cannot authorize Git documents.");
+  if (p.codeRecords) {
+    const { validateCodeGrant } = await import("./code-records.mjs");
+    validateCodeGrant(p);
+  }
   await noLinks(p.stateRoot);
   return { policy: p, digest: hash(p), file: path.resolve(file) };
 }

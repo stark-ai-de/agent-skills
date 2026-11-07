@@ -44,6 +44,30 @@ test("explicit topics group ordered sections without losing content or escaping"
   for (const section of report.sections) assert.ok(html.includes(`id="block-${section.id}"`));
 });
 
+test("responsive comparison labels retain escaped option conditions and complete exports", async () => {
+  const report = starter({ id: "topic-comparison-conditions" });
+  const comparison = exampleReport("r01");
+  const section = comparison.sections.find((item) => item.kind === "comparison");
+  section.data.options[0].note = 'Requires an "annual" contract & <approval>';
+  section.data.options[1].note = "";
+  report.sections.push(section);
+  report.sources.push(...comparison.sources);
+  const { html, json, markdown } = await renderReport(report);
+  const body = html.match(/<table class="comparison">[\s\S]*?<tbody>([\s\S]*?)<\/tbody>/)[1];
+  const label = `${section.data.options[0].label} · Requires an &quot;annual&quot; contract &amp; &lt;approval&gt;`;
+  assert.equal(
+    body.split(`data-label="${label}"`).length - 1,
+    section.data.criteria.length,
+    "every responsive comparison row exposes the option condition",
+  );
+  assert.ok(body.includes(`data-label="${section.data.options[1].label}"`));
+  assert.doesNotMatch(body, /data-label="[^"]* · "/);
+  assert.deepEqual(extractReport(html), report);
+  assert.deepEqual(JSON.parse(json), report);
+  const snapshot = JSON.parse(markdown.match(/(`{3,})json\n([\s\S]*?)\n\1/)[2]);
+  assert.deepEqual(snapshot, { current: report, original: report });
+});
+
 test("topic grouping rejects missing, duplicate, reordered and unknown sections", () => {
   const base = starter({ id: "topic-invalid" });
   const bad = (topics) => {

@@ -1,0 +1,17 @@
+[Unit]
+Description=Code reuse semantic index watcher
+After=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+[Service]
+Type=simple
+WorkingDirectory=@OPERATIONS_ROOT@
+ExecStart=@GREPAI@ watch --workspace @WORKSPACE@ --no-ui
+Restart=on-failure
+RestartSec=15
+TimeoutStopSec=120
+UMask=0077
+Nice=10
+Environment=GOMAXPROCS=4
+[Install]
+WantedBy=default.target

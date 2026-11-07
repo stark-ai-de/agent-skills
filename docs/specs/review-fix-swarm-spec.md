@@ -7,7 +7,7 @@ status: "accepted"
 owner: "stark-ai-de"
 repo: "agent-skills"
 created: "2026-10-16"
-updated: "2026-10-16"
+updated: "2026-11-07"
 source_request: "Review PR 146, address outstanding feedback, document the feature, test, and update the existing PR last."
 ---
 
@@ -41,6 +41,10 @@ changes and actual HYBRID/Cloud qualification are outside this slice.
   fingerprints around review;
   mutation invalidates all affected review results and blocks triage. Missing
   enforced isolation produces BLOCKED before reviewer execution.
+- Before launching a review round, establish a private, durable native-event or
+  transcript capture route. Reconcile native child creation and completion and,
+  in HYBRID, the external Pi invocation, completion and review result before
+  cleanup; an ephemeral coordinator narrative alone cannot prove reviewer work.
 - Wait for all reviewers, verify/deduplicate claims and classify candidates as
   apply, retain or defer with evidence. Exactly one authorized fixer writes after
   the review phase ends, within the target repository's worktree policy.
@@ -189,3 +193,5 @@ work, execute the validation above, and report observed results and remaining ga
 ### Pilot-derived session safety
 
 Every session start or resume must re-confirm its effective working directory and enforced read-only policy before any probe or reviewer launch. CLI resumption is not evidence that either property persisted. Orchestration Git reads use `GIT_OPTIONAL_LOCKS=0`; capture fingerprints immediately around each review phase so index stat-cache refreshes during preflight cannot masquerade as reviewer writes. A mismatched or writable resumed session is blocked and its results are not accepted as review evidence.
+
+Dynamic collaboration tool hosts may omit spawn events from compact CLI output. Preserve private parent and child transcripts and reconcile native call outputs, child ancestry, completion, and actual review results before triage.

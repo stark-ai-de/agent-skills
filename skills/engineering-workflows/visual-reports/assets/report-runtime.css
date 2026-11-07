@@ -866,6 +866,31 @@ body[data-presentation="topics"] #report-status:empty {
     overflow: hidden;
     clip-path: inset(50%);
   }
+  .topic-guide [data-kind="table"] thead {
+    display: block;
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+  .topic-guide [data-kind="table"] thead tr {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.8rem;
+  }
+  .topic-guide [data-kind="table"] thead th {
+    display: block;
+    min-width: 0;
+    padding: 0.35rem 0;
+    border: 0;
+    overflow-wrap: anywhere;
+  }
+  .topic-guide [data-kind="table"] [data-sort] {
+    max-width: 100%;
+    white-space: normal;
+    text-align: left;
+  }
   .topic-guide tbody tr {
     display: grid;
     grid-template-columns: minmax(0, 1fr);

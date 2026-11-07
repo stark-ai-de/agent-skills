@@ -147,6 +147,7 @@ for (const prefix of ["canonical", "portable"]) {
     "assets/preview.js",
     "scripts/lib/preview.mjs",
     "tests/browser-delivery.mjs",
+    "tests/browser-topics.mjs",
     "tests/v2.test.mjs",
     "assets/vendor/generator.mjs",
   ]) {
@@ -179,13 +180,19 @@ for (const prefix of ["canonical", "portable"]) {
           label,
         ).length,
       );
-    if (relative === "tests/browser-delivery.mjs")
-      assert.ok(
-        scanNetworkSource(
-          text.replace('["127.0.0.1", "localhost"]', '["unexpected.example"]'),
-          label,
-        ).length,
-      );
+    if (["tests/browser-delivery.mjs", "tests/browser-topics.mjs"].includes(relative)) {
+      for (const unsafe of [
+        text.replace('endpoint.protocol === "ws:"', "true"),
+        text.replace('["127.0.0.1", "localhost"]', '["unexpected.example"]'),
+        text + "\nnew WebSocket(endpoint)",
+      ])
+        assert.ok(scanNetworkSource(unsafe, label).length, "CDP guard drift and extra calls fail");
+      for (const other of [
+        label.replace(relative, "tests/other.mjs"),
+        label.replace(`${prefix}/`, "external/"),
+      ])
+        assert.ok(scanNetworkSource(text, other).length, "CDP exception stays file-scoped");
+    }
   }
 }
 console.log(

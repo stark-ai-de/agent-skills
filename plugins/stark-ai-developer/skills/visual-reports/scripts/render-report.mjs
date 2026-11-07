@@ -508,7 +508,7 @@ function comparison(d, sources) {
               : typeof v.value === "number"
                 ? `<div class="track" aria-hidden="true"><span class="zero" style="left:${((0 - lo) / range) * 100}%"></span><span class="bar" style="margin-left:${((Math.min(0, v.value) - lo) / range) * 100}%;width:${(Math.abs(v.value) / range) * 100}%"></span></div>`
                 : "";
-          return `<td data-option="${escape(o.id)}" data-label="${escape(o.label)}"><span class="value">${v.value === null ? "Unbekannt" : escape(v.value)} ${escape(c.unit)}</span>${chart}<span class="state">${escape(v.state)}</span><small>${escape(v.note)} ${sourceLinks(v.sourceIds, sources)}</small></td>`;
+          return `<td data-option="${escape(o.id)}" data-label="${escape(o.note ? `${o.label} · ${o.note}` : o.label)}"><span class="value">${v.value === null ? "Unbekannt" : escape(v.value)} ${escape(c.unit)}</span>${chart}<span class="state">${escape(v.state)}</span><small>${escape(v.note)} ${sourceLinks(v.sourceIds, sources)}</small></td>`;
         })
         .join("");
       return `<tr data-criterion="${escape(c.id)}"><th scope="row">${escape(c.label)}<small>${escape(c.context)} · ${escape(c.direction)}${numeric.length ? ` · gemeinsame Skala ${lo} … ${hi} ${escape(c.unit)}` : ""}</small></th>${cells}</tr>`;
