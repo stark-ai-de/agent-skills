@@ -171,7 +171,7 @@
       ],
       "winner": "native",
       "evidenceRefs": ["package.json#scripts.format", "package.json#scripts.lint"],
-      "rationale": "Oxfmt 0.71.0 and Oxlint 1.86.0 pass the repository formatter and linter on Linux/WSL (2026-10-01). The commands retain their native execution boundary; hosted checks remain separate.",
+      "rationale": "Oxfmt 0.71.0 and Oxlint 1.92.0 pass the repository formatter and linter on Linux/WSL (2026-11-07). The commands retain their native execution boundary; hosted checks remain separate.",
       "fallbackOrder": ["native"],
       "revisit": "Revisit if the installed Oxc entrypoints stop being native executables."
     },
@@ -227,7 +227,7 @@
         "node node_modules/astro/bin/astro.mjs build (cwd: site)",
         "node scripts/validate-seo.mjs (cwd: site)"
       ],
-      "rationale": "On 2026-10-01, Astro 7.3.5 and its SEO validator completed the 46-page production build on Linux/WSL under Bun 1.4.2 and Node.js 24.21.0. The declared CI toolchain and hosted Pages require current hosted observation.",
+      "rationale": "On 2026-11-07, Astro 7.4.7 with Vite 8.3.6 completed the 54-page production build and SEO validation on Linux/WSL under Bun 1.4.2 with Node.js 24.22.0 available for the Node-owned boundaries. The alternate Node site-build evidence remains historical; the declared CI toolchain and hosted Pages require current hosted observation.",
       "fallbackOrder": ["bun", "node"],
       "revisit": "Re-evaluate after a material Astro, Vite, adapter, or GitHub Pages runtime change."
     },

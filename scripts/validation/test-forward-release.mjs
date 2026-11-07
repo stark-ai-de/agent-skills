@@ -213,7 +213,7 @@ function producer() {
     },
   };
   const library = {
-    VERSION: "17.6.0",
+    VERSION: "17.11.2",
     Manifest: {
       fromManifest: async (...args) => {
         assert.deepEqual(args.slice(1), [

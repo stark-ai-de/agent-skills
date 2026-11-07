@@ -2,7 +2,7 @@
   "name": "agent-skills-forward-release-tool",
   "private": true,
   "dependencies": {
-    "release-please": "17.6.0"
+    "release-please": "17.11.2"
   },
   "packageManager": "pnpm@11.24.0"
 }
