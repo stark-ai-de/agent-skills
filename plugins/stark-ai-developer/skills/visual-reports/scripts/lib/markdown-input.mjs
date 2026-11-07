@@ -207,7 +207,11 @@ export function parseMarkdown(input) {
   )
     error(root, "exactly one :::report container required");
   const node = root.children[0],
-    a = attributes(node, ["id", "type", "profile", "style", "goal"], ["id", "type", "profile"]);
+    a = attributes(
+      node,
+      ["id", "type", "profile", "style", "goal", "presentation"],
+      ["id", "type", "profile"],
+    );
   const report = {
     schemaVersion: 2,
     id: a.id,
@@ -222,6 +226,7 @@ export function parseMarkdown(input) {
     sources: [],
     sections: [],
   };
+  if (a.presentation !== undefined) report.presentation = a.presentation;
   const single = new Set();
   for (const child of node.children) {
     if (child.type === "heading" && child.depth === 1) {
@@ -239,6 +244,20 @@ export function parseMarkdown(input) {
         const value = child.children.map(plain).join("");
         if (child.name === "caveat") report.criticalCaveats.push(value);
         else report[child.name === "next" ? "nextAction" : "takeaway"] = value;
+      } else if (child.name === "topic") {
+        const topic = attributes(
+          child,
+          ["id", "title", "short", "sections"],
+          ["id", "title", "sections"],
+        );
+        if (child.children.length) error(child, "topic uses attributes only");
+        report.topics ??= [];
+        report.topics.push({
+          id: topic.id,
+          title: topic.title,
+          ...(topic.short ? { shortTitle: topic.short } : {}),
+          sectionIds: ids(topic.sections),
+        });
       } else if (child.name === "source") {
         const source = attributes(
           child,
