@@ -128,7 +128,7 @@ export function scanNetworkSource(text, relative) {
     !text.includes('server.listen(port, "127.0.0.1", resolve)')
   )
     errors.push(`${relative}: preview must bind loopback`);
-  if (reportFile === "tests/browser-delivery.mjs") {
+  if (["tests/browser-delivery.mjs", "tests/browser-topics.mjs"].includes(reportFile)) {
     const normalized = text.replace(/\s+/g, " ");
     if (
       normalized.includes('endpoint.protocol === "ws:"') &&

@@ -27,7 +27,18 @@ four colons; contained blocks use three. GFM tables require a separator row.
   ::::
 ```
 
-Required report attributes: `id`, `type`, `profile`; optional `style`, `goal`.
+Required report attributes: `id`, `type`, `profile`; optional `style`, `goal`,
+`presentation` (`topics`, `reading` or `slides`). Omitted v2 presentation uses
+guided topics. To group adjacent sections, add ordered leaf directives:
+
+```markdown
+::topic{id="overview" title="Overview" short="Start" sections="flow,summary"}
+::topic{id="comparison" title="Options" sections="options"}
+```
+
+Every section must appear once, in its existing order. `short` is optional. Without
+topic directives each section is a topic. Group a meaningful graphic with its short
+explanations, and keep comparisons on one topic.
 There is exactly one title, takeaway and next action. Repeat `caveat` and `source`
 when necessary. Source attributes are `id`, `label`, `state`, optional `url`, `asOf`.
 

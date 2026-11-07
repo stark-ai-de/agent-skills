@@ -24,6 +24,34 @@ Optional `icon` selects one bundled Lucide name from `assets/vendor/manifest.jso
 Optional `details: [{title, items: string[]}]` holds supplementary evidence.
 Essential constraints belong in visible `caveats`, not details.
 
+## Guided topics
+
+New v2 reports use `presentation: "topics"` by default, including when the field
+is omitted. Each topic displays one page with connected tabs, position, previous/
+next controls and a step slider. Native radio controls also work offline without
+JavaScript; slider and link synchronization need JavaScript. Use an explicit
+`presentation: "reading"` for the complete continuous view, or `"slides"` with
+an authored slides block. Legacy v1 defaults and explicit modes do not change.
+Five or fewer topics use a connected tab row; larger sets use connected side tabs
+so every title remains available without a tab-bar scrollbar.
+
+Group related sections with the optional `topics` array:
+
+```json
+"topics": [
+  { "id": "result", "title": "Result", "shortTitle": "Start", "sectionIds": ["flow", "summary"] },
+  { "id": "comparison", "title": "Options", "sectionIds": ["options"] }
+]
+```
+
+Topic IDs are stable report IDs; titles are visible and `shortTitle` is optional.
+List every section ID exactly once, in the same order as `sections`. This prevents
+missing facts and accidental reordering. Without `topics`, each section becomes
+its own topic. Author a meaningful diagram or chart first, followed by the points
+and explanations it supports; do not invent visuals or split a genuine comparison.
+Use short meaningful tab labels and diagrams that remain readable on narrow screens.
+All source data and sections remain in the HTML, Markdown and JSON exports.
+
 ## Reader status and next action
 
 Optional `readerStatus` makes the reader handoff explicit. It never infers state

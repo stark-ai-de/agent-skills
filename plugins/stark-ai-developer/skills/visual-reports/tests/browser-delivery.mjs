@@ -147,7 +147,7 @@ try {
         toolingClosed:document.querySelector('#report-toolbox')?.open===false,
         toolingInFooter:document.querySelector('footer #export-json')!==null,
         toolingHidden:!document.querySelector('#export-json').checkVisibility(),
-        sections:document.querySelectorAll('main>section').length,
+        sections:document.querySelectorAll('main [data-section-index]').length,
         overflow:document.documentElement.scrollWidth>innerWidth+1,
         caveats:document.querySelectorAll('header>.caveat').length,
         images:[...document.images].every(i=>i.complete&&i.naturalWidth>0),
@@ -194,7 +194,7 @@ try {
         const { left, right, width } = document.querySelector(selector).getBoundingClientRect();
         return { left, right, width };
       };
-      return { header:box('header'), main:box('main'), footer:box('footer'), pageWidth:innerWidth };
+      return { header:box('header'), main:box(document.querySelector('.topic-guide') ? '.topic-guide' : 'main'), footer:box('footer'), pageWidth:innerWidth };
     })()`);
     for (const area of ["main", "footer"]) {
       assert.ok(

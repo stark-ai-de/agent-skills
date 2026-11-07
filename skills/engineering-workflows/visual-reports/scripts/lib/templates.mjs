@@ -105,6 +105,7 @@ export function starter({ type = "overview", profile = "software", id = "report"
     reportType: type,
     domainProfile: profile,
     style: "current",
+    presentation: "topics",
     nextAction: "Offene Angaben mit den vorhandenen Quellen klären.",
     criticalCaveats: ["Unbefülltes Startermodell; keine Tatsachen oder Messwerte."],
     sources: [],

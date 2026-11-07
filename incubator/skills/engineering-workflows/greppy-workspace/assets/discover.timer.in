@@ -1,0 +1,8 @@
+[Unit]
+Description=Discover new code reuse repositories
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=5min
+Unit=@PREFIX@-discover.service
+[Install]
+WantedBy=timers.target
