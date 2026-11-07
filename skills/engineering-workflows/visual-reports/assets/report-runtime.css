@@ -500,6 +500,9 @@ figure {
   details > * {
     display: block !important;
   }
+  details::details-content {
+    content-visibility: visible !important;
+  }
 }
 
 .report-icon {
