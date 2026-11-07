@@ -11,7 +11,11 @@ import {
   isGeneratedCachePath,
   listTrackedSourceFiles,
 } from "../lib/plugin-projections.mjs";
-import { openAiManifestFromListing, readOpenAiListing } from "../lib/openai-projection.mjs";
+import {
+  openAiImageFiles,
+  openAiManifestFromListing,
+  readOpenAiListing,
+} from "../lib/openai-projection.mjs";
 import { listingForProfile, openAiProfile, profilePackageFiles } from "../lib/openai-profiles.mjs";
 import {
   assertNoPathCollisions,
@@ -200,10 +204,10 @@ try {
     }
   }
 
+  const imageFiles = openAiImageFiles(listing);
   const expectedRoots = new Set([
     ".codex-plugin/plugin.json",
-    "assets/composer-icon.png",
-    "assets/logo.png",
+    ...imageFiles.map(({ name }) => `assets/${name}`),
     "LICENSE",
     "README.md",
     "SOURCE-MANIFEST.json",
@@ -211,6 +215,17 @@ try {
   for (const rootEntry of expectedRoots) {
     if (!Object.prototype.hasOwnProperty.call(files, rootEntry)) {
       errors.push(`OpenAI submission archive is missing ${rootEntry}`);
+    }
+  }
+  if (listingValidation.errors.length === 0) {
+    for (const image of imageFiles) {
+      const archived = files[`assets/${image.name}`];
+      if (
+        archived &&
+        hashBytes(archived) !== hashBytes(fs.readFileSync(path.join(root, image.source)))
+      ) {
+        errors.push(`OpenAI submission archive changed assets/${image.name}`);
+      }
     }
   }
   const expectedFiles = new Set([...expectedRoots, ...extra.map((file) => file.path)]);

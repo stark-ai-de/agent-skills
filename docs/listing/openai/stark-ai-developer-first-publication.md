@@ -127,15 +127,17 @@ for public directory identity. Do not add authenticated portal URLs or account
 identifiers to listing fields, README badges, `.codex-plugin/plugin.json`,
 release evidence, or the public handoff issue.
 
-### Country picker
+### Country targeting
 
-The live plugin portal no longer exposes a publisher country or region picker.
-The listing source therefore omits `availability` entirely. Do not store an
-empty region list, leftover `DE`, or a worldwide-availability claim. Directory
-reach is controlled by OpenAI and the installing account, workspace, plan, and
-client. Publisher legal seat remains Germany on the imprint and terms pages.
-Do not add `listing.availability` unless a later portal build collects that
-field again.
+The first-publication portal did not expose a publisher country or region picker.
+That dated observation does not describe every later portal build. The current
+[submission field reference](https://developers.openai.com/plugins/deploy/submission#configure-onboarding-review-and-publication),
+checked 2026-11-07, supports `extensions.com.openai.publication.countries`.
+Omission preserves saved targeting; `[]` removes country restrictions. Both
+release profiles omit this field to preserve their existing targeting. Verify
+it in the portal before submission. Do not add the unrelated
+`listing.availability` field or infer worldwide availability. Publisher legal
+seat remains Germany.
 
 ### Skill metadata warnings
 
@@ -146,9 +148,11 @@ strip `SKILL.md` metadata to silence the warning.
 
 ### Safety and security scan
 
-OpenAI documents up to two hours per bundled-skill safety/security scan. That
-scan is distinct from unbounded human review and from Codex Security scans.
-Human review has no published ETA.
+Required metadata and skill scans must succeed before submission. The current
+[submission guide](https://developers.openai.com/plugins/deploy/submission),
+checked 2026-11-07, gives no fixed scan completion time. Scan completion,
+human review, approval and publication are separate observations. Do not reuse
+the historical two-hour scan estimate as a current deadline.
 
 ### Portal skill glyphs
 
@@ -184,63 +188,54 @@ too generic in the portal UI.
 
 ### Packaged skill icons and portal limits
 
-Each bundled skill now ships `assets/openai-icon.png` and references it unchanged
-for `icon_small` and `icon_large`. The OpenAI plugin manifest separately supports
-one `logo`, one `composerIcon`, and brand colors. The public documentation does
-not define separate light and dark Plugin Info logo or Composer icon fields in
-the package, does not guarantee that a portal glyph survives a package update,
-and documents no public publication API. Therefore the portal inspection remains
-mandatory:
-
-1. verify all six skill icons and restore the reviewed portal glyphs if needed;
-2. keep both existing Plugin Info logos unchanged;
-3. follow the [Composer icon handoff](#composer-icon-handoff) for the two manual uploads;
-4. verify light/dark rendering and directory identity after propagation.
-
-See [Build plugins](https://developers.openai.com/plugins/build/plugins) and
-[Submit and publish plugins](https://developers.openai.com/plugins/deploy/submission).
+Each bundled skill ships `assets/openai-icon.png` and references it unchanged
+for `icon_small` and `icon_large`. The OpenAI plugin manifest has separate
+listing and Composer images. Current packages include both theme variants;
+verify the imported images and every packaged skill icon after upload.
+Portal glyph observations above remain historical and do not guarantee that
+package updates preserve dashboard selections.
 
 ### Composer icon handoff
 
-The ZIP can configure **one** Composer icon through
-`interface.composerIcon` in `.codex-plugin/plugin.json`, with a path such as
-`./assets/composer-icon.png`. Separate light/dark Composer image paths are not
-documented. `brandColor` and `brandColorDark` set colors, not image selection.
-SVG is an accepted package image format, but the documentation does not promise
-that the portal preserves CSS `prefers-color-scheme` switching. Do not rely on
-a theme-aware SVG to populate both portal fields automatically. Sources checked
-2026-09-07: [manifest fields](https://developers.openai.com/plugins/build/plugins#manifest-fields)
-and [image validation](https://developers.openai.com/plugins/deploy/submission-errors#image-errors).
+The [official submission field reference](https://developers.openai.com/plugins/deploy/submission#listing-metadata),
+checked 2026-11-07, documents `interface.logo`, `interface.logoDark`,
+`interface.composerIcon` and `interface.composerIconDark` for Codex packages.
+Dark variants are optional; brand colors do not select image files. The
+canonical listing supplies these existing PNGs, copied without rewriting:
 
-The current packager still uses `site/public/logo-dark.png` for its single
-`assets/composer-icon.png`. The two full-width Composer PNGs below are separate
-repository assets, not entries in either release ZIP. After each verified ZIP upload:
+| Manifest field     | Repository source                                                         | Archive path                    |
+| ------------------ | ------------------------------------------------------------------------- | ------------------------------- |
+| `logo`             | `site/public/logo.png`                                                    | `assets/logo.png`               |
+| `logoDark`         | `site/public/logo-dark.png`                                               | `assets/logo-dark.png`          |
+| `composerIcon`     | [chatgpt-composer-icon-light.png](assets/chatgpt-composer-icon-light.png) | `assets/composer-icon.png`      |
+| `composerIconDark` | [chatgpt-composer-icon-dark.png](assets/chatgpt-composer-icon-dark.png)   | `assets/composer-icon-dark.png` |
 
-1. Keep the existing **Plugin Info** light and dark logos. If the upload reset
-   them, restore `site/public/logo.png` for light mode and
-   `site/public/logo-dark.png` for dark mode. Do not replace these logos with
-   the Composer icons.
-2. In **ChatGPT composer icon**, upload
-   [chatgpt-composer-icon-light.png](assets/chatgpt-composer-icon-light.png) to
-   the light-mode field and
-   [chatgpt-composer-icon-dark.png](assets/chatgpt-composer-icon-dark.png) to
-   the dark-mode field. Download the original PNG files from the reviewed
-   repository revision; do not upload a screenshot or the GitHub file-view page.
-3. Confirm both Composer previews, save the selections, and verify light/dark
-   rendering and directory identity after propagation. Recheck on every package
-   update because package defaults may replace portal selections.
+After each verified ZIP upload:
 
-Both PNGs are transparent 1024×1024 images with no added side padding. Do not
-unpack, replace files in, or repack the verified release ZIP for this handoff.
-Portal observations remain manual evidence, separate from package validation.
+1. Inspect both Plugin Info logos and both Composer previews against the table.
+   The listing logos and Composer images have different purposes.
+2. If an older verified release ZIP omits dark fields or the portal did not
+   import an image, use the available image controls to restore the exact source
+   PNGs above. Download original PNG bytes from the reviewed release revision;
+   do not upload screenshots or GitHub file-view pages. If a field is package
+   managed and read-only, correct the canonical source and submit a new package
+   instead of relying on a dashboard override.
+3. Verify all packaged skill icons, save any supported manual selections, and
+   check light/dark rendering and directory identity after propagation.
+
+The Composer PNGs are transparent 1024×1024 images with no added side padding.
+Never unpack, modify or repack an already verified release ZIP. Published
+archives remain immutable; portal observations are separate acceptance evidence.
+SVG support alone does not establish theme switching through CSS.
 
 ## Brand assets
 
 Official 2048×2048 PNGs from the stark-ai.de landing page were copied
 byte-identical into `site/public/logo.png` (light) and
-`site/public/logo-dark.png` (dark). Listing `logo` maps to the light file and
-`composerIcon` maps to the dark file. The packager copies them into the OpenAI
-archive as `assets/logo.png` and `assets/composer-icon.png` without rewriting.
+`site/public/logo-dark.png` (dark). They map to `logo` and `logoDark`.
+The separate 1024×1024 Composer PNGs map to `composerIcon` and
+`composerIconDark`; see the table above. All four participate in release-input
+hashing and are copied into each OpenAI archive without rewriting.
 
 The catalog PWA `site/public/icon-512.png` was not replaced.
 
@@ -259,9 +254,10 @@ Deterministic hosted `Validate` does not fetch the live directory.
 
 Regenerate
 [`stark-ai-developer-release-evidence.json`](stark-ai-developer-release-evidence.json)
-only from a clean working tree whose `HEAD` has an exact Git tag. The latest
-published GitHub baseline is `v0.20.1`. A dirty or untagged evidence write is
-not a freeze.
+only from a clean working tree whose `HEAD` has an exact Git tag. The committed
+first-publication evidence remains historical. Use the matching tagged release
+and generated handoff for each current upload; a dirty or untagged evidence
+write is not a freeze.
 
 ## Do not
 

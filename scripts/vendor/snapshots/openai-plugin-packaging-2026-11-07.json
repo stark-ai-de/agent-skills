@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "contractId": "openai-plugin-packaging-2026-11-07",
+  "source": {
+    "url": "https://developers.openai.com/plugins/deploy/submission",
+    "title": "OpenAI Developers — Upload and submit your plugin",
+    "checksum": {
+      "algorithm": "sha256",
+      "value": "5c639c495b0e9eca0f256c3a68de83e90cec2d6472becc8a97c6a5bcfd9bacd4"
+    }
+  },
+  "verifiedOn": "2026-11-07",
+  "verifiedBy": "stark-ai-de",
+  "precedenceClass": "packaging-submission",
+  "facts": {
+    "nativeManifestPath": ".codex-plugin/plugin.json",
+    "displayNameMax": 30,
+    "shortDescriptionMax": 30,
+    "longDescriptionMax": 4000,
+    "developerNameMax": 80,
+    "capabilitiesMax": 20,
+    "capabilityLengthMax": 120,
+    "starterPromptsMax": 3,
+    "starterPromptLengthMax": 128,
+    "packageNameMax": 64,
+    "assetMaxBytes": 5242880,
+    "skillsOnlyOmits": ["mcpServers", "apps", "interface.screenshots", "authentication"],
+    "marketplaceAuthenticationRequired": true,
+    "allowedAuthentication": ["ON_INSTALL", "ON_USE"],
+    "nativeMcpConfiguration": ".mcp.json",
+    "nativeMcpManifestField": "mcpServers",
+    "supportedProfiles": ["existing-skills-only", "existing-remote", "new-remote", "desktop-local"],
+    "requiredImageFields": ["logo", "composerIcon"],
+    "optionalImageFields": ["logoDark", "composerIconDark"]
+  },
+  "requirementIds": ["OAI-001", "META-001"],
+  "validators": ["validate:openai-plugin", "validate:openai-listing", "validate:openai-submission"],
+  "unresolvedConflicts": []
+}
