@@ -133,11 +133,13 @@ try {
     });
   }
   async function press(key, keyCode, code = key) {
+    const text = key === "Enter" ? "\r" : key.length === 1 ? key : "";
     await page("Input.dispatchKeyEvent", {
-      type: "keyDown",
+      type: text ? "keyDown" : "rawKeyDown",
       key,
       code,
       windowsVirtualKeyCode: keyCode,
+      ...(text ? { text, unmodifiedText: text } : {}),
     });
     await page("Input.dispatchKeyEvent", {
       type: "keyUp",
@@ -150,6 +152,58 @@ try {
     return evaluate(
       `(()=>({visible:[...document.querySelectorAll('.topic-panel')].filter(x=>getComputedStyle(x).display!=='none').map(x=>x.id), checked:document.querySelector('.topic-radio:checked')?.dataset.topicId, slider:document.querySelector('.topic-slider').value,sliderHidden:document.querySelector('.topic-slider').hidden,position:[...document.querySelectorAll('.topic-position')].filter(x=>getComputedStyle(x).display!=='none').map(x=>x.textContent),hash:location.hash}))()`,
     );
+  }
+  async function settleLayout() {
+    await evaluate(
+      "new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))",
+    );
+  }
+  async function assertSectionLink() {
+    for (let attempt = 0; attempt < 100; attempt++) {
+      if ((await state()).checked === "metrics") break;
+      await new Promise((resolve) => setTimeout(resolve, 30));
+    }
+    assert.equal((await state()).checked, "metrics");
+    await settleLayout();
+    const anchor = await evaluate(
+      `(()=>{const el=document.getElementById('block-capacity'),rect=el.getBoundingClientRect(),margin=parseFloat(getComputedStyle(el).scrollMarginTop)||0,max=Math.max(0,document.scrollingElement.scrollHeight-innerHeight);return {height:rect.height,actual:scrollY,expected:Math.min(max,Math.max(0,scrollY+rect.top-margin))}})()`,
+    );
+    assert.ok(anchor.height > 0, "deep-linked section is visible");
+    assert.ok(
+      Math.abs(anchor.actual - anchor.expected) <= 3,
+      `deep-linked section reaches its anchor: ${JSON.stringify(anchor)}`,
+    );
+  }
+  async function assertPrint(pdfPath) {
+    const wasOpen = await evaluate("document.querySelector('.source-catalog').open");
+    await evaluate("document.querySelector('.source-catalog').open=false");
+    await page("Emulation.setEmulatedMedia", { media: "print" });
+    try {
+      const printed = await evaluate(
+        `(()=>({panels:[...document.querySelectorAll('.topic-panel')].filter(x=>getComputedStyle(x).display!=='none').length,catalogOpen:document.querySelector('.source-catalog').open,sources:[...document.querySelectorAll('.source-catalog .source-list li')].map(x=>x.checkVisibility({contentVisibilityAuto:true})),toolbox:document.getElementById('report-toolbox').checkVisibility()}))()`,
+      );
+      assert.equal(printed.panels, 5, "print includes every topic");
+      assert.equal(printed.catalogOpen, false, "print does not require opening the source catalog");
+      assert.ok(
+        printed.sources.length > 0 && printed.sources.every(Boolean),
+        "print includes sources",
+      );
+      assert.equal(printed.toolbox, false, "print excludes report tooling");
+      if (pdfPath) {
+        // This marker exists only in the catalog, so PDF text extraction cannot
+        // accidentally match the source labels repeated in section links.
+        await evaluate(
+          `(()=>{const marker=document.createElement('span');marker.id='print-source-marker';marker.textContent=' PRINTSOURCECHECKONESEVENEIGHT';document.getElementById('source-fixture').append(marker)})()`,
+        );
+        const pdf = await page("Page.printToPDF", { printBackground: true });
+        await writeFile(pdfPath, Buffer.from(pdf.data, "base64"));
+      }
+    } finally {
+      await evaluate(
+        `document.getElementById('print-source-marker')?.remove();document.querySelector('.source-catalog').open=${JSON.stringify(wasOpen)}`,
+      );
+      await page("Emulation.setEmulatedMedia", { media: "screen" });
+    }
   }
   await page("Page.enable");
   await page("Runtime.enable");
@@ -214,12 +268,13 @@ try {
     ),
     true,
   );
+  await evaluate("scrollTo(0,0)");
   await evaluate(`location.hash='#block-capacity'`);
-  await new Promise((resolve) => setTimeout(resolve, 50));
-  assert.equal((await state()).checked, "metrics");
+  await assertSectionLink();
   const captured = await evaluate(`window.visualReportView.capture()`);
   await click('.topic-tabs label[for="topic-select-review"]');
   await evaluate(`window.visualReportView.restore(${JSON.stringify(captured)})`);
+  await settleLayout();
   assert.equal((await state()).checked, "metrics", "managed preview restores selected topic");
   const sortedNames = [
     ["Alpha", "Bravo", "Charlie"],
@@ -311,14 +366,7 @@ try {
   const screenshot = await page("Page.captureScreenshot", { format: "png" });
   if (process.env.REPORT_TOPIC_SCREENSHOT)
     await writeFile(process.env.REPORT_TOPIC_SCREENSHOT, Buffer.from(screenshot.data, "base64"));
-  await page("Emulation.setEmulatedMedia", { media: "print" });
-  assert.equal(
-    await evaluate(
-      `[...document.querySelectorAll('.topic-panel')].filter(x=>getComputedStyle(x).display!=='none').length`,
-    ),
-    5,
-  );
-  await page("Emulation.setEmulatedMedia", { media: "screen" });
+  await assertPrint(process.env.REPORT_TOPIC_PRINT_PDF);
   await page("Emulation.setDeviceMetricsOverride", {
     width: 320,
     height: 900,
@@ -390,6 +438,16 @@ try {
     await evaluate(`JSON.parse(document.getElementById('report-data').textContent)`),
     report,
   );
+  await assertPrint(process.env.REPORT_TOPIC_NOJS_PRINT_PDF);
+  await page("Emulation.setScriptExecutionDisabled", { value: false });
+  await page("Emulation.setDeviceMetricsOverride", {
+    width: 390,
+    height: 480,
+    deviceScaleFactor: 1,
+    mobile: false,
+  });
+  await navigate(`${url}#block-capacity`);
+  await assertSectionLink();
   assert.equal(errors.length, 0, errors.join("\n"));
   assert.equal(external.length, 0, "standalone topic report is offline");
   console.log(
@@ -398,11 +456,13 @@ try {
       tabsAndArrows: "pass",
       sliderAndKeyboard: "pass",
       deepLinkAndRestore: "pass",
+      deepLinkScrollAndReload: "pass",
       responsive: [700, 650, 390, 320],
       mobileSortPointerAndKeyboard: "pass",
       mobileOptionConditions: "pass",
       noJsAndOffline: "pass",
       printAndData: "pass",
+      printClosedSourcesWithAndWithoutJs: "pass",
       browserExceptions: 0,
     }),
   );
