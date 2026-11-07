@@ -22,7 +22,7 @@ implementation-specific checks; it does not redefine the general rules.
 | 13A: selective, reviewed code reuse           | Reuse requires file-level provenance/license review and integration into common blocks. Report blocks and instructions are original. Pinned generator dependencies and selected Lucide icons are bundled with full notices; no external skill text is copied. |
 | 14A: current state plus original              | HTML, Markdown and JSON export the same working state; retain one original snapshot and label field-level user edits without re-verifying evidence.                                                                                                           |
 | 15A: helpful explanatory motion               | Motion may be offered for explanations; it starts on click, can pause/resume/reset, respects reduced motion and keeps a static explanation.                                                                                                                   |
-| 16A: explicit presentations start with slides | Presentation requests set `presentation: "slides"`; the reading toggle and complete no-JavaScript view remain available. Ordinary reports stay reading-first.                                                                                                 |
+| 16A: explicit presentations start with slides | Presentation requests set `presentation: "slides"`; the reading toggle and complete no-JavaScript view remain available. V2 reports otherwise default to guided topics.                                                                                       |
 
 The October 19 discussion comments are historical decision records, not another
 maintained specification. The later 11A/12B/13A answers supersede their unresolved
@@ -37,8 +37,8 @@ supersedes fixed-height panels, inner tab scrollbars, separated active tab/panel
 surfaces and redundant large Back/Next controls. A functional connected tab outline
 is compatible with quiet reports. Standalone wide comparisons/trees keep their
 scoped horizontal-scroll option; explicit slide presentations and the optional
-configurator remain distinct modes. This instruction update does not add a tab
-block to the model/API or claim those modes share one navigation implementation.
+configurator remain distinct modes. Guided groups use the documented `topics`
+model and do not require a separate content block for each tab.
 
 The accepted October 20 completion plan authorizes public preparation, plugin
 inclusion and local installation. It does not authorize push, merge, publication,
