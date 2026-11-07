@@ -26,6 +26,7 @@ Use this folder for:
 - [`cursor-spec-interviewer`](cursor-spec-interviewer/README.md)
 - [`drawio-diagrams`](drawio-diagrams/README.md)
 - [`jev-capability-advisor`](jev-capability-advisor/README.md)
+- [`greppy-workspace`](greppy-workspace/README.md)
 - [`karakeep-knowledge`](karakeep-knowledge/README.md)
 - [`telegram-serverless`](telegram-serverless/README.md)
 

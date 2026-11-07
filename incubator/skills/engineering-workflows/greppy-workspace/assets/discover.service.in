@@ -1,0 +1,8 @@
+[Unit]
+Description=Reconcile code reuse repository membership
+[Service]
+Type=oneshot
+ExecStart=@PYTHON@ @SKILL@/scripts/workspace.py maintain --config @CONFIG@ --apply --discovery-only
+TimeoutStartSec=300
+UMask=0077
+Nice=10

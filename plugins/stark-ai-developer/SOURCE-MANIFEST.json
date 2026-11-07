@@ -90,7 +90,7 @@
       "byteLength": 756,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "8ed478bd2235cebc858ab62a93e0d5f27d572ecd38c2e4069bfafe52c3d91ad1"
+      "sha256": "c093154e2c3d309649d6cf1ac3979c17d2504b48b5f922456d3ac6181b21e7d7"
     },
     {
       "byteLength": 2128,
@@ -2355,16 +2355,22 @@
       "sha256": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6"
     },
     {
-      "byteLength": 12101,
+      "byteLength": 12657,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/SKILL.md",
-      "sha256": "e526bacbf3aa6843215ccee6a7c0cfc3fbb9f32f24b595132886760673e9c34f"
+      "sha256": "28c4c3e88865dc952b85c9107f19871b42d2b744becc2a72d41c4b7caef4beb5"
     },
     {
       "byteLength": 488,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/agents/openai.yaml",
       "sha256": "f3ea70f13a43a5f81763494ef08a49ee94ed6c3509a0def9bb788324d0421384"
+    },
+    {
+      "byteLength": 1207,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/assets/code-record-policy.example.json",
+      "sha256": "b31787a3939afca8bb7b89912cea65c6966d13fd9f2b3379f2460b05d47da340"
     },
     {
       "byteLength": 1912,
@@ -2421,6 +2427,12 @@
       "sha256": "c8f89f068e645127d29330d7ecad1eb0229e0d8ebc52bc362f0f6bc272d78737"
     },
     {
+      "byteLength": 4149,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/references/code-records.md",
+      "sha256": "ed6fcedbcebbfbd74c23f6aa3b745f2a63d632e56c351a040298c1d88ba67428"
+    },
+    {
       "byteLength": 9770,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/references/curation.md",
@@ -2433,10 +2445,10 @@
       "sha256": "87d2ae9553eee8b3f05f5ddc1b597af7249ad44ade6f02826aff11bbb9af4b29"
     },
     {
-      "byteLength": 16638,
+      "byteLength": 16960,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/references/helper.md",
-      "sha256": "fbdf65447e917a8d698a0689555c26d2307b69d7a24490a74aefafc8fa34bc48"
+      "sha256": "f75cebfce92c5fb97d2fe2c02ff3724659409003f4c8ca8ec42ff3bcd0b7ddb7"
     },
     {
       "byteLength": 5977,
@@ -2487,6 +2499,12 @@
       "sha256": "5cd63a876031bdfab3fb277108c507adbe9af3e5a056a1ee64383f3648f527aa"
     },
     {
+      "byteLength": 15222,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/scripts/knowledge/code-records.mjs",
+      "sha256": "cbe5efc792b9b72892186c82012765f42593913ca94fcac5d8715f03a640be34"
+    },
+    {
       "byteLength": 7517,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/scripts/knowledge/git.mjs",
@@ -2499,16 +2517,16 @@
       "sha256": "da9200fba5d8aa25357880eb9412a57d3c90470a0c0afb5fcb2f235d55dd7227"
     },
     {
-      "byteLength": 46215,
+      "byteLength": 47463,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/scripts/knowledge/reconcile.mjs",
-      "sha256": "f8792915db1af6b91e7378f199ae6fff58c143c671ff41951b336cc526e66f2f"
+      "sha256": "a745fd667c0ca081e3a7c0b4d0f129808c382ecffd464b8fe8d694a39793b94d"
     },
     {
-      "byteLength": 10852,
+      "byteLength": 11030,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/scripts/knowledge/state.mjs",
-      "sha256": "10b30ac275cee0abc8c18c72e8bfe21241f50f8b93674f77efc93ec702c2945b"
+      "sha256": "11fb31425eb8a20eae3d9032b9bb91eafbd5de31fd237ea208f5414bcb06601d"
     },
     {
       "byteLength": 1607,
@@ -2867,9 +2885,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.19.8"
+    "version": "1.20.3"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "5a839ef79d05d98184af57392c3d3cb8019c61b86b0ea69bbf87f1b01310998f"
+  "treeHash": "65c177938d10f540ec5bc813cd08e91537b3555125b8d6f579cf58f91fd167ee"
 }

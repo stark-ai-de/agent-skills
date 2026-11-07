@@ -12,6 +12,14 @@
 
 ### Removed
 
+## 0.33.0 (2026-11-05)
+
+## What's Changed
+* Add Greppy workspace and repository setup skills by @servrox in https://github.com/stark-ai-de/agent-skills/pull/181
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.32.1...v0.33.0
+
 ## 0.32.1 (2026-10-28)
 
 ## What's Changed
