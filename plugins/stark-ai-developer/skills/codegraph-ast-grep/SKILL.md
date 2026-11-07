@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.3.4"
+  version: "0.4.0"
 ---
 
 # CodeGraph + ast-grep
@@ -28,7 +28,7 @@ Do not activate this skill merely because a coding task can benefit from an alre
 
 The complete finite workflow inventory, in plain, benefit-first language, is:
 
-- `setup`: supercharge the repository with Semantic Code Intelligence and structural code search, helping coding agents answer faster with fewer tool calls. Install missing pieces, connect the coding client, build the code index, add repository guidance, and safely reuse or repair any existing setup.
+- `setup`: supercharge the repository with Semantic Code Intelligence and structural code search, helping coding agents explore repository code with semantic and structural evidence. Install missing pieces, connect the coding client, build the code index, add repository guidance, and safely reuse or repair any existing setup.
 - `update`: bring an existing setup to current stable versions without changing how it was installed. Migrate configuration or index data when needed, reconnect the coding client, and verify that everything still works.
 - `doctor`: diagnose setup health and report analytics without repairing anything.
 
@@ -96,6 +96,10 @@ Routine semantic exploration, structural search, impact analysis, rule authoring
 - **Reviewed rewrites:** inventory, test, preview, approve exact bounded scope, apply, inspect the diff, and run repository-native validation.
 
 When semantic and structural evidence disagree, check graph freshness/root, parser/language, generated or dynamic code, ignore rules, and targeted source before claiming coverage. Runtime-native LSP and bounded text/file inspection are fallbacks; neither core tool is compiler, type, taint, or runtime proof.
+
+## Optional visual output
+
+Use native interactive visualization only when the current host exposes a documented, callable capability and the result benefits from exploration. Keep ordinary results concise. The complete findings, evidence, uncertainty, and next steps must remain available in chat if rendering or interaction is unavailable. A visualization never establishes correctness or grants authority. Follow [visualization and actions](references/usage-playbook.md#optional-visualizations-and-actions) for selection, fallback, and action boundaries.
 
 ## Safety rules
 

@@ -1510,10 +1510,21 @@ const astGrepPath = runtimePaths[6];
 const astGrep = runtime.get(astGrepPath);
 const extensionPath = runtimePaths[7];
 const extensions = runtime.get(extensionPath);
+const visualizationPath = runtimePaths[5];
+const visualization = runtime.get(visualizationPath);
+for (const [pattern, reason] of [
+  [/current host instructions and callable interfaces/i, "discover current host capability"],
+  [/equivalent chat result/i, "provide equivalent textual result"],
+  [/genuine host-delivered click/i, "require a host-delivered user action"],
+  [/doctor.*non-repairing/i, "preserve doctor boundary"],
+  [/do not retry automatically/i, "avoid automatic retries"],
+  [/complete bounded action as text/i, "provide action fallback"],
+])
+  requirePattern(visualizationPath, visualization, pattern, reason);
 const openAiPath = runtimePaths[1];
 const openAi = runtime.get(openAiPath);
 
-requirePattern(skillPath, skill, /version:\s*"0\.3\.4"/, "metadata.version must be 0.3.4");
+requirePattern(skillPath, skill, /version:\s*"0\.4\.0"/, "metadata.version must be 0.4.0");
 const workflowSection = /## Workflow selection([\s\S]*?)(?=\n## Inputs to inspect)/.exec(skill);
 const expectedWorkflows = ["setup", "update", "doctor"];
 const listedWorkflows = workflowSection
@@ -1540,12 +1551,7 @@ requirePattern(
   /setup[\s\S]*(?:structural (?:code )?search|structural syntax|ast-grep)/i,
   "setup disclosure must state the structural-search benefit",
 );
-requirePattern(
-  skillPath,
-  skill,
-  /setup[\s\S]*(?:faster|fewer tool calls|efficien)/i,
-  "setup disclosure must state an efficiency benefit",
-);
+
 requirePattern(
   skillPath,
   skill,
@@ -2105,6 +2111,7 @@ const requiredEvalCases = [
   "update-migrations-and-reconnect.md",
   "setup-idempotence.md",
   "analysis-is-internal-behavior.md",
+  "visualization-action-boundary.md",
   "internal-reviewed-rewrite-boundary.md",
   "experimental-ast-grep-mcp-negative.md",
   "typecheck-only-negative.md",
@@ -2971,7 +2978,7 @@ const routingCapture = validateRoutingCapture(root);
 errors.push(...routingCapture.errors);
 
 export const validationErrors = [...new Set(errors)].sort();
-export const validationSummary = `Validated CodeGraph + ast-grep runtime contract, ${routingCapture.passed}/${routingCapture.total} assertions across ${routingCapture.cases} fresh v0.3.4 routing captures, ${requiredEvalCases.length} scenario schemas, ${legacyCaseLineage.summary.cases} legacy-case dispositions covering ${legacyCaseLineage.summary.sourceUnits} material units, ${currentContractPassed}/${currentContractPassed + currentContractFailed} assertions across ${currentContractCases} historical hash-bound v0.3.3 local nonbehavioral refresh captures (not current behavioral proof), and ${capturedBehaviorAssertions} assertions across ${capturedBehaviorCases} historical captured v0.2 cases.`;
+export const validationSummary = `Validated CodeGraph + ast-grep runtime contract, ${routingCapture.passed}/${routingCapture.total} assertions across ${routingCapture.cases} historical v0.3.4 routing captures, ${requiredEvalCases.length} scenario schemas, ${legacyCaseLineage.summary.cases} legacy-case dispositions covering ${legacyCaseLineage.summary.sourceUnits} material units, ${currentContractPassed}/${currentContractPassed + currentContractFailed} assertions across ${currentContractCases} historical hash-bound v0.3.3 local nonbehavioral refresh captures (not current behavioral proof), and ${capturedBehaviorAssertions} assertions across ${capturedBehaviorCases} historical captured v0.2 cases.`;
 
 const entrypoint = process.argv[1] ? path.resolve(process.argv[1]) : "";
 const isMain = entrypoint === path.resolve(fileURLToPath(import.meta.url));
