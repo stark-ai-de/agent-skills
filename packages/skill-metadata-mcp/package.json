@@ -12,10 +12,10 @@
     "dev": "node src/dev.mjs"
   },
   "dependencies": {
-    "@modelcontextprotocol/server": "2.3.1",
+    "@modelcontextprotocol/server": "2.4.0",
     "ajv": "8.20.0",
-    "js-yaml": "5.4.2",
-    "mcp-handler": "2.3.0",
+    "js-yaml": "5.5.0",
+    "mcp-handler": "2.3.1",
     "zod": "4.6.7"
   },
   "engines": {

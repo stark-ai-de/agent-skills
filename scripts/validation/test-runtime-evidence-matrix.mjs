@@ -694,13 +694,13 @@ requireCondition(
   "site package scripts must match the Bun-selected Astro boundary",
 );
 requireCondition(
-  sitePackageJson.dependencies?.astro === "^7.3.5",
-  "site Astro floor must equal ^7.3.5",
+  sitePackageJson.dependencies?.astro === "^7.4.7",
+  "site Astro floor must equal ^7.4.7",
 );
 
 const lockfile = read("pnpm-lock.yaml");
-requireCondition(lockfile.includes("astro@7.3.5"), "pnpm lockfile must resolve Astro 7.3.5");
-requireCondition(lockfile.includes("vite@8.2.2"), "pnpm lockfile must resolve Vite 8.2.2");
+requireCondition(lockfile.includes("astro@7.4.7"), "pnpm lockfile must resolve Astro 7.4.7");
+requireCondition(lockfile.includes("vite@8.3.6"), "pnpm lockfile must resolve Vite 8.3.6");
 
 const smokeInstall = read("scripts/repo/smoke-install.mjs");
 requireCondition(

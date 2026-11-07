@@ -101,6 +101,28 @@ const cases = [
     },
   ],
   [
+    "patched glob matcher preserves release file discovery",
+    async () => {
+      const { BranchFileCache } = libraryRequire("@google-automations/git-file-utils");
+      const cache = new BranchFileCache({}, { owner: "fixture-owner", repo: "fixture" }, "main");
+      cache.treeEntryIterator = async function* () {
+        for (const path of [
+          "packages/one/package.json",
+          "packages/nested/two/package.yaml",
+          "packages/.hidden/package.json",
+          "packages/one/README.md",
+        ]) {
+          yield { path };
+        }
+      };
+      assert.deepEqual(await cache.findFilesByGlob("packages/**/package.{json,yaml}"), [
+        "packages/one/package.json",
+        "packages/nested/two/package.yaml",
+      ]);
+      assert.deepEqual(await cache.findFilesByGlob("missing/**"), []);
+    },
+  ],
+  [
     "actual Manifest parsing supports the bounded forward baseline",
     async () => {
       const readPaths = [];

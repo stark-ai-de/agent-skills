@@ -15,7 +15,7 @@ export const FORWARD_RELEASE = Object.freeze({
   baselineVersion: "0.25.1",
   baselineSha: "f186e5ab3c43cc13f70af2adc1dc70bb1bf3ed3b",
   nextVersion: "0.25.3",
-  libraryVersion: "17.6.0",
+  libraryVersion: "17.11.2",
 });
 
 export function githubReader(token, fetchImpl = fetch) {
