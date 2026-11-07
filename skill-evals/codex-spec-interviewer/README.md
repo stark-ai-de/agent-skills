@@ -8,6 +8,10 @@ Run [approval-scenarios.json](../codex-spec-interviewer/approval-scenarios.json)
 
 Use real conversation continuation for interactive evidence. Preserve material decisions while counting duplicate questions and avoidable mode interruptions. Separate native UI prompts from skill-generated questions. Test actual saved artifacts and permissions; do not score expected text as execution.
 
+## Optional visualization scenarios
+
+The native-plan-mode fallback case covers decision visualizations, unavailable renderers, trusted action delivery, explicit approval and no-write Plan boundaries. Contract assertions and scenario expectations are not live rendering or action-dispatch evidence.
+
 ## Evidence boundaries
 
 `validate:skills` checks structural consistency, metadata, template records and scenario inventory. Case assertions are evaluator expectations, not live passes. Parent PR evidence records the bounded Codex/Astra pilot separately; a CLI result does not prove ChatGPT, Claude Code, Cursor or native UI behavior. Historical case filenames are retained for compatibility even where the current expected lifecycle changed.

@@ -36,6 +36,21 @@ function filesUnder(dir) {
   });
 }
 
+export function inspectCodexVisualContract(skill, adapter) {
+  const errors = [];
+  for (const [text, pattern, message] of [
+    [skill, /optional native interactive visualizations/i, "optional visualization entry"],
+    [adapter, /current host.*(?:callable|exposed)/i, "current host capability"],
+    [adapter, /complete.*(?:text|conversation)/i, "complete text fallback"],
+    [adapter, /host-delivered.*(?:click|selection)/i, "trusted user action"],
+    [adapter, /silence.*(?:preselected|timeout)/i, "pending input boundary"],
+    [adapter, /(?:never|do not).*Plan.*(?:write|persist)/i, "plan no-write boundary"],
+    [adapter, /(?:unknown|unverified).*render/i, "render verification boundary"],
+  ])
+    if (!pattern.test(text)) errors.push(message);
+  return errors;
+}
+
 export function validateInterviewerContracts(root) {
   const errors = [];
   const lifecycles = [];
@@ -48,6 +63,10 @@ export function validateInterviewerContracts(root) {
       errors.push(...inspectPortableMetadata(metadata).map((error) => `${rel}: ${error}`));
     } catch (error) {
       errors.push(`${rel}: invalid metadata: ${error.message}`);
+    }
+    if (host === "codex") {
+      const adapter = fs.readFileSync(path.join(dir, "references/host-adapters.md"), "utf8");
+      errors.push(...inspectCodexVisualContract(skill, adapter).map((e) => `${rel}: ${e}`));
     }
     lifecycles.push(fs.readFileSync(path.join(dir, "references/workflow-details.md"), "utf8"));
     for (const file of filesUnder(dir).filter((file) => file.endsWith(".md"))) {
@@ -134,6 +153,14 @@ export function validateInterviewerContracts(root) {
 }
 
 export function testInterviewerContractChecks() {
+  assert.ok(inspectCodexVisualContract("", "").length >= 7);
+  assert.deepEqual(
+    inspectCodexVisualContract(
+      "optional native interactive visualizations",
+      "current host has callable interface; complete text fallback; host-delivered click; silence or preselected option; never persist in Plan or write; unknown render",
+    ),
+    [],
+  );
   const valid =
     "## User verification\n\n- Reviewed revision:\n\n## Artifact plan\n\n- Spec persistence: pending\n";
   assert.deepEqual(inspectTemplateRecords(valid), []);
