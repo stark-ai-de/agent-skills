@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Local workspace orchestration. Mutations require an adopted config and --apply.
+"""Local workspace orchestration.
+
+Reconciliation mutations require an adopted config and --apply. The notify and
+hook receivers write minimal private queue receipts under the adopted config.
 
 Requires Python 3.10+, PyYAML, Git and grepai 1.1.x. No Karakeep credentials or
 API writes belong here; maintain delegates to the karakeep-knowledge owner.
@@ -876,15 +879,42 @@ def notify(c, event):
     return {'status': 'queued', **receipt}
 
 
+def hook(c, event):
+    """Queue a Codex Stop without requesting continuation or claiming final completion."""
+    if not isinstance(event, dict):
+        raise ValueError('Codex hook input must be a JSON object')
+    if event.get('hook_event_name') != 'Stop':
+        return {'status': 'ignored', 'reason': 'unsupported_hook'}
+    cwd = event.get('cwd')
+    if not isinstance(cwd, str) or not cwd or not Path(cwd).is_absolute():
+        raise ValueError('Codex Stop hook requires an absolute cwd')
+    # Other hooks may resume work; a later Stop must refresh the same queue item.
+    # Keep the existing receipt shape and downstream trigger for compatibility.
+    return notify(c, {'type': 'agent-turn-complete', 'cwd': cwd})
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('command', choices=['setup', 'discover', 'doctor', 'maintain', 'notify'])
+    p.add_argument('command', choices=['setup', 'discover', 'doctor', 'maintain', 'notify', 'hook'])
     p.add_argument('--config', required=True)
     p.add_argument('--apply', action='store_true')
     p.add_argument('--discovery-only', action='store_true')
     p.add_argument('--migrate-from', help='Exact previous adopted config; preview first, old collection is retained')
     p.add_argument('event', nargs='?')
-    args = p.parse_args()
+    args = argparse.Namespace()
+    try:
+        p.parse_args(namespace=args)
+    except SystemExit as error:
+        # Exit 2 asks a Stop hook to continue the turn. Keep ordinary CLI errors
+        # unchanged, but never request continuation for recognized hook misuse.
+        if error.code == 2 and (getattr(args, 'command', None) == 'hook' or sys.argv[1:2] == ['hook']):
+            raise ValueError('Invalid Codex hook arguments') from None
+        raise
+    if args.command == 'hook':
+        if args.event is not None or args.apply or args.discovery_only or args.migrate_from:
+            raise ValueError('The hook command accepts only --config and event JSON on stdin')
+        hook(load_config(args.config), json.loads(sys.stdin.read()))
+        return  # Empty stdout means success; this receiver emits no hook decision.
     c = load_config(args.config)
     previous = load_config(args.migrate_from) if args.migrate_from else None
     if previous and args.command != 'setup':
