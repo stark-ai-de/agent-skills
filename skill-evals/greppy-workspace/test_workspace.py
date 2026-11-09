@@ -45,6 +45,13 @@ class WorkspaceTests(unittest.TestCase):
         self.git(p,"-c","user.name=Fixture","-c","user.email=fixture@example.invalid","commit","-qm",name)
         return p
 
+    def cli(self, *args, input=None):
+        env = dict(os.environ)
+        env.pop("GREPPY_MAINTENANCE_RUN", None)
+        return subprocess.run([sys.executable, "-B", str(SCRIPT), *args],
+                              input=input, text=True, capture_output=True,
+                              cwd=self.base, env=env, timeout=10)
+
     def test_doctor_separates_search_from_optional_and_enabled_capabilities(self):
         repo = self.repo("doctor")
         state = Path(self.c["stateRoot"])
@@ -694,6 +701,99 @@ class WorkspaceTests(unittest.TestCase):
         with patch.dict(os.environ,{"GREPPY_MAINTENANCE_RUN":"1"}): self.assertEqual(w.notify(self.c,event)["status"],"ignored")
         event["cwd"]=self.c["operationsRoot"]
         self.assertEqual(w.notify(self.c,event)["status"],"ignored")
+
+    def test_hook_coalesces_every_stop_without_persisting_payload(self):
+        root = self.repo("root")
+        w.atomic(self.c["registry"], w.discover(self.c))
+        event = {"hook_event_name": "Stop", "cwd": str(root),
+                 "session_id": "fixture-session-private",
+                 "transcript_path": str(self.base / "private-transcript.jsonl"),
+                 "last_assistant_message": "must never persist"}
+        timestamps = ["2026-01-01T00:00:00+00:00", "2026-01-01T00:01:00+00:00"]
+        with patch.object(w, "stamp", side_effect=timestamps), \
+                patch.object(w, "run", side_effect=AssertionError("No subprocess in hook")), \
+                patch.object(w, "http", side_effect=AssertionError("No HTTP in hook")):
+            for active in (False, True):
+                event["stop_hook_active"] = active
+                self.assertEqual(w.hook(self.c, event)["status"], "queued")
+        queue = list((Path(self.c["stateRoot"]) / "queue").glob("*.json"))
+        self.assertEqual(len(queue), 1)
+        receipt = json.loads(queue[0].read_text())
+        self.assertEqual(set(receipt), {"repoId", "at", "trigger"})
+        self.assertEqual(receipt["at"], timestamps[-1])
+        self.assertEqual(receipt["trigger"], "agent-turn-complete")
+        self.assertEqual(w.read(Path(self.c["stateRoot"]) / "last-notify.json"), receipt)
+
+    def test_hook_preserves_scope_and_maintenance_filters(self):
+        root = self.repo("root")
+        w.atomic(self.c["registry"], w.discover(self.c))
+        events = [
+            {"hook_event_name": "SessionStart", "cwd": str(root)},
+            {"hook_event_name": "Stop", "cwd": self.c["operationsRoot"]},
+            {"hook_event_name": "Stop", "cwd": str(self.base / "outside")},
+        ]
+        for event in events:
+            with self.subTest(event=event):
+                self.assertEqual(w.hook(self.c, event)["status"], "ignored")
+        with patch.dict(os.environ, {"GREPPY_MAINTENANCE_RUN": "1"}):
+            self.assertEqual(w.hook(self.c, {"hook_event_name": "Stop", "cwd": str(root)})["status"], "ignored")
+        self.assertFalse((Path(self.c["stateRoot"]) / "queue").exists())
+        self.assertFalse((Path(self.c["stateRoot"]) / "last-notify.json").exists())
+
+    def test_hook_rejects_invalid_payload_without_queue_writes(self):
+        invalid = [None, [], "Stop", {"hook_event_name": "Stop"}]
+        invalid.extend({"hook_event_name": "Stop", "cwd": cwd}
+                       for cwd in (None, "", "relative/repo", 7))
+        for event in invalid:
+            with self.subTest(event=event), self.assertRaises(ValueError):
+                w.hook(self.c, event)
+        self.assertFalse(Path(self.c["stateRoot"]).exists())
+
+    def test_cli_preserves_notify_transports_and_hook_has_quiet_stdin_success(self):
+        root = self.repo("root")
+        w.atomic(self.c["registry"], w.discover(self.c))
+        config = self.base / "workspace.json"
+        w.atomic(config, self.c)
+        legacy = json.dumps({"type": "agent-turn-complete", "cwd": str(root)})
+        for args, input_text in [((legacy,), None), ((), legacy)]:
+            with self.subTest(transport="argv" if args else "stdin"):
+                result = self.cli("notify", "--config", str(config), *args, input=input_text)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(json.loads(result.stdout)["status"], "queued")
+        event = json.dumps({"hook_event_name": "Stop", "cwd": str(root), "stop_hook_active": True})
+        result = self.cli("hook", "--config", str(config), input=event)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, "")
+        self.assertEqual(result.stderr, "")
+        queue = list((Path(self.c["stateRoot"]) / "queue").glob("*.json"))
+        self.assertEqual(len(queue), 1)
+        self.assertEqual(set(json.loads(queue[0].read_text())), {"repoId", "at", "trigger"})
+
+    def test_cli_hook_failures_never_request_continuation(self):
+        config = self.base / "workspace.json"
+        w.atomic(config, self.c)
+        event = json.dumps({"hook_event_name": "Stop", "cwd": str(self.dev)})
+        cases = [
+            (("hook",), event),
+            (("hook", "--config"), event),
+            (("hook", "--config", str(config), "--unknown"), event),
+            (("--config", str(config), "hook", "--unknown"), event),
+            (("hook", "--config", str(config), event), ""),
+            (("hook", "--config", str(config), "--apply"), event),
+            (("hook", "--config", str(config), "--discovery-only"), event),
+            (("hook", "--config", str(config), "--migrate-from", str(config)), event),
+            (("hook", "--config", str(config)), "not-json"),
+            (("hook", "--config", str(config)), "[]"),
+            (("hook", "--config", str(config)), '{"hook_event_name":"Stop"}'),
+        ]
+        for args, input_text in cases:
+            with self.subTest(args=args, input=input_text):
+                result = self.cli(*args, input=input_text)
+                self.assertEqual(result.returncode, 1, result.stderr)
+                self.assertEqual(result.stdout, "")
+                self.assertTrue(result.stderr)
+        self.assertFalse((Path(self.c["stateRoot"]) / "queue").exists())
+        self.assertEqual(self.cli("notify").returncode, 2)
 
 
 

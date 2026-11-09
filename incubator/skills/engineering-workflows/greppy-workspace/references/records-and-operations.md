@@ -9,11 +9,16 @@ The owner recomputes the actual source root, regular-file bytes, line range and 
 ## Triggers and bounds
 
 - `workspace.py notify` accepts a real Codex completion event, records only registered repository ID/time, and coalesces events per repository. The operations root and `GREPPY_MAINTENANCE_RUN=1` are ignored.
+- `workspace.py hook` is an optional alternative for a separately adopted Codex command Stop hook. It reads stdin and feeds the same minimal queue without requesting another turn. Stop precedes final completion; other hooks may resume work, so repeated Stop events, including `stop_hook_active: true`, refresh the repository entry. The legacy internal trigger label remains `agent-turn-complete` for compatibility, not as proof that a Stop event completed the turn. Scope and maintenance exclusions are unchanged. Follow the [integration and rollback procedure](integration.md#optional-later-stop-hook-migration); adding adapter support does not switch an installation.
 - Discovery timer: reconcile new/moved/removed roots and generated ignore config; restart the owned watcher only on change.
 - Maintenance timer: reconcile known sources, inspect/plan/apply at most the policy batch limit, and optionally assess one eligible queue item with the qualified runner below. The runner has bounded runtime/output and a per-repository cooldown. It never runs on every file save.
 - Source assessment may return zero candidates. Failures remain `needs_agent`; only a newer completion after cooldown permits another automatic assessment. Receipt logs are private. Owner lock contention remains pending until the existing writer finishes. Never interpret an unverified create as a safe retry.
 
 Inspect `last-reconcile.json`, `last-record-maintenance.json`, `last-notify.json`, `agent-checkpoints.json`, `agent-runs/` and owner operation receipts. A delivered notification, an executed timer, a successful runner and a verified remote write are separate evidence. `--no-agent` on `records.mjs` performs deterministic record maintenance without model calls.
+
+Both completion receivers write queue receipts under the adopted private state
+without `--apply`; they do not run reconciliation or record maintenance. They
+retain no thread/session route and do not send a message back into Codex.
 
 ## Qualify the optional assessor
 
