@@ -18,3 +18,17 @@
 - Run `make check` in a reviewed Greppy source snapshot.
 - This directory validates the legacy launchers only; it must not acquire another orchestrator implementation.
 - Legacy installed skill paths delegate to the package after the reviewed consumer migration.
+
+## Cross-owner record integration
+
+- The shared Karakeep fixture suite retains three Greppy integration scenarios.
+- Standalone Karakeep checks skip those scenarios unless an explicit `GREPPY_TEST_RECORDS_ADAPTER` selects a reviewed runtime.
+- Greppy's required CI supplies its own runtime and a revision-pinned public Karakeep fixture suite.
+- This keeps core Karakeep tests independent of an installed coordinator without removing integration coverage.
+
+```sh
+GREPPY_TEST_RECORDS_ADAPTER=/absolute/reviewed/runtime/src/greppy/records.mjs \
+  node --test --test-name-pattern '^Greppy ' skill-evals/karakeep-knowledge/helper.test.mjs
+```
+
+- All three selected scenarios must pass; they exercise a loopback fixture and never contact a real account or model provider.
