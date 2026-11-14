@@ -13,4 +13,17 @@
 
 ## Local smoke check
 
-A registered project produced the same source match through MCP and the host CLI. The sandbox CLI received a loopback connection refusal. The CLI without workspace selection reported an empty embedding provider. The sampled source location matched the current checkout. The Git status and the two configuration file digests matched before and after the probe. This historical access check did not verify that GrepAI avoided backend initialization. Current doctor qualification uses metadata unless the exact probe route has independently proven non-mutating behavior.
+- A registered project produced the same source match through MCP and the host CLI.
+- The sandbox CLI received a loopback connection refusal.
+- The CLI without workspace selection reported an empty embedding provider.
+- The sampled source location matched the current checkout.
+- The Git status and the two configuration file digests matched before and after the probe.
+- This historical access check did not verify that GrepAI avoided backend initialization.
+- Current doctor qualification uses metadata unless the exact probe route has independently proven non-mutating behavior.
+
+## Standalone candidate
+
+- Run `python3 -B -m unittest discover -s skill-evals/grepai-repo-setup -p "test_*.py"` for preparation/ownership checks.
+- Run `python3 -B skill-evals/grepai-repo-setup/qualify_standalone.py` with GrepAI 1.1.0 for native initialization, retrieval, update, deletion and private exclusions in a disposable repository.
+- It uses a loopback embedding stub and an owned temporary watcher, with no production index or model call.
+- This qualifies the native pipeline, not semantic quality, an Ubuntu clean install or a fresh Codex client.

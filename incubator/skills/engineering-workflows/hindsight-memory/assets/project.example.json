@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "enabled": true,
+  "projectRoot": "/absolute/project",
+  "sessionsRoot": "/absolute/private/codex/sessions",
+  "stateRoot": "/absolute/private/state/hindsight/project",
+  "runtimeEnv": "/absolute/private/config/hindsight-memory/runtime.env",
+  "privatePolicyFile": "/absolute/installed/hindsight-memory/scripts/private_policy.py",
+  "endpoint": "http://127.0.0.1:18888",
+  "bankId": "project-memory",
+  "embeddingDigest": "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+  "container": "hindsight-memory-hindsight-1",
+  "image": "ghcr.io/vectorize-io/hindsight:1.2.1@sha256:d2bc230a714e933affd63753e181a0579328fdcbbc021800a76e0bc7b6e76b31",
+  "consent": {
+    "status": "REPLACE_WITH_RECORDED_CONSENT",
+    "contentScope": "manual-memory",
+    "providerReview": "Record the selected provider route and privacy acceptance"
+  }
+}

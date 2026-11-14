@@ -1,0 +1,78 @@
+name: "@COMPOSE_PROJECT@"
+services:
+  hindsight:
+    image: ghcr.io/vectorize-io/hindsight:1.2.1@sha256:d2bc230a714e933affd63753e181a0579328fdcbbc021800a76e0bc7b6e76b31
+    network_mode: host
+    restart: unless-stopped
+    stop_grace_period: 75s
+    shm_size: 1gb
+    env_file:
+      - "@RUNTIME_ENV@"
+    environment:
+      HINDSIGHT_API_HOST: 127.0.0.1
+      HINDSIGHT_API_PORT: "18888"
+      HINDSIGHT_CP_HOSTNAME: 127.0.0.1
+      HINDSIGHT_CP_PORT: "19999"
+      HINDSIGHT_CP_DATAPLANE_API_URL: http://127.0.0.1:18888
+      HINDSIGHT_API_TENANT_EXTENSION: private_policy:PrivateTenantExtension
+      HINDSIGHT_API_OPERATION_VALIDATOR_EXTENSION: private_policy:PrivateStorageValidator
+      PYTHONPATH: /hindsight
+      HINDSIGHT_API_STORE_DOCUMENT_TEXT: "false"
+      HINDSIGHT_API_LLM_TRACE_ENABLED: "false"
+      HINDSIGHT_API_OTEL_TRACES_ENABLED: "false"
+      HINDSIGHT_API_LOG_LEVEL: warning
+      HINDSIGHT_API_LLM_DEBUG_DUMP_4XX: "false"
+      HINDSIGHT_API_FAIL_ON_EXTRACTION_ERRORS: "true"
+      HINDSIGHT_API_WORKER_ID: hindsight-greppy
+    volumes:
+      - hindsight-data:/home/hindsight/.pg0
+      - hindsight-auth:/home/hindsight/codex-auth
+      - type: bind
+        source: "@POLICY@"
+        target: /hindsight/private_policy.py
+        read_only: true
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+  weekly:
+    image: ghcr.io/vectorize-io/hindsight:1.2.1@sha256:d2bc230a714e933affd63753e181a0579328fdcbbc021800a76e0bc7b6e76b31
+    profiles: ["job"]
+    network_mode: host
+    entrypoint: ["/app/api/.venv/bin/python3", "/hindsight/worker.py"]
+  auth-init:
+    image: ghcr.io/vectorize-io/hindsight:1.2.1@sha256:d2bc230a714e933affd63753e181a0579328fdcbbc021800a76e0bc7b6e76b31
+    profiles: ["job"]
+    network_mode: none
+    user: "0:0"
+    volumes:
+      - hindsight-auth:/home/hindsight/codex-auth
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        dir=/home/hindsight/codex-auth
+        owner=$$(stat -c %u "$$dir")
+        if [ "$$owner" = 0 ] && [ -z "$$(ls -A "$$dir")" ]; then
+          chown 1000:1000 "$$dir"
+          chmod 700 "$$dir"
+        elif [ "$$owner" != 1000 ]; then
+          echo "Hindsight auth volume has an unexpected owner" >&2
+          exit 1
+        fi
+  auth:
+    image: ghcr.io/vectorize-io/hindsight:1.2.1@sha256:d2bc230a714e933affd63753e181a0579328fdcbbc021800a76e0bc7b6e76b31
+    profiles: ["job"]
+    network_mode: host
+    environment:
+      CODEX_HOME: /home/hindsight/codex-auth
+    volumes:
+      - hindsight-auth:/home/hindsight/codex-auth
+      - type: bind
+        source: "@CODEX@"
+        target: /hindsight/codex
+        read_only: true
+    entrypoint: ["/hindsight/codex"]
+volumes:
+  hindsight-data:
+  hindsight-auth:
