@@ -33,11 +33,11 @@ metadata:
 
 ## Workflow
 
-| Requested outcome | Route | Configuration owner |
-| --- | --- | --- |
-| Search in one new repository | Standalone setup | Native repository configuration and host package/service owner |
-| Add a repository to adopted shared search | Shared setup | Existing workspace owner |
-| Understand a failure or current status | Doctor | Existing owner; diagnosis only |
+| Requested outcome                         | Route            | Configuration owner                                            |
+| ----------------------------------------- | ---------------- | -------------------------------------------------------------- |
+| Search in one new repository              | Standalone setup | Native repository configuration and host package/service owner |
+| Add a repository to adopted shared search | Shared setup     | Existing workspace owner                                       |
+| Understand a failure or current status    | Doctor           | Existing owner; diagnosis only                                 |
 
 - Select **setup** for explicit onboarding and **doctor** for health checks or failures.
 - Announce the selected route.

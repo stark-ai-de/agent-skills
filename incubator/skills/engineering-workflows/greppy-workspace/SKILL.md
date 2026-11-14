@@ -25,11 +25,11 @@ metadata:
 
 ## Workflow selection
 
-| Workflow | Outcome |
-| --- | --- |
-| `setup` | Adopt and qualify shared search and selected companion integrations |
-| `doctor` | Inspect combined readiness or the existing shared workspace |
-| `maintain` | Preview or apply bounded maintenance within adopted scope |
+| Workflow   | Outcome                                                             |
+| ---------- | ------------------------------------------------------------------- |
+| `setup`    | Adopt and qualify shared search and selected companion integrations |
+| `doctor`   | Inspect combined readiness or the existing shared workspace         |
+| `maintain` | Preview or apply bounded maintenance within adopted scope           |
 
 - Select `setup`, `doctor`, or `maintain` from the user's intent and announce the authorized route.
 - For a bare or ambiguous request, show all three in that order and ask which workflow to use.
@@ -74,11 +74,11 @@ metadata:
 
 ### doctor
 
-| View | Command |
-| --- | --- |
-| Combined readiness | `greppy doctor --config /absolute/private/stack.json --project /absolute/project --json` |
-| Loopback status and guided plan | `greppy dashboard --config /absolute/private/stack.json --project /absolute/project` |
-| Existing shared workspace | `greppy workspace-doctor --config /absolute/private/workspace.json` |
+| View                            | Command                                                                                  |
+| ------------------------------- | ---------------------------------------------------------------------------------------- |
+| Combined readiness              | `greppy doctor --config /absolute/private/stack.json --project /absolute/project --json` |
+| Loopback status and guided plan | `greppy dashboard --config /absolute/private/stack.json --project /absolute/project`     |
+| Existing shared workspace       | `greppy workspace-doctor --config /absolute/private/workspace.json`                      |
 
 - Its component pointers are separate from shared workspace configuration.
 - It verifies installation/configuration/health and current owner grants; client usability and index freshness need current qualified evidence.

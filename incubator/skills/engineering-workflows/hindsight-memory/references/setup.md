@@ -116,14 +116,14 @@ python3 scripts/mcp_launcher.py RUNTIME_ENV MCP_PROXY --policy POLICY
 - A request already dispatched may finish.
 - MCP scope is checked when its transport starts; close and reconnect a running client after changing its grant.
 
-| Root or consent change | Effect |
-| --- | --- |
-| Ordinary subdirectory | Covered by the applicable parent project grant |
-| Nested repository, submodule or linked worktree | Requires its own project policy |
-| Separately granted child repository | Eligible under its own grant |
+| Root or consent change                                          | Effect                                                                      |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Ordinary subdirectory                                           | Covered by the applicable parent project grant                              |
+| Nested repository, submodule or linked worktree                 | Requires its own project policy                                             |
+| Separately granted child repository                             | Eligible under its own grant                                                |
 | Disabled/narrowed consent, changed destination or renewed grant | Current batch stops before its next worker dispatch; pending records remain |
-| Already-dispatched operation | May finish |
-| Running MCP transport | Reconnect after changing its grant |
+| Already-dispatched operation                                    | May finish                                                                  |
+| Running MCP transport                                           | Reconnect after changing its grant                                          |
 
 ## Acceptance and recovery
 
