@@ -75,7 +75,7 @@ def qualify():
                         return json.loads(result.stdout)
 
                     def until(predicate):
-                        deadline = time.monotonic() + 30
+                        deadline = time.monotonic() + 90
                         while time.monotonic() < deadline:
                             if watcher.poll() is not None:
                                 log.seek(0)

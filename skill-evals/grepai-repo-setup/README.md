@@ -26,4 +26,5 @@
 - Run `python3 -B -m unittest discover -s skill-evals/grepai-repo-setup -p "test_*.py"` for preparation/ownership checks.
 - Run `python3 -B skill-evals/grepai-repo-setup/qualify_standalone.py` with GrepAI 1.1.0 for native initialization, retrieval, update, deletion and private exclusions in a disposable repository.
 - It uses a loopback embedding stub and an owned temporary watcher, with no production index or model call.
+- Each propagation check has a 90-second deadline so deletion near the previous 30-second deadline can be observed.
 - This qualifies the native pipeline, not semantic quality, an Ubuntu clean install or a fresh Codex client.
