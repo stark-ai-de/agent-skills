@@ -38,6 +38,8 @@ import {
   git,
 } from "../../skills/engineering-workflows/karakeep-knowledge/scripts/knowledge/git.mjs";
 const exec = promisify(execFile);
+const recordsAdapter = process.env.GREPPY_TEST_RECORDS_ADAPTER;
+const greppyTest = recordsAdapter ? test : test.skip;
 const helper = fileURLToPath(
   new URL(
     "../../skills/engineering-workflows/karakeep-knowledge/scripts/knowledge.mjs",
@@ -1408,105 +1410,99 @@ test("collection status keeps the code grant separate from project readiness", a
   assert.equal(f.writes.length, 0);
 });
 
-test("Greppy maintenance uses the adopted account writer and converges without model calls", async (t) => {
-  const f = await codeFixture(t);
-  const item = await f.code();
-  const { source, ...record } = item.codeRecord;
-  const configFile = path.join(f.root, "workspace.json");
-  const componentsFile = path.join(f.root, "components.json");
-  const adapter =
-    process.env.GREPPY_TEST_RECORDS_ADAPTER ??
-    fileURLToPath(
-      new URL(
-        "../../incubator/skills/engineering-workflows/greppy-workspace/scripts/records.mjs",
-        import.meta.url,
-      ),
-    );
-  const knowledgeRoot =
-    process.env.GREPPY_TEST_KNOWLEDGE_ROOT ??
-    fileURLToPath(
-      new URL("../../skills/engineering-workflows/karakeep-knowledge", import.meta.url),
-    );
-  await writeJson(componentsFile, {
-    components: [
-      { ...record, id: item.id, title: item.title, assessedSourceHash: source.fileHash },
-    ],
-  });
-  await writeJson(configFile, {
-    knowledgeRoot,
-    codePolicy: f.policyFile,
-    componentsFile,
-    stateRoot: path.join(f.root, "workspace-state"),
-    agent: { enabled: true },
-    codexExecutable: path.join(f.root, "no-model-executable"),
-  });
-  const run = async () => {
-    const { stdout } = await exec(process.execPath, [
-      adapter,
-      "--config",
-      configFile,
-      "--no-agent",
-    ]);
-    return JSON.parse(stdout);
-  };
-
-  const first = await run();
-  assert.equal(first.status, "complete");
-  assert.equal(first.changed, 1);
-  const [bookmark] = f.objects.values();
-  assert.equal(splitNote(bookmark.note).meta.kind, "code-record");
-  assert.deepEqual([...f.members.get(bookmark.id)], ["list1"]);
-  bookmark.note = "Manual follow-up\n" + bookmark.note;
-  const writes = f.writes.length;
-
-  const second = await run();
-  assert.equal(second.status, "complete");
-  assert.equal(second.unchanged, 1);
-  assert.equal(f.objects.size, 1);
-  assert.equal(f.writes.length, writes);
-  assert.match(bookmark.note, /^Manual follow-up\n/u);
-});
-
-test("Greppy rejects incompatible owners and missing grants before state or model work", async (t) => {
-  const f = await codeFixture(t);
-  delete f.p.codeRecords;
-  await f.savePolicy();
-  const configFile = path.join(f.root, "workspace.json");
-  const stateRoot = path.join(f.root, "greppy-state");
-  const componentsFile = path.join(f.root, "components.json");
-  const adapter = fileURLToPath(
-    new URL(
-      "../../incubator/skills/engineering-workflows/greppy-workspace/scripts/records.mjs",
-      import.meta.url,
-    ),
-  );
-  const knowledgeRoot = path.dirname(path.dirname(helper));
-  const incompatible = path.join(f.root, "incompatible");
-  const modules = path.join(incompatible, "scripts/knowledge");
-  await fs.mkdir(modules, { recursive: true });
-  for (const name of ["state", "reconcile", "code-records"]) {
-    await fs.writeFile(path.join(modules, name + ".mjs"), "export const unsupported = true;");
-  }
-  for (const [root, code] of [
-    [incompatible, "owner_incompatible"],
-    [knowledgeRoot, "missing_grant"],
-  ]) {
+greppyTest(
+  "Greppy maintenance uses the adopted account writer and converges without model calls",
+  async (t) => {
+    const f = await codeFixture(t);
+    const item = await f.code();
+    const { source, ...record } = item.codeRecord;
+    const configFile = path.join(f.root, "workspace.json");
+    const componentsFile = path.join(f.root, "components.json");
+    const adapter = recordsAdapter;
+    const knowledgeRoot =
+      process.env.GREPPY_TEST_KNOWLEDGE_ROOT ??
+      fileURLToPath(
+        new URL("../../skills/engineering-workflows/karakeep-knowledge", import.meta.url),
+      );
+    await writeJson(componentsFile, {
+      components: [
+        { ...record, id: item.id, title: item.title, assessedSourceHash: source.fileHash },
+      ],
+    });
     await writeJson(configFile, {
-      knowledgeRoot: root,
+      knowledgeRoot,
       codePolicy: f.policyFile,
       componentsFile,
-      stateRoot,
+      stateRoot: path.join(f.root, "workspace-state"),
       agent: { enabled: true },
+      codexExecutable: path.join(f.root, "no-model-executable"),
     });
-    await assert.rejects(
-      exec(process.execPath, [adapter, "--config", configFile]),
-      (error) => JSON.parse(error.stderr).code === code,
-    );
-    await assert.rejects(fs.stat(stateRoot), { code: "ENOENT" });
-    await assert.rejects(fs.stat(componentsFile), { code: "ENOENT" });
-    assert.equal(f.requests.length, 0);
-  }
-});
+    const run = async () => {
+      const { stdout } = await exec(process.execPath, [
+        adapter,
+        "--config",
+        configFile,
+        "--no-agent",
+      ]);
+      return JSON.parse(stdout);
+    };
+
+    const first = await run();
+    assert.equal(first.status, "complete");
+    assert.equal(first.changed, 1);
+    const [bookmark] = f.objects.values();
+    assert.equal(splitNote(bookmark.note).meta.kind, "code-record");
+    assert.deepEqual([...f.members.get(bookmark.id)], ["list1"]);
+    bookmark.note = "Manual follow-up\n" + bookmark.note;
+    const writes = f.writes.length;
+
+    const second = await run();
+    assert.equal(second.status, "complete");
+    assert.equal(second.unchanged, 1);
+    assert.equal(f.objects.size, 1);
+    assert.equal(f.writes.length, writes);
+    assert.match(bookmark.note, /^Manual follow-up\n/u);
+  },
+);
+
+greppyTest(
+  "Greppy rejects incompatible owners and missing grants before state or model work",
+  async (t) => {
+    const f = await codeFixture(t);
+    delete f.p.codeRecords;
+    await f.savePolicy();
+    const configFile = path.join(f.root, "workspace.json");
+    const stateRoot = path.join(f.root, "greppy-state");
+    const componentsFile = path.join(f.root, "components.json");
+    const adapter = recordsAdapter;
+    const knowledgeRoot = path.dirname(path.dirname(helper));
+    const incompatible = path.join(f.root, "incompatible");
+    const modules = path.join(incompatible, "scripts/knowledge");
+    await fs.mkdir(modules, { recursive: true });
+    for (const name of ["state", "reconcile", "code-records"]) {
+      await fs.writeFile(path.join(modules, name + ".mjs"), "export const unsupported = true;");
+    }
+    for (const [root, code] of [
+      [incompatible, "owner_incompatible"],
+      [knowledgeRoot, "missing_grant"],
+    ]) {
+      await writeJson(configFile, {
+        knowledgeRoot: root,
+        codePolicy: f.policyFile,
+        componentsFile,
+        stateRoot,
+        agent: { enabled: true },
+      });
+      await assert.rejects(
+        exec(process.execPath, [adapter, "--config", configFile]),
+        (error) => JSON.parse(error.stderr).code === code,
+      );
+      await assert.rejects(fs.stat(stateRoot), { code: "ENOENT" });
+      await assert.rejects(fs.stat(componentsFile), { code: "ENOENT" });
+      assert.equal(f.requests.length, 0);
+    }
+  },
+);
 
 test("Code-record deadline is checked after the final asynchronous preflight", async (t) => {
   const { createRequire, syncBuiltinESMExports } = await import("node:module");
@@ -1542,38 +1538,35 @@ test("Code-record deadline is checked after the final asynchronous preflight", a
   }
 });
 
-test("Greppy gates the assessor and consumes an invalid event once without blocking maintenance", async (t) => {
-  const f = await codeFixture(t);
-  const { source, ...record } = (await f.code()).codeRecord;
-  const configFile = path.join(f.root, "workspace.json");
-  const stateRoot = path.join(f.root, "greppy-state");
-  const componentsFile = path.join(f.root, "components.json");
-  const checkpoint = path.join(stateRoot, "agent-checkpoints.json");
-  const starts = path.join(f.root, "runner-starts.jsonl");
-  const inherited = path.join(f.root, "inherited-mcp");
-  const runner = path.join(f.root, "fixture-codex");
-  const adapter = fileURLToPath(
-    new URL(
-      "../../incubator/skills/engineering-workflows/greppy-workspace/scripts/records.mjs",
-      import.meta.url,
-    ),
-  );
-  await fs.mkdir(path.join(f.repo, ".codex"));
-  await fs.writeFile(
-    path.join(f.repo, ".codex/config.toml"),
-    "[mcp_servers.fixture]\ncommand = 'never-start'\n",
-  );
-  await fs.mkdir(path.join(stateRoot, "queue"), { recursive: true, mode: 0o700 });
-  const event = { repoId: "repo-one", at: new Date().toISOString() };
-  await writeJson(path.join(stateRoot, "queue/repo-one.json"), event);
-  await writeJson(componentsFile, {
-    components: [
-      { ...record, id: "retry", title: "Bounded retry", assessedSourceHash: source.fileHash },
-    ],
-  });
-  await fs.writeFile(
-    runner,
-    `#!${process.execPath}
+greppyTest(
+  "Greppy gates the assessor and consumes an invalid event once without blocking maintenance",
+  async (t) => {
+    const f = await codeFixture(t);
+    const { source, ...record } = (await f.code()).codeRecord;
+    const configFile = path.join(f.root, "workspace.json");
+    const stateRoot = path.join(f.root, "greppy-state");
+    const componentsFile = path.join(f.root, "components.json");
+    const checkpoint = path.join(stateRoot, "agent-checkpoints.json");
+    const starts = path.join(f.root, "runner-starts.jsonl");
+    const inherited = path.join(f.root, "inherited-mcp");
+    const runner = path.join(f.root, "fixture-codex");
+    const adapter = recordsAdapter;
+    await fs.mkdir(path.join(f.repo, ".codex"));
+    await fs.writeFile(
+      path.join(f.repo, ".codex/config.toml"),
+      "[mcp_servers.fixture]\ncommand = 'never-start'\n",
+    );
+    await fs.mkdir(path.join(stateRoot, "queue"), { recursive: true, mode: 0o700 });
+    const event = { repoId: "repo-one", at: new Date().toISOString() };
+    await writeJson(path.join(stateRoot, "queue/repo-one.json"), event);
+    await writeJson(componentsFile, {
+      components: [
+        { ...record, id: "retry", title: "Bounded retry", assessedSourceHash: source.fileHash },
+      ],
+    });
+    await fs.writeFile(
+      runner,
+      `#!${process.execPath}
 const fs = require("node:fs");
 const args = process.argv.slice(2);
 if (args.includes("--help")) {
@@ -1589,61 +1582,62 @@ if (args.includes("--help")) {
   }));
 }
 `,
-    { mode: 0o700 },
-  );
-  await writeJson(configFile, {
-    knowledgeRoot: path.dirname(path.dirname(helper)),
-    codePolicy: f.policyFile,
-    componentsFile,
-    stateRoot,
-    codexExecutable: runner,
-    agent: {
-      enabled: true,
-      cooldownSeconds: 3600,
-      model: "adopted-fixture-model",
-      executableSha256: hash(await fs.readFile(runner)),
-    },
-  });
-  const run = async () =>
-    JSON.parse((await exec(process.execPath, [adapter, "--config", configFile])).stdout);
-  await fs.writeFile(inherited, "present");
-  const blocked = await run();
-  assert.equal(blocked.agent.reason, "assessment_isolation_unverified");
-  assert.equal(blocked.changed, 1);
-  await assert.rejects(fs.stat(starts), { code: "ENOENT" });
-  await assert.rejects(fs.stat(checkpoint), { code: "ENOENT" });
-  await fs.unlink(inherited);
-  const attempt = await run();
-  assert.equal(attempt.agent.status, "needs_agent");
-  assert.equal(attempt.agent.reason, "code_scope");
-  assert.equal(attempt.unchanged, 1);
-  const { args, cwd, before } = JSON.parse((await fs.readFile(starts, "utf8")).trim());
-  assert.equal(before.eventAt, event.at);
-  assert.equal(before.status, "needs_agent");
-  assert.ok(cwd.startsWith(stateRoot + path.sep));
-  for (const arg of [
-    "--ignore-user-config",
-    "--skip-git-repo-check",
-    "read-only",
-    'approval_policy="never"',
-    "features.apps=false",
-    "features.plugins=false",
-    "features.hooks=false",
-  ])
-    assert.ok(args.includes(arg), arg);
-  assert.equal((await run()).unchanged, 1);
-  assert.equal((await fs.readFile(starts, "utf8")).trim().split("\n").length, 1);
-  assert.equal((await readJson(checkpoint))["repo-one"].reason, "code_scope");
-  assert.equal(args[args.indexOf("--model") + 1], "adopted-fixture-model");
-  await writeJson(path.join(stateRoot, "queue/repo-one.json"), {
-    ...event,
-    at: new Date(Date.parse(event.at) + 1000).toISOString(),
-  });
-  assert.equal((await run()).agent, undefined);
-  assert.equal((await fs.readFile(starts, "utf8")).trim().split("\n").length, 1);
-  const past = await readJson(checkpoint);
-  past["repo-one"].at = new Date(Date.now() - 3601000).toISOString();
-  await writeJson(checkpoint, past);
-  assert.equal((await run()).agent.status, "needs_agent");
-  assert.equal((await fs.readFile(starts, "utf8")).trim().split("\n").length, 2);
-});
+      { mode: 0o700 },
+    );
+    await writeJson(configFile, {
+      knowledgeRoot: path.dirname(path.dirname(helper)),
+      codePolicy: f.policyFile,
+      componentsFile,
+      stateRoot,
+      codexExecutable: runner,
+      agent: {
+        enabled: true,
+        cooldownSeconds: 3600,
+        model: "adopted-fixture-model",
+        executableSha256: hash(await fs.readFile(runner)),
+      },
+    });
+    const run = async () =>
+      JSON.parse((await exec(process.execPath, [adapter, "--config", configFile])).stdout);
+    await fs.writeFile(inherited, "present");
+    const blocked = await run();
+    assert.equal(blocked.agent.reason, "assessment_isolation_unverified");
+    assert.equal(blocked.changed, 1);
+    await assert.rejects(fs.stat(starts), { code: "ENOENT" });
+    await assert.rejects(fs.stat(checkpoint), { code: "ENOENT" });
+    await fs.unlink(inherited);
+    const attempt = await run();
+    assert.equal(attempt.agent.status, "needs_agent");
+    assert.equal(attempt.agent.reason, "code_scope");
+    assert.equal(attempt.unchanged, 1);
+    const { args, cwd, before } = JSON.parse((await fs.readFile(starts, "utf8")).trim());
+    assert.equal(before.eventAt, event.at);
+    assert.equal(before.status, "needs_agent");
+    assert.ok(cwd.startsWith(stateRoot + path.sep));
+    for (const arg of [
+      "--ignore-user-config",
+      "--skip-git-repo-check",
+      "read-only",
+      'approval_policy="never"',
+      "features.apps=false",
+      "features.plugins=false",
+      "features.hooks=false",
+    ])
+      assert.ok(args.includes(arg), arg);
+    assert.equal((await run()).unchanged, 1);
+    assert.equal((await fs.readFile(starts, "utf8")).trim().split("\n").length, 1);
+    assert.equal((await readJson(checkpoint))["repo-one"].reason, "code_scope");
+    assert.equal(args[args.indexOf("--model") + 1], "adopted-fixture-model");
+    await writeJson(path.join(stateRoot, "queue/repo-one.json"), {
+      ...event,
+      at: new Date(Date.parse(event.at) + 1000).toISOString(),
+    });
+    assert.equal((await run()).agent, undefined);
+    assert.equal((await fs.readFile(starts, "utf8")).trim().split("\n").length, 1);
+    const past = await readJson(checkpoint);
+    past["repo-one"].at = new Date(Date.now() - 3601000).toISOString();
+    await writeJson(checkpoint, past);
+    assert.equal((await run()).agent.status, "needs_agent");
+    assert.equal((await fs.readFile(starts, "utf8")).trim().split("\n").length, 2);
+  },
+);

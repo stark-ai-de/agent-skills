@@ -1,6 +1,8 @@
 # Qualification gates
 
-Record versions, source hashes, timestamps and exact commands privately. Use three real representative roots without editing their source. Keep fixture roots, their workspace, collection and state separate from production.
+- Record versions, source hashes, timestamps and exact commands privately.
+- Use three real representative roots without editing their source.
+- Keep fixture roots, their workspace, collection and state separate from production.
 
 1. Semantic query: relevant results in multiple registered repositories, independently confirm actual file and one-based start/end lines. Initial indexing complete and watcher alive are different checks.
 2. Ignore fixture: normal source is indexed; `.env`/key files, dependencies/builds, generated index state and existing external symlinks are absent from actual vector payloads. Do not use real secrets as markers.
@@ -12,13 +14,15 @@ Record versions, source hashes, timestamps and exact commands privately. Use thr
 8. Fresh-agent usability: a new agent receives only the skill path and config location, discovers supported commands, runs doctor and performs a scoped search without previous chat context. Record its actual observations and fix unclear instructions.
 9. Full rollout: remove pilot selection only after these checks; inventory every admitted/excluded root and show ongoing/full initial index coverage honestly. Reference source and instruction diffs must remain unchanged. Inspect the current invocation for framework/compiler warnings as well as fatal errors. A fallback may produce searchable chunks while omitting template relationships. After any compiler repair, require regenerated affected chunks and a fresh complete watchloop; a standalone compiler probe is insufficient. Check actual stored and returned ranges against the original file; warning-free compilation can still yield invalid source lines. If the qualified raw-Vue mode is selected, retain semantic source coverage and explicitly leave compiled-template relationships unqualified.
 
-Repository checks for this skill: `python3 -B -m unittest discover -s skill-evals/greppy-workspace -p 'test_*.py' -v`, catalog/incubator discovery checks, and the Karakeep owner's `pnpm run validate:karakeep` when its contract changed. Sync generated plugin projections only through repository scripts.
+- Repository checks for this skill: `python3 -B -m unittest discover -s skill-evals/greppy-workspace -p 'test_*.py' -v`, catalog/incubator discovery checks, and the Karakeep owner's `pnpm run validate:karakeep` when its contract changed.
+- Sync generated plugin projections only through repository scripts.
 
-The local inference pilot adds ten predeclared known-target cases, top-5 retrieval
-and actual returned-line checks, digest/dimension consistency, finite batch
-vectors, cold/warm/batch timings, cgroup versus model/GPU memory and indexing
-wall time. Measure the server restart and a newly launched WSL development
-process without shutting down an active distribution. Keep a Windows reboot
-explicitly untested unless actually authorized and observed. A NixOS activation
-can restart a user manager and re-enable owned units: recheck that maintenance
-stays paused throughout a staged model migration.
+- The local inference pilot adds ten predeclared known-target cases, top-5 retrieval and actual returned-line checks, digest/dimension consistency, finite batch vectors, cold/warm/batch timings, cgroup versus model/GPU memory and indexing wall time.
+- Measure the server restart and a newly launched WSL development process without shutting down an active distribution.
+- Keep a Windows reboot explicitly untested unless actually authorized and observed.
+- A NixOS activation can restart a user manager and re-enable owned units: recheck that maintenance stays paused throughout a staged model migration.
+
+- The canonical runtime is now the Greppy package.
+- Its extracted tests run through that repository's `make check`; this skill's tests cover compatibility launchers only.
+- Combined readiness uses `greppy doctor --json` and the same report as `greppy dashboard`.
+- Preserve existing workspace configuration when adopting the package.
