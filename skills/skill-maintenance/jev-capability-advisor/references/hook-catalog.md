@@ -79,11 +79,11 @@ from jev_advisor import digest
 catalog = read_json(Path(sys.argv[1]))
 path = Path(sys.argv[2])
 evidence = read_json(path)
-token = 'capture-' + uuid.uuid4().hex
-evidence['capture'] = {'token': token, 'binding': 'agent_asserted_current_session'}
+capture_id = 'capture-' + uuid.uuid4().hex
+evidence['capture'] = {'token': capture_id, 'binding': 'agent_asserted_current_session'}
 evidence['catalog_sha256'] = digest(catalog)
 path.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-print(token)
+print(capture_id)
 PY
 ```
 
