@@ -41,7 +41,7 @@ class WeeklyTests(unittest.TestCase):
         self.state = state
 
     def test_worker_runs_as_transcript_owner(self):
-        args = SimpleNamespace(docker="docker", compose="compose.yaml", worker="worker.py", parser="parser.cjs")
+        args = SimpleNamespace(docker="docker", compose="compose.yaml", worker="worker.py", parser="parser.cjs", memory_state=self.state)
         result = SimpleNamespace(returncode=0, stdout="{}")
         with patch.object(weekly.os, "getuid", return_value=1001), patch.object(weekly.os, "getgid", return_value=100), \
                 patch.object(weekly.subprocess, "run", return_value=result) as run:

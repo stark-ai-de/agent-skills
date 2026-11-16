@@ -17,6 +17,8 @@ import urllib.request
 from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
+from session_parser import parse, snapshot
+
 
 # shortcut: patterns miss unknown credential formats; upgrade when a maintained scanner is available in the worker.
 SECRET_PATTERNS = (
@@ -51,25 +53,8 @@ def request(path, body=None):
 
 
 def add_tool_details(turns, transcript_text):
-    details = []
-    for line in transcript_text.splitlines():
-        event = json.loads(line)
-        payload = event.get("payload") or {}
-        if event.get("type") != "response_item":
-            continue
-        if payload.get("type") in ("function_call_output", "custom_tool_call_output"):
-            role, content = "tool", payload.get("output")
-        elif payload.get("type") in ("function_call", "custom_tool_call"):
-            role = "tool_input"
-            content = {"name": payload.get("name"), "input": payload.get("arguments", payload.get("input"))}
-        else:
-            continue
-        if content is not None:
-            if not isinstance(content, str):
-                content = json.dumps(content, ensure_ascii=False)
-            details.append({"role": role, "content": content, "timestamp": event.get("timestamp", "")})
-    # Missing timestamps retain the parser's original order ahead of timestamped additions.
-    return sorted([*turns, *details], key=lambda turn: turn.get("timestamp") or "")
+    """Compatibility entrypoint: raw tools and recalled content are never added."""
+    return list(turns)
 
 
 def reject_secrets(value):
@@ -84,45 +69,49 @@ def reject_secrets(value):
             reject_secrets(item)
 
 
-def ingest(transcript, session_id, parser):
-    raw = transcript.read_bytes()
+def ingest(transcript, session_id, parser=None, job=None):
+    job = job or {}
+    raw = snapshot(transcript, job.get("byte_length"))
     text = raw.decode("utf-8")
     reject_secrets(text)
     for line in text.splitlines():
         reject_secrets(json.loads(line))
-    header = json.loads(text.splitlines()[0])
-    meta = header["payload"]
-    if header.get("type") != "session_meta" or meta.get("id") != session_id or meta.get("source") != "cli":
-        raise ValueError("session identity mismatch")
-    # The upstream parser seeks, so give it a private, seekable snapshot.
-    with tempfile.TemporaryFile() as snapshot:
-        snapshot.write(raw)
-        snapshot.seek(0)
-        result = subprocess.run(
-            ["node", "-e", "process.stdout.write(JSON.stringify(require(process.argv[1]).readCodexTranscript(process.argv[2])))", str(parser), "/dev/stdin"],
-            stdin=snapshot, check=True, capture_output=True, text=True,
-        )
-    turns = add_tool_details(json.loads(result.stdout), text)
-    if not turns:
-        raise ValueError("session has no supported conversation")
-    reject_secrets(turns)
-    content = json.dumps(turns, ensure_ascii=False)
     digest = hashlib.sha256(raw).hexdigest()
-    document_id = "conversation-" + session_id
-    response = request("/memories", {"items": [{
-        "content": content,
-        "context": "Project Codex CLI session",
-        "document_id": document_id,
-        "timestamp": meta["timestamp"],
-        "metadata": {"session_id": session_id, "session_started": meta["timestamp"], "sha256": digest},
-    }], "async": False})
+    known = job.get("known_outcomes", [])
+    if not isinstance(known, list) or any(not isinstance(item, str) or not re.fullmatch(r"[a-f0-9]{64}", item) for item in known):
+        raise ValueError("outcome ledger")
+    meta, outcomes = parse(raw, session_id, job.get("source"), job.get("leaf_id"), known,
+                           job.get("completion_status"), job.get("checkpoint_at"))
+    reject_secrets(outcomes)
+    items = []
+    for outcome in outcomes:
+        if outcome["id"] in known:
+            continue
+        provenance = {"session_id": session_id, "session_started": meta["timestamp"],
+                      "source": meta["source"], "sha256": digest, "outcome_id": outcome["id"],
+                      "outcome_at": json.loads(outcome["content"])["timestamp"]}
+        if meta["forked_from"]:
+            provenance["forked_from"] = meta["forked_from"]
+        if outcome["entry_id"]:
+            provenance["entry_id"] = outcome["entry_id"]
+        for name in ("repository", "branch_at_intake", "commit_at_intake", "provenance_observed_at", "checkpoint_at"):
+            if name in job:
+                provenance[name] = job[name] if isinstance(job[name], str) else json.dumps(job[name], sort_keys=True)
+        items.append({"content": outcome["content"], "context": "Agent-reported project outcome; verify against its sources.",
+                      "document_id": "outcome-" + outcome["id"], "timestamp": provenance["outcome_at"], "metadata": provenance})
+    result = {"session_id": session_id, "sha256": digest, "outcome_ids": [item["id"] for item in outcomes],
+              "pending_outcomes": meta["remaining_outcomes"]}
+    if not items:
+        return result
+    response = request("/memories", {"items": items, "async": False})
     if response.get("success") is not True or response.get("async") is not False:
         raise ValueError("retain did not succeed")
-    document = request("/documents/" + urllib.parse.quote(document_id, safe=""))
-    count = document.get("memory_unit_count")
-    if document.get("id") != document_id or type(count) is not int or count < 1:
-        raise ValueError("retain produced no sourced memories")
-    return {"session_id": session_id, "sha256": digest}
+    for item in items:
+        document = request("/documents/" + item["document_id"])
+        count = document.get("memory_unit_count")
+        if document.get("id") != item["document_id"] or type(count) is not int or count < 1:
+            raise ValueError("retain produced no sourced memories")
+    return result
 
 
 def grounded_patterns(response, start, end):
@@ -137,8 +126,11 @@ def grounded_patterns(response, start, end):
             metadata = fact.get("metadata") or {}
             try:
                 session = metadata["session_id"]
-                timestamp = datetime.datetime.fromisoformat(metadata["session_started"].replace("Z", "+00:00"))
-                if timestamp.tzinfo is None or fact.get("document_id") != "conversation-" + session:
+                timestamp = datetime.datetime.fromisoformat(metadata.get("outcome_at", metadata["session_started"]).replace("Z", "+00:00"))
+                documents = {"conversation-" + session}
+                if isinstance(metadata.get("outcome_id"), str) and re.fullmatch(r"[a-f0-9]{64}", metadata["outcome_id"]):
+                    documents.add("outcome-" + metadata["outcome_id"])
+                if timestamp.tzinfo is None or fact.get("document_id") not in documents or metadata.get("forked_from"):
                     continue
                 date = timestamp.astimezone(ZoneInfo("Europe/Berlin")).date()
             except (KeyError, TypeError, ValueError):
@@ -172,12 +164,15 @@ def main():
     parser.add_argument("--transcript", type=Path)
     parser.add_argument("--session-id")
     parser.add_argument("--parser", type=Path, default=Path("/hindsight/parser.cjs"))
+    parser.add_argument("--job", type=Path, help="Private bounded snapshot/provenance envelope")
     parser.add_argument("--start", type=datetime.date.fromisoformat)
     parser.add_argument("--end", type=datetime.date.fromisoformat)
     args = parser.parse_args()
     try:
         if args.action == "ingest":
-            result = ingest(args.transcript, args.session_id, args.parser)
+            from project_scope import private_read
+            job = json.loads(private_read(args.job)) if args.job else None
+            result = ingest(args.transcript, args.session_id, args.parser, job)
         else:
             result = reflect(args.start, args.end)
         print(json.dumps(result, ensure_ascii=False))

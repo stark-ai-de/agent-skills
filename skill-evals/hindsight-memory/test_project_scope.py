@@ -87,6 +87,24 @@ class ProjectScopeTests(unittest.TestCase):
         self.extension.write_text("# changed privacy implementation\n")
         self.assertEqual(scope.doctor(self.policy)["status"], "unverified")
 
+    def test_workspace_repository_switches_preserve_only_the_qualified_maximum_scope(self):
+        self.policy.update(kind="hindsight-workspace", roots=[str(self.project)], exclude=[], worktrees={}, repositories={})
+        scope.enable(self.policy, self.evidence(), apply=True)
+        qualified = scope.fingerprint(self.policy)
+        for enabled in (False, True):
+            self.policy["repositories"] = {str(self.project): {"enabled": enabled}}
+            self.assertEqual(scope.fingerprint(self.policy), qualified)
+            scope.active(self.policy)
+        for field, value in (("exclude", [str(self.project)]), ("roots", [str(self.root)]),
+                             ("worktrees", {str(self.root / "linked"): str(self.project)}),
+                             ("repositories", {str(self.project): {"enabled": False, "bankId": "different"}}),
+                             ("repositories", {str(self.project): {"enabled": False, "repoId": "different"}})):
+            with self.subTest(field=field, value=value):
+                changed = {**self.policy, field: value}
+                self.assertNotEqual(scope.fingerprint(changed), qualified)
+                with self.assertRaisesRegex(ValueError, "binding changed"):
+                    scope.active(changed)
+
     def test_declared_runtime_must_match_running_container(self):
         scope.enable(self.policy, self.evidence(), apply=True)
         self.runtime.write_text("HINDSIGHT_API_TENANT_API_KEY=synthetic-token\nHINDSIGHT_API_LLM_MODEL=different\nHINDSIGHT_API_LLM_PROVIDER=ollama\n")
