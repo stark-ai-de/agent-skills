@@ -90,7 +90,7 @@
       "byteLength": 756,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "c357173afe92761dbdb977d4ba1a4bddd2316aabff20edcf155119e3cb911b6f"
+      "sha256": "6558b277e39aa868309b632fe12d3c536d9231a260dc0ac5d142e1d89fd9b3d9"
     },
     {
       "byteLength": 2128,
@@ -294,7 +294,7 @@
       "byteLength": 16529,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "15db561fe621d79c5b21514cc0dd2b7b65645afafc61fa11ef37c31620ab0aac"
+      "sha256": "78c1414471b0a2d6e86a0bf3eeb305795a8ac2fcc67c88b1cf7d02db4926bff1"
     },
     {
       "byteLength": 692,
@@ -1788,7 +1788,7 @@
       "byteLength": 15422,
       "mode": "0644",
       "path": "skills/codex-memory-curator/SKILL.md",
-      "sha256": "e8d73059ce47601e2c6e60be9779e27d8bf15559e389f00d40197bd446e2018d"
+      "sha256": "859a2099fcd6e1212051370202b56e78f17e45092cd8f5bb4aad83bd9e7fd0f7"
     },
     {
       "byteLength": 575,
@@ -2244,7 +2244,7 @@
       "byteLength": 15928,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/SKILL.md",
-      "sha256": "ffd7ef3f5661c71888059462db87d908cc23b5e4133acadf443c901685b278d3"
+      "sha256": "7199e17bd6887b428b37198d6db4a91b6520251e8b8378c77f142efbefb29d8a"
     },
     {
       "byteLength": 615,
@@ -2915,9 +2915,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.23.1"
+    "version": "1.23.2"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "70c597aed9f29780b9259b9ca0275a9aa508511b7c4ef8f16be121f1c6b589c0"
+  "treeHash": "fe7c1d5da371c7650771722f167be58883b57f4fb7ffd42e1eade0436a749c53"
 }

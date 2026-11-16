@@ -8,7 +8,7 @@ compatibility: >-
 metadata:
   author: stark-ai-de
   category: skill-maintenance
-  version: "0.3.3"
+  version: "0.3.4"
 ---
 
 # Jev Capability Advisor

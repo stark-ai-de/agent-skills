@@ -3,6 +3,7 @@ name: lens-debug
 description: Use when the user explicitly requests Lens-based diagnosis of a coding-agent run, unexpected model requests, tool failures, latency, token usage, or cost, or asks to compare a bounded set of recorded runs.
 metadata:
   internal: true
+  version: "0.1.0"
 ---
 
 # Lens Debug
