@@ -33,7 +33,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD^)" = 4365eaeea698ea41f61673a780f2ed033ca76f13
+          test "$(git rev-parse HEAD^)" = 4ba7e62523f59c67e6c431af36d746954183b0e4
           python3 - <<'PY'
           import hashlib, json, os, subprocess
           from pathlib import Path
@@ -83,7 +83,7 @@ jobs:
           data = json.loads(listing.read_text())
           assert data['plugin']['version'] == '1.23.1'
           data['plugin']['version'] = '1.23.2'
-          listing.write_text(json.dumps(data, indent=2) + '\n')
+          listing.write_text(json.dumps(data, indent=2, ensure_ascii=False) + '\n')
           badge = Path('docs/assets/chatgpt-plugin-badge.svg')
           text = badge.read_text()
           assert text.count('1.23.1') == 3
