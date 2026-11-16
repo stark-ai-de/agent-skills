@@ -38,10 +38,7 @@ test("fallback requires route restrictions and preserves pending reviews and rep
     "C",
   );
   assert.equal(
-    selectOpenAiReleaseRoute({
-      skillsOnlyUpdate: "unavailable",
-      newRemote: "unavailable",
-    }).route,
+    selectOpenAiReleaseRoute({ skillsOnlyUpdate: "unavailable", newRemote: "unavailable" }).route,
     "D",
   );
   for (const status of ["in-review", "published", "repair-required"])
