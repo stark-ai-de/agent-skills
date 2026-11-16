@@ -38,7 +38,10 @@ test("fallback requires route restrictions and preserves pending reviews and rep
     "C",
   );
   assert.equal(
-    selectOpenAiReleaseRoute({ skillsOnlyUpdate: "unavailable", newRemote: "unavailable" }).route,
+    selectOpenAiReleaseRoute({
+      skillsOnlyUpdate: "unavailable",
+      newRemote: "unavailable",
+    }).route,
     "D",
   );
   for (const status of ["in-review", "published", "repair-required"])
@@ -136,7 +139,7 @@ test("new remote ZIP carries one real MCP, unchanged skills, provenance and repr
 });
 test("legacy target remains skills-only and identity selection has one canonical owner", () => {
   assert.equal(openAiIdentityFromSource(source, "existing-remote").pluginId, source.pluginId);
-  assert.equal(openAiIdentityFromSource(source, "existing-remote").version, "2.0.0");
+  assert.equal(openAiIdentityFromSource(source, "existing-remote").version, "2.0.1");
   assert.throws(() => openAiIdentityFromSource(source, "invalid"));
   withOpenAiStage(
     root,
@@ -329,7 +332,7 @@ test(
       const fixtureSource = JSON.parse(fs.readFileSync(sourcePath));
       fixtureSource.openai.activeProfile = "desktop-local";
       fixtureSource.distributions.openaiPlugin = "stark-ai-developer-desktop";
-      fixtureSource.outputs.openaiArchive = "dist/openai/stark-ai-developer-desktop-1.0.0.zip";
+      fixtureSource.outputs.openaiArchive = "dist/openai/stark-ai-developer-desktop-1.0.1.zip";
       fs.writeFileSync(sourcePath, JSON.stringify(fixtureSource, null, 2) + "\n");
       const git = (args) => execFileSync("git", args, { cwd: checkout, stdio: "pipe" });
       git(["init", "--quiet"]);
@@ -400,7 +403,7 @@ test(
       const files = unzipSync(fs.readFileSync(desktopArchives[0].output));
       const manifest = JSON.parse(Buffer.from(files[".codex-plugin/plugin.json"]));
       assert.equal(manifest.name, "stark-ai-developer-desktop");
-      assert.equal(manifest.version, "1.0.0");
+      assert.equal(manifest.version, "1.0.1");
       const install = path.join(temp, "install");
       fs.mkdirSync(install);
       const bundle = path.join(install, "index.mjs");
