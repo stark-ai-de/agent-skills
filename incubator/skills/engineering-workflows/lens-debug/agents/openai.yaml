@@ -1,0 +1,6 @@
+interface:
+  display_name: "Lens Debug"
+  short_description: "Explain selected agent traces without changing the setup"
+  default_prompt: "Use $lens-debug to diagnose the selected agent run using trace evidence."
+policy:
+  allow_implicit_invocation: false
