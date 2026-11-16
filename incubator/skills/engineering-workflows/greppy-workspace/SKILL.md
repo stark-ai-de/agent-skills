@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.3.0"
+  version: "0.3.1"
   internal: true
 ---
 
@@ -67,7 +67,7 @@ metadata:
 
 1. Follow `references/local-inference.md` and `references/setup.md`: inspect Windows/WSL, GPU/driver access, actual free resources and existing servers before selecting same-distribution or Windows-native Ollama. Adopt existing package/service owners; prove actual inference rather than inferring it from an installed driver. Start with a measured BGE-M3 pilot (1024 dimensions), ten predeclared retrieval cases, and server-side `OLLAMA_NO_CLOUD=1`. Keep the previous collection during a model migration.
 2. Inventory actual Git roots with `greppy discover --config /absolute/private/workspace.json`. Review exclusions, duplicate paths, linked worktrees and nested repositories. Keep the operations root and fixtures outside the productive corpus.
-3. Resolve and integrate the dependencies in `references/integration.md` for the selected Codex context. Back up targeted runtime configuration and update its declarative source. Use `grepai mcp-serve --workspace <name>`. Route separately authorized companion setup through its owner. Do not replace another notify hook silently.
+3. Resolve and integrate the dependencies in `references/integration.md` for the selected client. Back up targeted runtime configuration and update its declarative source. Use `grepai mcp-serve --workspace <name>`. The watcher needs no completion hook; the optional assessor uses one supported producer. Preserve unrelated hooks. Route separately authorized companion setup through its owner.
 4. If record maintenance is requested, resolve a compatible `karakeep-knowledge` installation and adopt the exact roots, private list, and bounded `codeRecords` grant through that owner. Use its normal policy validation and `inspect → plan → apply` protocol. Enable `recordsCommand` only for this scope.
 5. Preview `greppy setup --config /absolute/private/workspace.json`; after scope adoption, add `--apply`. Configure the supervised services and timers from `assets/` with resolved executable paths. No install/service changes are performed by the Python preview.
 6. Qualify three representative repositories plus isolated fixture repositories using `references/qualification.md`. Verify search, source lines, ignore behavior, updates/deletions and unchanged reruns. Qualify companion evidence and background record execution only for the adopted capabilities. Then expand the selected registry scope, wait for the complete initial watchloop and repeat doctor. Measure restart and an unchanged second run. Keep missing native Windows reboot evidence explicit.

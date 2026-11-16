@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.6.2"
+  version: "0.6.3"
   hermes:
     tags: [knowledge, karakeep, repositories]
     category: engineering-workflows
@@ -81,11 +81,13 @@ post-merge hook. If continuous operation is requested, configure the host's exis
 hook/scheduler explicitly, using the same account, policy, lock and receipts; verify
 one actual trigger. Do not claim unattended operation from a prompt file alone.
 
-1. At the first substantive work in a Git repository after this skill is loaded,
-   or when global/repository guidance requests the session-start check, run
+1. When connection or document-sync readiness is relevant to the requested work,
+   or existing repository guidance requests a check, run
    `node <absolute-skill-root>/scripts/knowledge.mjs check --repo <absolute-repository-root>`
    once for that repository/context. Follow [Sync](references/sync.md) for the result.
-   This check is read-only; missing project policy is not upload permission.
+   `connection: ready` establishes collection reads; `sync: not_enabled` is normal
+   read-only use and needs no repository adoption. Reuse the result until the
+   repository, policy or connection changes. This check grants no uploads.
    If the execution host blocks the check, record the host denial and keep sync
    readiness unverified. Independently test the configured MCP connection with a
    bounded search/content read; shell denial does not establish MCP failure. Follow

@@ -9,8 +9,10 @@ Karakeep is an editable knowledge collection, not a raw transcript or audit log.
 
 Use this route for an authorized sync, a session-start instruction, or meaningful
 completion under an adopted project policy. Reuse standing authorization. A missing
-policy produces `needs_setup`: inspect candidate paths and use the consumer ADR
-process once. Do not silently enroll every repository or import whole trees.
+project policy produces `sync: not_enabled`; collection reads can still be ready.
+If the user requests document sync, inspect candidate paths and use the consumer
+ADR process once. Ordinary reading requires no adoption. Do not silently enroll
+every repository or import whole trees.
 Recommended scope is durable README/docs/ADRs/runbooks/research, with explicit
 exclusions for secrets, private user data, generated files, dependencies and logs.
 Keep runtime grants, credentials, hashes and receipts outside the repository.
@@ -18,7 +20,7 @@ Keep runtime grants, credentials, hashes and receipts outside the repository.
 Use the [Node helper contract](helper.md). `check` is a bounded read-only readiness
 probe, not a full sync or proof of remote branch freshness. `ready` permits normal
 work; `pending` leads to reconciliation at an appropriate point; `needs_setup`
-requires one-time adoption; `conflict` needs evidence-based resolution; `unreachable`
+means read configuration is missing; `conflict` needs evidence-based resolution; `unreachable`
 leaves pending work visible and does not block repository work. Installation adds
 no daemon, scheduler, CI upload job or guaranteed host hook.
 

@@ -1268,7 +1268,12 @@ export async function check({ repo, config = defaultConfig() }) {
     );
   } catch (e) {
     if (e.code === "ENOENT")
-      return { status: "needs_setup", reason: "Global knowledge configuration is missing." };
+      return {
+        status: "needs_setup",
+        connection: "not_configured",
+        sync: "not_enabled",
+        reason: "Global knowledge configuration is missing.",
+      };
     throw e;
   }
   requireThat(
@@ -1277,21 +1282,29 @@ export async function check({ repo, config = defaultConfig() }) {
     "Unsupported installation descriptor.",
   );
   const root = (await git(repo, ["rev-parse", "--show-toplevel"])).trim();
+  const remotes = new Map();
+  for (const name of (await git(root, ["remote"])).trim().split("\n").filter(Boolean)) {
+    // Policies accept these names; other remotes cannot be selected by a policy.
+    if (!/^[a-zA-Z0-9_-]+$/u.test(name)) continue;
+    remotes.set(name, (await git(root, ["remote", "get-url", name])).trim());
+  }
+  const remoteUrls = new Set(remotes.values());
   const candidates = [];
   for (const entry of descriptor.projects) {
     object(entry, ["remote", "policy"]);
     string(entry.remote);
     string(entry.policy);
-    let remote;
-    try {
-      remote = (await git(root, ["remote", "get-url", "origin"])).trim();
-    } catch {
-      return {
-        status: "needs_setup",
-        reason: "Repository source identity has not been configured.",
-      };
-    }
-    if (entry.remote === remote) candidates.push(entry);
+    // Unrelated stale policies must not block collection reads in this repository.
+    // A matching missing/invalid policy remains an error, never a silent opt-out.
+    if (!remoteUrls.has(entry.remote)) continue;
+    const { policy: project } = await loadPolicy(entry.policy);
+    requireThat(
+      project.scope === "project" && project.repo.remote === entry.remote,
+      "config",
+      "Project descriptor and policy source identity differ.",
+    );
+    const remote = remotes.get(project.repo.remoteName);
+    if (entry.remote === remote) candidates.push({ ...entry, loadedPolicy: project });
   }
   requireThat(candidates.length <= 1, "config", "Multiple project policies match the repository.");
   if (!candidates.length) {
@@ -1309,14 +1322,18 @@ export async function check({ repo, config = defaultConfig() }) {
       }
     }
     return {
-      status: "needs_setup",
+      status: connection === "not_configured" ? "needs_setup" : connection,
       connection,
+      sync: "not_enabled",
       ...(diagnostic ? { diagnostic } : {}),
-      reason: "This repository has no adopted project policy.",
+      reason:
+        connection === "ready"
+          ? "Collection reads are available; repository document sync is not enabled."
+          : "Collection reads are not verified; repository document sync is not enabled.",
     };
   }
   const policyFile = candidates[0].policy,
-    { policy: p } = await loadPolicy(policyFile);
+    p = candidates[0].loadedPolicy;
   const current = await localFingerprints(root, p),
     store = await loadStore(p),
     checkpoint = store.checkpoints[p.id];
@@ -1326,11 +1343,19 @@ export async function check({ repo, config = defaultConfig() }) {
     if (e.code === "unreachable")
       return {
         status: "unreachable",
+        connection: "unreachable",
+        sync: "unverified",
         reason: e.message,
         policy: policyFile,
         ...(e.diagnostic ? { diagnostic: e.diagnostic } : {}),
       };
-    return { status: "conflict", reason: e.code, policy: policyFile };
+    return {
+      status: "conflict",
+      connection: "conflict",
+      sync: "unverified",
+      reason: e.code,
+      policy: policyFile,
+    };
   }
   const pending = Object.values(store.entries).some(
     (r) =>
@@ -1340,9 +1365,12 @@ export async function check({ repo, config = defaultConfig() }) {
         r.needsReplan ||
         (r.evidence && r.evidence.status !== "verified")),
   );
+  const sync =
+    pending || !checkpoint || hash(current) !== hash(checkpoint.local) ? "pending" : "ready";
   return {
-    status:
-      pending || !checkpoint || hash(current) !== hash(checkpoint.local) ? "pending" : "ready",
+    status: sync,
+    connection: "ready",
+    sync,
     policy: policyFile,
     writer: os.hostname() === p.writerHost,
     reason: "Local readiness only; canonical freshness is verified by inspect.",

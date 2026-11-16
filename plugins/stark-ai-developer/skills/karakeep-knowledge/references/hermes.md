@@ -77,7 +77,7 @@ remain consistent with the adopted policy.
 2. Start a fresh ordinary session in a Git repository. Observe the native auto-load
    and the agent's real read-only `check` invocation. A loaded prompt alone proves
    instruction discovery, not execution or a working Karakeep connection.
-3. Verify `needs_setup` without mutation for an unadopted repository and continued
+3. Verify `sync: not_enabled` without mutation for an unadopted repository and continued
    repository work when the configured service is unavailable. Qualify authorized
    reads/writes separately using the existing setup/sync acceptance cases.
 
