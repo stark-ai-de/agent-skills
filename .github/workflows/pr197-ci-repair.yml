@@ -1,0 +1,46 @@
+name: PR 197 deterministic CI repair
+
+on:
+  push:
+    branches: [codex/lens-debug-skill]
+    paths: [.github/workflows/pr197-ci-repair.yml, scripts/pr197-ci-repair.py]
+
+permissions: {}
+
+jobs:
+  prepare:
+    if: github.repository == 'stark-ai-de/agent-skills' && github.ref == 'refs/heads/codex/lens-debug-skill'
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: useblacksmith/checkout@75c49b6ed30ce59336e9252425796cfcfac155f8
+        with:
+          persist-credentials: false
+      - uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1
+        with:
+          runtime: node@24.18.0
+          cache: false
+          install: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version-file: .bun-version
+      - name: Install pinned verification dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+      - name: Reproduce the reviewed candidate and verify exact content
+        run: python3 -B scripts/pr197-ci-repair.py apply
+      - name: Verify repaired catalog and Lens regression suite
+        run: |
+          node scripts/catalog/validate-skills.mjs
+          python3 -B incubator/skills/engineering-workflows/lens-debug/tests/test_lens_read.py
+      - name: Create candidate Git objects without changing any branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 -B scripts/pr197-ci-repair.py publish
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: pr197-tested-candidate
+          path: ${{ runner.temp }}/pr197-candidate.json
+          retention-days: 1
+          if-no-files-found: error
