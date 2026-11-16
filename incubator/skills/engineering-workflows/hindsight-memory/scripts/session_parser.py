@@ -203,7 +203,10 @@ def parse(raw, session_id, source=None, leaf_id=None, known_outcomes=(), complet
             role = payload.get("role")
             if role == "user" and user_events:
                 continue
-            if role == "assistant" and any(payload.get(field) not in (None, "final") for field in ("channel", "phase")):
+            # Native MessagePhase serializes FinalAnswer as final_answer; older
+            # transcripts can omit phase and use the separate final channel.
+            if role == "assistant" and (payload.get("channel") not in (None, "final")
+                    or payload.get("phase") not in (None, "final_answer")):
                 continue
         text = text_content(payload.get("content"))
         if role == "user":

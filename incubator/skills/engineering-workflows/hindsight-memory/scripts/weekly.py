@@ -201,12 +201,15 @@ def run(args):
     queue.mkdir(exist_ok=True, mode=0o700)
     ledger_path = state / "imported.json"
     from project_scope import private_read
-    ledger = json.loads(private_read(ledger_path)) if ledger_path.exists() else {}
+    from workspace_scope import RepositoryIneligible
+    # Durable deduplication history grows across batches; it is not a bounded input.
+    ledger = json.loads(private_read(ledger_path, max_bytes=None)) if ledger_path.exists() else {}
     failed = False
     mode = getattr(args, "mode", "weekly")
     maximum = getattr(args, "max_sessions", 8)
     attempted = 0
-    counts = {"retained_outcomes": 0, "no_new_outcomes": 0, "unchanged_sessions": 0}
+    skipped = {}
+    counts = {"retained_outcomes": 0, "no_new_outcomes": 0, "unchanged_sessions": 0, "skipped_ineligible": 0}
     if args is not None:
         args.deadline = time.monotonic() + getattr(args, "max_seconds", 240 if mode == "intake" else 1800)
     for record_path in sorted(queue.glob("*.json"), key=lambda path: (path.stat().st_mtime_ns, path.name)):
@@ -276,13 +279,23 @@ def run(args):
                     record_path.unlink()
                 else:
                     failed = True
+        except RepositoryIneligible:
+            # A pause preserves captured work but must not consume another bank's
+            # intake allowance or block its reflection. Rotate for time-budget fairness.
+            attempted -= 1
+            skipped[record_path] = original
+            counts["skipped_ineligible"] += 1
+            if record_path.exists():
+                os.utime(record_path, None)
         except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
             failed = True
             # Preserve poison/revoked records without starving later eligible sessions.
             if record_path.exists():
                 os.utime(record_path, None)
             print("A queued session remains pending.", file=sys.stderr)
-    if failed or any(queue.glob("*.json")):
+    remaining = list(queue.glob("*.json"))
+    pending = failed or any(path not in skipped or path.read_bytes() != skipped[path] for path in remaining)
+    if pending or (mode == "intake" and remaining):
         if mode == "intake":
             return {"status": "pending", "attempted": attempted, "failed": failed, **counts}
         raise ValueError("pending imports")
@@ -304,7 +317,10 @@ def run(args):
                 # Recheck current eligibility; a disabled repository cannot trigger reflection.
                 from workspace_scope import resolve
                 records = [item for item in ledger.values() if isinstance(item, dict) and item["bankId"] == bank]
-                resolve(scope, records[0]["repository"]["projectRoot"])
+                try:
+                    resolve(scope, records[0]["repository"]["projectRoot"])
+                except RepositoryIneligible:
+                    continue
                 args.memory_bank = bank
             patterns = call_worker(args, token, "reflect", ["--start", start.isoformat(), "--end", end.isoformat()])
             atomic_write(report, render_report(start, end, patterns))

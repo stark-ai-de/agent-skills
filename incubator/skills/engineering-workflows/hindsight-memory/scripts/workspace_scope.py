@@ -18,6 +18,10 @@ import project_scope
 IDENTIFIER = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}")
 
 
+class RepositoryIneligible(ValueError):
+    """The accepted workspace scope does not currently include this repository."""
+
+
 def absolute(value):
     if not isinstance(value, str) or not Path(value).is_absolute():
         raise ValueError("absolute workspace path required")
@@ -139,12 +143,12 @@ def resolve(policy, cwd, register=False):
     if (Path(root) / ".git").is_file() and root not in policy["worktrees"]:
         raise ValueError("worktree requires an exact explicit mapping")
     if not any(Path(canonical).is_relative_to(Path(allowed)) for allowed in policy["roots"]):
-        raise ValueError("repository is outside accepted roots")
+        raise RepositoryIneligible("repository is outside accepted roots")
     if any(Path(candidate).is_relative_to(Path(excluded)) for candidate in (root, canonical) for excluded in policy["exclude"]):
-        raise ValueError("repository excluded")
+        raise RepositoryIneligible("repository excluded")
     override = policy["repositories"].get(canonical, {})
     if override.get("enabled") is False:
-        raise ValueError("repository disabled")
+        raise RepositoryIneligible("repository disabled")
     identity = actual if canonical == root else git_identity(canonical)
     if identity["root"] != canonical or identity["commonDir"] != actual["commonDir"]:
         raise ValueError("worktree does not belong to mapped repository")

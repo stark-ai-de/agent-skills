@@ -35,7 +35,7 @@ class SessionParserTests(unittest.TestCase):
                    codex("assistant", "private thought", channel="analysis"),
                    codex("assistant", "progress report", channel=None, phase="commentary"),
                    {"type": "response_item", "payload": {"type": "function_call_output", "output": "Recalled old memory"}},
-                   codex("assistant", "Fixed the parser; test_session_parser.py passes.", phase="final")]
+                   codex("assistant", "Fixed the parser; test_session_parser.py passes.", phase="final_answer")]
         meta, outcomes = parser.parse(encoded(records), SID)
         self.assertEqual(len(outcomes), 1)
         text = outcomes[0]["content"]
@@ -43,10 +43,28 @@ class SessionParserTests(unittest.TestCase):
         for excluded in ("private thought", "progress report", "Recalled old memory", "instructions"):
             self.assertNotIn(excluded, text)
 
+    def test_codex_native_final_answer_phase_and_legacy_channel_are_distinct(self):
+        for fields in ({}, {"channel": "final"}, {"phase": "final_answer"},
+                       {"channel": None, "phase": "final_answer"}, {"channel": "final", "phase": "final_answer"}):
+            with self.subTest(fields=fields):
+                records = [self.codex_header, codex("user", "Task"), codex("assistant", "Completed outcome", **fields)]
+                outcomes = parser.parse(encoded(records), SID)[1]
+                self.assertEqual(len(outcomes), 1)
+                self.assertEqual(json.loads(outcomes[0]["content"])["outcome"], "Completed outcome")
+
+    def test_codex_nonfinal_unknown_and_crossed_phase_channel_values_are_excluded(self):
+        fields = [{"phase": phase} for phase in ("commentary", "partial_answer", "analysis", "unknown", "final")]
+        fields += [{"channel": channel} for channel in ("commentary", "analysis", "unknown", "final_answer")]
+        fields += [{"channel": "analysis", "phase": "final_answer"}, {"channel": "final", "phase": "commentary"}]
+        for value in fields:
+            with self.subTest(fields=value):
+                records = [self.codex_header, codex("user", "Task"), codex("assistant", "Not an outcome", **value)]
+                self.assertEqual(parser.parse(encoded(records), SID)[1], [])
+
     def test_native_user_events_disambiguate_injected_role_user(self):
         records = [self.codex_header, codex("user", "injected context"),
                    {"type": "event_msg", "timestamp": START, "payload": {"type": "item_completed", "item": {"type": "UserMessage", "content": [{"type": "text", "text": "Actual request"}]}}},
-                   codex("assistant", "Outcome", phase="final")]
+                   codex("assistant", "Outcome", phase="final_answer")]
         self.assertEqual(json.loads(parser.parse(encoded(records), SID)[1][0]["content"])["task"], "Actual request")
 
     def test_pi_native_branch_keeps_selected_leaf_and_skips_tools_reasoning(self):
@@ -67,8 +85,8 @@ class SessionParserTests(unittest.TestCase):
             self.assertEqual(parser.parse(encoded(records), SID, "pi", "a")[1], [])
 
     def test_explicit_abort_and_codex_abort_notice_drop_last_task_only(self):
-        records = [self.codex_header, codex("user", "First"), codex("assistant", "Completed", phase="final"),
-                   codex("user", "Second"), codex("assistant", "Unfinished", phase="final")]
+        records = [self.codex_header, codex("user", "First"), codex("assistant", "Completed", phase="final_answer"),
+                   codex("user", "Second"), codex("assistant", "Unfinished", phase="final_answer")]
         for suffix, status in (([], "aborted"), ([{"type": "event_msg", "timestamp": START, "payload": {"type": "turn_aborted"}}], None)):
             outcomes = parser.parse(encoded(records + suffix), SID, completion_status=status)[1]
             self.assertEqual(len(outcomes), 1)
@@ -88,7 +106,7 @@ class SessionParserTests(unittest.TestCase):
 
     def test_marked_excerpts_and_unseen_batches_do_not_starve_old_outcomes(self):
         records = [self.codex_header, codex("user", "Task")]
-        records.extend(codex("assistant", str(i) + ": " + "A complete sentence. " * 400, phase="final") for i in range(20))
+        records.extend(codex("assistant", str(i) + ": " + "A complete sentence. " * 400, phase="final_answer") for i in range(20))
         known = []
         for _ in range(20):
             meta, batch = parser.parse(encoded(records), SID, known_outcomes=known)
@@ -112,7 +130,7 @@ class SessionParserTests(unittest.TestCase):
         self.assertEqual(parser.parse(encoded(records), SID, "pi")[1], [])
 
     def test_replayed_content_in_another_session_cannot_overwrite_provenance(self):
-        records = [self.codex_header, codex("user", "Task"), codex("assistant", "Outcome", phase="final")]
+        records = [self.codex_header, codex("user", "Task"), codex("assistant", "Outcome", phase="final_answer")]
         first = parser.parse(encoded(records), SID)[1][0]["id"]
         other = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
         records[0]["payload"]["id"] = other
@@ -126,11 +144,11 @@ class SessionParserTests(unittest.TestCase):
         self.assertEqual(parser.parse(encoded(records), SID, "pi", "edit")[1], [])
 
     def test_checkpoint_rejects_future_and_undated_outcomes_until_a_later_checkpoint(self):
-        future = codex("assistant", "Later completed turn", phase="final")
+        future = codex("assistant", "Later completed turn", phase="final_answer")
         future["timestamp"] = "2026-11-16T10:05:00Z"
-        undated = codex("assistant", "Unbounded outcome", phase="final")
+        undated = codex("assistant", "Unbounded outcome", phase="final_answer")
         del undated["timestamp"]
-        records = [self.codex_header, codex("user", "Actual request"), codex("assistant", "Earlier completed turn", phase="final"),
+        records = [self.codex_header, codex("user", "Actual request"), codex("assistant", "Earlier completed turn", phase="final_answer"),
                    {"type": "event_msg", "timestamp": "2026-11-16T10:04:00Z", "payload": {"type": "user_message", "message": "Future request"}},
                    future, undated]
         _, initial = parser.parse(encoded(records), SID, checkpoint_at="2026-11-16T10:02:00Z")

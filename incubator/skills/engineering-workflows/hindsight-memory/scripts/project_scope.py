@@ -16,13 +16,17 @@ import urllib.request
 from urllib.parse import urlsplit
 
 
-def private_read(path):
+def private_read(path, *, max_bytes=1048576):
     fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
     with os.fdopen(fd, "rb") as stream:
         info = os.fstat(stream.fileno())
-        if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o600 or info.st_size > 1048576:
+        if (not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o600
+                or (max_bytes is not None and info.st_size > max_bytes)):
             raise ValueError("private input permissions or size")
-        return stream.read(1048577)
+        raw = stream.read() if max_bytes is None else stream.read(max_bytes + 1)
+        if max_bytes is not None and len(raw) > max_bytes:
+            raise ValueError("private input permissions or size")
+        return raw
 
 
 def project_directory(path, project):

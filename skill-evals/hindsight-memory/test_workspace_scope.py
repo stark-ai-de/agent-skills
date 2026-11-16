@@ -55,7 +55,7 @@ class WorkspaceScopeTests(unittest.TestCase):
         self.transcript = self.sessions / "synthetic.jsonl"
         self.records = [{"type": "session_meta", "payload": {"id": SID, "source": "cli", "cwd": str(self.project), "timestamp": "2026-11-16T10:00:00Z"}},
                         {"type": "response_item", "timestamp": "2026-11-16T10:01:00Z", "payload": {"type": "message", "role": "user", "content": [{"type": "input_text", "text": "Repair the issue"}]}},
-                        {"type": "response_item", "timestamp": "2026-11-16T10:02:00Z", "payload": {"type": "message", "role": "assistant", "phase": "final", "content": [{"type": "output_text", "text": "Fixed parser.py; the regression test passes."}]}}]
+                        {"type": "response_item", "timestamp": "2026-11-16T10:02:00Z", "payload": {"type": "message", "role": "assistant", "phase": "final_answer", "content": [{"type": "output_text", "text": "Fixed parser.py; the regression test passes."}]}}]
         self.write_transcript()
         self.event = {"hook_event_name": "Stop", "source": "codex", "session_id": SID, "cwd": str(self.project), "transcript_path": str(self.transcript)}
 
@@ -208,6 +208,176 @@ class WorkspaceScopeTests(unittest.TestCase):
             dispatch.assert_not_called()
         self.assertEqual(len(list((self.state / "queue").glob("*.json"))), 1)
 
+    def test_weekly_skips_disabled_bank_and_reflects_the_next_enabled_bank(self):
+        other = self.repository(self.root / "other")
+        self.value["repositories"] = {
+            str(self.project): {"bankId": "bank-a"},
+            str(other): {"bankId": "bank-z"},
+        }
+        self.save()
+        repositories = [scope.resolve(self.policy, root, register=True) for root in (self.project, other)]
+        ledger = {str(index): {"bankId": item["bankId"], "repository": item}
+                  for index, item in enumerate(repositories)}
+        scope.write_json(self.state / "imported.json", ledger)
+        self.value["repositories"][str(self.project)]["enabled"] = False
+        self.save()
+        args = self.args()
+        args.mode = "weekly"
+        calls = []
+        def dispatch(args, token, action, extra, transcript=None):
+            calls.append((action, args.memory_bank))
+            return []
+        with patch.object(scope, "active", return_value=CUTOFF), patch.object(weekly, "call_worker", side_effect=dispatch):
+            self.assertEqual(weekly.run(args)["status"], "complete")
+        self.assertEqual(calls, [("reflect", "bank-z")])
+        self.assertFalse(list((self.state / "reflections/bank-a").glob("*.md")))
+        self.assertEqual(len(list((self.state / "reflections/bank-z").glob("*.md"))), 1)
+        self.assertEqual(json.loads((self.state / "imported.json").read_text()), ledger)
+
+    def test_weekly_keeps_registry_permission_failures_fatal(self):
+        repository = scope.resolve(self.policy, self.project, register=True)
+        scope.write_json(self.state / "imported.json", {"session": {"bankId": repository["bankId"], "repository": repository}})
+        (self.state / "repositories.json").chmod(0o644)
+        args = self.args()
+        args.mode = "weekly"
+        with patch.object(scope, "active", return_value=CUTOFF), patch.object(weekly, "call_worker") as dispatch:
+            with self.assertRaisesRegex(ValueError, "private input permissions"):
+                weekly.run(args)
+            dispatch.assert_not_called()
+
+    def test_paused_queue_preserves_capture_without_starving_enabled_bank(self):
+        other = self.repository(self.root / "other")
+        self.value["repositories"] = {
+            str(self.project): {"bankId": "bank-a"},
+            str(other): {"bankId": "bank-z"},
+        }
+        self.save()
+        repositories = [scope.resolve(self.policy, root, register=True) for root in (self.project, other)]
+        ledger = {str(index): {"bankId": item["bankId"], "repository": item}
+                  for index, item in enumerate(repositories)}
+        scope.write_json(self.state / "imported.json", ledger)
+        for number in range(10):
+            root = self.project if number < 9 else other
+            self.records[0]["payload"].update(id=str(number) + SID[1:], cwd=str(root))
+            self.transcript = self.sessions / f"{number}.jsonl"
+            self.write_transcript()
+            self.event.update(session_id=self.records[0]["payload"]["id"], cwd=str(root), transcript_path=str(self.transcript))
+            self.assertTrue(session_hook.queue_session(self.event, self.home, workspace_policy_path=self.file))
+        paused = {path: path.read_bytes() for path in (self.state / "queue").glob("*.json")
+                  if json.loads(path.read_text())["repository"]["bankId"] == "bank-a"}
+        for path in (self.state / "queue").glob("*.json"):
+            order = 1 if path in paused else 2
+            os.utime(path, (order, order))
+        self.value["repositories"][str(self.project)]["enabled"] = False
+        self.save()
+        args = self.args(max_sessions=1)
+        args.mode = "weekly"
+        calls = []
+        def dispatch(args, token, action, extra, transcript=None):
+            calls.append((action, args.memory_bank))
+            if action == "ingest":
+                return {"session_id": self.event["session_id"], "sha256": hashlib.sha256(transcript.read_bytes()).hexdigest(),
+                        "outcome_ids": [], "pending_outcomes": 0}
+            return []
+        with patch.object(scope, "active", return_value=CUTOFF), patch.object(weekly, "call_worker", side_effect=dispatch):
+            result = weekly.run(args)
+        self.assertEqual((result["status"], result["attempted"], result["skipped_ineligible"]), ("complete", 1, 9))
+        self.assertEqual(calls, [("ingest", "bank-z"), ("reflect", "bank-z")])
+        self.assertEqual({path: path.read_bytes() for path in (self.state / "queue").glob("*.json")}, paused)
+        saved = json.loads((self.state / "imported.json").read_text())
+        self.assertEqual({key: saved[key] for key in ledger}, ledger)
+        self.assertFalse(list((self.state / "reflections/bank-a").glob("*.md")))
+
+    def test_replaced_paused_queue_record_is_not_exempt_from_pending_imports(self):
+        self.assertTrue(session_hook.queue_session(self.event, self.home, workspace_policy_path=self.file))
+        paused = next((self.state / "queue").glob("*.json"))
+        other = self.repository(self.root / "other")
+        self.records[0]["payload"].update(id="a" + SID[1:], cwd=str(other))
+        self.transcript = self.sessions / "other.jsonl"
+        self.write_transcript()
+        self.event.update(session_id=self.records[0]["payload"]["id"], cwd=str(other), transcript_path=str(self.transcript))
+        self.assertTrue(session_hook.queue_session(self.event, self.home, workspace_policy_path=self.file))
+        os.utime(paused, (1, 1))
+        self.value["repositories"][str(self.project)] = {"enabled": False}
+        self.save()
+        args = self.args(max_sessions=1)
+        args.mode = "weekly"
+        def dispatch(args, token, action, extra, transcript=None):
+            self.assertEqual(action, "ingest")
+            paused.write_text("{}\n")  # Simulate a changed queue reference during worker dispatch.
+            return {"session_id": self.event["session_id"], "sha256": hashlib.sha256(transcript.read_bytes()).hexdigest(),
+                    "outcome_ids": [], "pending_outcomes": 0}
+        with patch.object(scope, "active", return_value=CUTOFF), patch.object(weekly, "call_worker", side_effect=dispatch) as called:
+            with self.assertRaisesRegex(ValueError, "pending imports"):
+                weekly.run(args)
+        self.assertEqual(called.call_count, 1)
+        self.assertEqual(paused.read_text(), "{}\n")
+        self.assertFalse((self.state / "reflections").exists())
+
+    def test_accumulated_ledger_over_one_megabyte_allows_intake_and_reflection(self):
+        self.assertTrue(session_hook.queue_session(self.event, self.home, workspace_policy_path=self.file))
+        repository = scope.resolve(self.policy, self.project)
+        ledger = {f"history-{index}": {
+            "sha256": "a" * 64, "bankId": repository["bankId"], "repository": repository,
+            "session_id": f"{index:08x}" + SID[8:], "pending_outcomes": 0,
+            "outcome_ids": [hashlib.sha256(f"{index}-{outcome}".encode()).hexdigest() for outcome in range(10)],
+        } for index in range(1000)}
+        ledger_path = self.state / "imported.json"
+        scope.write_json(ledger_path, ledger)
+        self.assertGreater(ledger_path.stat().st_size, 1048576)
+        with self.assertRaisesRegex(ValueError, "private input permissions or size"):
+            project_scope.private_read(ledger_path)  # Ordinary private inputs retain their bound.
+        calls = []
+        def dispatch(args, token, action, extra, transcript=None):
+            calls.append(action)
+            if action == "ingest":
+                return {"session_id": SID, "sha256": hashlib.sha256(transcript.read_bytes()).hexdigest(),
+                        "outcome_ids": ["f" * 64], "pending_outcomes": 0}
+            return []
+        with patch.object(scope, "active", return_value=CUTOFF), patch.object(weekly, "call_worker", side_effect=dispatch):
+            self.assertEqual(weekly.run(self.args())["status"], "complete")
+            args = self.args()
+            args.mode = "weekly"
+            self.assertEqual(weekly.run(args)["status"], "complete")
+        self.assertEqual(calls, ["ingest", "reflect"])
+        saved = json.loads(ledger_path.read_text())
+        self.assertEqual({key: saved[key] for key in ledger}, ledger)
+        self.assertEqual(len(saved), len(ledger) + 1)
+        self.assertEqual(ledger_path.stat().st_mode & 0o777, 0o600)
+        self.assertFalse(list((self.state / "queue").glob("*.json")))
+
+    def test_ledger_reader_retains_private_file_checks(self):
+        ledger_path = self.state / "imported.json"
+        for kind in ("permissions", "symlink", "directory", "fifo", "owner"):
+            with self.subTest(kind=kind):
+                scope.write_json(ledger_path, {})
+                if kind == "permissions":
+                    ledger_path.chmod(0o644)
+                elif kind == "symlink":
+                    ledger_path.unlink()
+                    ledger_path.symlink_to(self.file)
+                elif kind == "directory":
+                    ledger_path.unlink()
+                    ledger_path.mkdir(mode=0o700)
+                elif kind == "fifo":
+                    ledger_path.unlink()
+                    os.mkfifo(ledger_path, 0o600)
+                try:
+                    with patch.object(scope, "active", return_value=CUTOFF), patch.object(weekly, "call_worker") as dispatch:
+                        if kind == "owner":
+                            with patch.object(project_scope.os, "getuid", return_value=os.getuid() + 1):
+                                with self.assertRaisesRegex(ValueError, "permissions"):
+                                    project_scope.private_read(ledger_path, max_bytes=None)
+                        else:
+                            with self.assertRaises((OSError, ValueError)):
+                                weekly.run(self.args())
+                        dispatch.assert_not_called()
+                finally:
+                    if kind == "directory":
+                        ledger_path.rmdir()
+                    else:
+                        ledger_path.unlink()
+
     def test_stop_cli_emits_json_without_requesting_continuation(self):
         result = subprocess.run([sys.executable, "-B", str(SCRIPTS / "session_hook.py"), "--workspace-policy", str(self.home / "absent")],
                                 input=json.dumps(self.event), text=True, capture_output=True, check=True)
@@ -250,7 +420,7 @@ class WorkspaceScopeTests(unittest.TestCase):
             scope.resolve(self.policy, moved)
 
     def test_partial_and_delayed_final_flushes_are_retried_from_latest_complete_prefix(self):
-        final = {"type": "response_item", "timestamp": "2026-11-16T10:04:00Z", "payload": {"type": "message", "role": "assistant", "phase": "final", "content": [{"type": "output_text", "text": "Delayed final observation"}]}}
+        final = {"type": "response_item", "timestamp": "2026-11-16T10:04:00Z", "payload": {"type": "message", "role": "assistant", "phase": "final_answer", "content": [{"type": "output_text", "text": "Delayed final observation"}]}}
         raw_final = (json.dumps(final) + "\n").encode()
         with self.transcript.open("ab") as stream:
             stream.write(raw_final[:20])
@@ -277,7 +447,7 @@ class WorkspaceScopeTests(unittest.TestCase):
             self.assertTrue(session_hook.queue_session(self.event, self.home, workspace_policy_path=self.file))
         self.records.extend([
             {"type": "response_item", "timestamp": "2026-11-16T10:04:00Z", "payload": {"type": "message", "role": "user", "content": [{"type": "input_text", "text": "A later task"}]}},
-            {"type": "response_item", "timestamp": "2026-11-16T10:05:00Z", "payload": {"type": "message", "role": "assistant", "phase": "final", "content": [{"type": "output_text", "text": "Outcome after capture pause"}]}}])
+            {"type": "response_item", "timestamp": "2026-11-16T10:05:00Z", "payload": {"type": "message", "role": "assistant", "phase": "final_answer", "content": [{"type": "output_text", "text": "Outcome after capture pause"}]}}])
         self.write_transcript()
         self.assertFalse(session_hook.queue_session({**self.event, "memory_disabled": True}, self.home, workspace_policy_path=self.file))
         bodies = []

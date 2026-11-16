@@ -79,7 +79,7 @@ class IngestTests(unittest.TestCase):
         self.records = [
             {"type": "session_meta", "payload": {"id": self.session, "source": "cli", "cwd": str(Path(root.name)), "timestamp": "2026-11-10T10:00:00Z"}},
             {"type": "response_item", "payload": {"type": "message", "role": "user", "content": [{"type": "input_text", "text": "Safe question"}]}},
-            {"type": "response_item", "timestamp": "2026-11-10T10:01:00Z", "payload": {"type": "message", "role": "assistant", "phase": "final", "content": [{"type": "output_text", "text": "Safe outcome with a verified source reference."}]}},
+            {"type": "response_item", "timestamp": "2026-11-10T10:01:00Z", "payload": {"type": "message", "role": "assistant", "phase": "final_answer", "content": [{"type": "output_text", "text": "Safe outcome with a verified source reference."}]}},
         ]
         self.responses = [{"success": True, "async": False}]
 
