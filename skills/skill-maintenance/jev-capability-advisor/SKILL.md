@@ -8,7 +8,7 @@ compatibility: >-
 metadata:
   author: stark-ai-de
   category: skill-maintenance
-  version: "0.3.3"
+  version: "0.3.4"
 ---
 
 # Jev Capability Advisor
@@ -35,11 +35,7 @@ Concrete host approval controls belong in the [hook reference](references/hook-i
 
 ## Enabled-hook entry
 
-Hook guidance requests **Recommend**, `general/current`. First distinguish the delivered mode. A `repository-adopted` reminder follows the [repository policy prerequisites](references/hook-integration.md#repository-adopted-policy), including adoption, scoped host-owner processing authority and qualification; it has no installer binding and must not invent one. The following bound-status and receipt steps apply to the optional installer-managed reminder. Resolve this `SKILL.md` from its current eligible host card. Use that exact directory for every reference and script; a repository/workspace search cannot establish whether installed support files exist. First read this copy's `references/hook-integration.md`, then run this copy's `scripts/jev_hooks.py status` with the delivered registration's `--host` and `--scope`; add `--project-root` only for project scope. Use absolute paths or that skill directory as the command working directory. Require an active registration and `advice_consent.status: recorded`; a key or native hook trust does not establish processing consent. Never install or grant consent to repair a missing prerequisite during ordinary advice.
-
-Read the [capture procedure](references/hook-catalog.md) before judging catalog availability. A prebuilt JSON export or complete inventory is not required: construct a bounded bare array from the current model-visible skill cards and loaded MCP definitions, keeping only source-backed eligible entries. A missing structured export alone is not a prerequisite failure. Build the hook catalog from current skill cards and actual MCP definitions, excluding built-in host tools. Candidate enrichment may extract name, description and invocation-policy metadata, but must not load candidate workflow instructions before advice. The CLI catalog is a **bare JSON array**, never a `{"capabilities": [...]}` wrapper or a Session frame. Keep current-source snapshots and exclusions in the private [catalog evidence sidecar](references/hook-catalog.md), check it with `scripts/hook_catalog.py`, and retain its declared coverage limits. For a newly generated catalog, follow the [local catalog check](references/hook-integration.md#catalog-shape-and-local-check) with `--offline-candidates` before the separate provider command; this checks input locally, makes no recommendation and needs no credential/network approval. Follow the [portable network and failure contract](references/network-access.md). Check the active host's effective permission for the TypeSafe endpoint. If its enforced network policy already allows that destination, run the advisor in the normal sandbox; in Codex use `use_default` or omit the override. Restricted networking alone does not require escalation. Only when this invocation actually requires native approval, and the active tool exposes it, use the host's normal approval route on the advisor command itself. Prepare permitted local inputs separately. Denied, unavailable or unverifiable required permission means native fallback without a provider attempt; never replay a failed provider request with higher permissions.
-
-Keep one eligible skill instance's instructions and scripts together; do not concatenate multiple installed versions. If support is unavailable, establish that with a direct read/execution result for this instance before reporting the concrete fallback. Continue with its current-session catalog and configured credentials when prerequisites hold; no setup or workflow-selection question is needed.
+Hook guidance requests **Recommend**, `general/current`. Before any hook-driven advice, read this installed copy's [enabled-hook procedure](references/enabled-hook-entry.md). It distinguishes repository-adopted from installer-managed reminders and retains the consent, current-catalog, network-approval and fallback checks. Keep one eligible skill instance's instructions and scripts together. Missing prerequisites never authorize installation, consent changes, escalation, or replay; preserve native fallback.
 
 ## When to use
 
@@ -108,15 +104,7 @@ Read [the contract and commands](references/contract.md) when preparing a catalo
 
 ## Scripts
 
-- `scripts/jev_hooks.py`: explicit hook `install`/`uninstall` mutate the selected host configuration and private ownership state; `status` and `--dry-run` are read-only; `render` prints a repository-policy fragment without accessing user configuration or ownership state. Embeds static guidance; no provider access, dependency installation or trust changes.
-- `scripts/hook_catalog.py`: read-only consistency check for a private current-session catalog sidecar; no discovery, credentials, network, cache or host-attestation claim.
-- `scripts/jev_advisor.py`: recommendation client; network access only for a fresh requested recommendation. `--output` writes the requested local result file; `--cache-dir` opts in to decision-cache writes; `--index-cache-dir` separately enables local index-cache writes, including during offline inspection.
-- `scripts/retrieval.py`: deterministic candidate retrieval, used by the client. No network or installation.
-- `scripts/decision_cache.py`: private, bounded cache used only when explicitly configured. Stores decisions without query text, provider payloads or credentials.
-- `scripts/index_cache.py`: bounded session-owned lexical-index reuse plus an optional private disk cache; fresh-index fallback on unavailable reuse.
-- `scripts/routing_metadata.py`: validates optional public applicability guidance and creates bounded model-card text.
-- `scripts/https_transport.py`: verified HTTPS with session-scoped connection reuse, bounded responses, proxy fallback and no automatic request replay.
-- `scripts/jev_session.py`: optional owner-process Python/NDJSON interface; reads each task and catalog from its caller and writes bounded advisory IDs to stdout. Requires fresh inventory; caches derived search data, never decisions or inventory authority. No listener or host configuration changes.
+Before using a helper, read its [script inventory and side-effect contract](references/script-inventory.md). Only explicitly requested recommendation, output/cache, or hook-management actions may have the documented effects; inspection stays read-only. Resolve commands from this installed skill directory.
 
 ## Output format
 

@@ -90,7 +90,7 @@
       "byteLength": 756,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "c357173afe92761dbdb977d4ba1a4bddd2316aabff20edcf155119e3cb911b6f"
+      "sha256": "6558b277e39aa868309b632fe12d3c536d9231a260dc0ac5d142e1d89fd9b3d9"
     },
     {
       "byteLength": 2128,
@@ -291,10 +291,10 @@
       "sha256": "a37e1bc72c46376a710e18cf4c4f863d3a4cc90e22903df55f53f443e3c70f3f"
     },
     {
-      "byteLength": 20853,
+      "byteLength": 16529,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "028189587517158bf0ba11d257cd016fb3ebfbe5449db59dba01b7a7b3d7cc44"
+      "sha256": "78c1414471b0a2d6e86a0bf3eeb305795a8ac2fcc67c88b1cf7d02db4926bff1"
     },
     {
       "byteLength": 692,
@@ -1539,10 +1539,10 @@
       "sha256": "40890b255471e9e4f21e4c4ee49bf5d2db8da5b1d423b7baf686e0a24d94c988"
     },
     {
-      "byteLength": 12877,
+      "byteLength": 17516,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
-      "sha256": "4303b05864e02d8c19fcbb84e679dc554a75516e9b03f78754b1240ee59e4e9e"
+      "sha256": "2529d4c113e0ccb4a7219d932e162e82d955ad203d59699ee54633089eeab0aa"
     },
     {
       "byteLength": 9221,
@@ -1785,10 +1785,10 @@
       "sha256": "d0fcd8846dfdd74ef5a13385fe298e95ed13d1c422d807fd82283f17dd567368"
     },
     {
-      "byteLength": 18071,
+      "byteLength": 15422,
       "mode": "0644",
       "path": "skills/codex-memory-curator/SKILL.md",
-      "sha256": "8c444e61f66ed59173a9288a8639aff1e4b8cec9cacc835609fde5e558f7e55f"
+      "sha256": "859a2099fcd6e1212051370202b56e78f17e45092cd8f5bb4aad83bd9e7fd0f7"
     },
     {
       "byteLength": 575,
@@ -1849,6 +1849,12 @@
       "mode": "0644",
       "path": "skills/codex-memory-curator/references/plan-lifecycle.md",
       "sha256": "f08e75ffee590651c84b96c229035767c2713c9da9315dac2ea41dec213cbc0e"
+    },
+    {
+      "byteLength": 3436,
+      "mode": "0644",
+      "path": "skills/codex-memory-curator/references/review-procedure.md",
+      "sha256": "0e7f446e3244f70380c5a0626492b31edd0f8f27751e3ca5d218187ac747ca61"
     },
     {
       "byteLength": 5470,
@@ -2235,10 +2241,10 @@
       "sha256": "a2178792b40306f7c98365105b93cf693204cd84601762370c3b7f6050c0fb4c"
     },
     {
-      "byteLength": 20465,
+      "byteLength": 15928,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/SKILL.md",
-      "sha256": "5f209ae35fe01412c8ca7b4c3efcc306b59a81bde6113774796b5f9542aa2770"
+      "sha256": "7199e17bd6887b428b37198d6db4a91b6520251e8b8378c77f142efbefb29d8a"
     },
     {
       "byteLength": 615,
@@ -2277,10 +2283,16 @@
       "sha256": "92402047de5dda5f347492956384b9ecaea4e88ff3241fd26182bc77e7be4ef8"
     },
     {
-      "byteLength": 7631,
+      "byteLength": 3690,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/references/enabled-hook-entry.md",
+      "sha256": "3649afd6750c74288b67a80c7733e5c13c61962d5895b16d9cc30150d660c929"
+    },
+    {
+      "byteLength": 7646,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/references/hook-catalog.md",
-      "sha256": "672a1f985c9ecdf6482eef7316ad5c4979a5f546a87e140466aae55d812d4b6c"
+      "sha256": "2f80aa05cf9c042cc239b60b1a3570d1c2f03319cb385d614911034ec32a4311"
     },
     {
       "byteLength": 41613,
@@ -2293,6 +2305,12 @@
       "mode": "0644",
       "path": "skills/jev-capability-advisor/references/network-access.md",
       "sha256": "81c63d08f1ffc6454652bc6ae816ab9864aa34f5985ad2ce1855c69d00f510e5"
+    },
+    {
+      "byteLength": 1992,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/references/script-inventory.md",
+      "sha256": "a71be75a0f4fc06ddca11031551d97b1be3164b197968ae34ed9a965cc767765"
     },
     {
       "byteLength": 11002,
@@ -2897,9 +2915,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.23.1"
+    "version": "1.23.2"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "1ca3df47ea50424735637c7f3fb08571e61788ecc23d833bc3286bfb970c10bf"
+  "treeHash": "fe7c1d5da371c7650771722f167be58883b57f4fb7ffd42e1eade0436a749c53"
 }

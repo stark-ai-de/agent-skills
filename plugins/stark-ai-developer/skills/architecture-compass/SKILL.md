@@ -6,7 +6,7 @@ compatibility: Designed for Codex, Cursor, Claude Code, ChatGPT Chat/Work, Codex
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.13.1"
+  version: "0.13.2"
 ---
 
 # Architecture Compass
@@ -57,31 +57,7 @@ Agent-initiated activation may select and announce `audit` without mutation auth
 
 ## References
 
-Start with [the ADR catalog](references/adr-catalog.md). Select entries by `Scope`, `Category`, `Tags`, and `Applies when`:
-
-- Read Short first.
-- Read Long when a selected decision governs the task, a conflict exists, or implementation depends on its invariants.
-- Read Guide only for current procedures, examples, commands, or compatibility notes.
-- Do not load the entire library for a narrow task.
-- Treat Long as canonical. Short cannot relax it; Guide is non-normative.
-
-Route skill behavior through:
-
-- **Workflows:** [AC-ADR-064 Short](references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.short.md) · [Guide](references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md).
-- **Validation:** [AC-ADR-049 Guide](references/ac-adr-049-distinguish-change-risk-from-representative-environment-observation.guide.md).
-- **Host state:** [AC-ADR-036 Guide](references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md).
-- **Worktrees and harness alignment:** [AC-ADR-054 Short](references/ac-adr-054-isolate-agent-writes-in-external-git-worktrees.short.md) · [Long](references/ac-adr-054-isolate-agent-writes-in-external-git-worktrees.long.md) · [Guide](references/ac-adr-054-isolate-agent-writes-in-external-git-worktrees.guide.md). Load for relevant Setup adoption or work governed by its local mapping; compare the assigned workspace with effective harness settings before writing, preserving existing consumer ADR authority.
-- **Execution and claims:** [AC-ADR-003 Guide](references/ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices.guide.md) · [AC-ADR-004 Guide](references/ac-adr-004-report-staged-evidence-and-protect-public-outputs.guide.md).
-- **Presentation:** [AC-ADR-050 Short](references/ac-adr-050-use-semantic-status-markers-in-user-facing-receipts.short.md) · [Guide](references/ac-adr-050-use-semantic-status-markers-in-user-facing-receipts.guide.md).
-- **Adopted Jev host advice:** [AC-ADR-065 Short](references/ac-adr-065-require-qualified-jev-host-advice-after-repository-adoption.short.md) · [Long](references/ac-adr-065-require-qualified-jev-host-advice-after-repository-adoption.long.md) · [Guide](references/ac-adr-065-require-qualified-jev-host-advice-after-repository-adoption.guide.md); load for local adoption, host prerequisite evidence, or compliance audit.
-- **Product planning:** [AC-ADR-067 Short](references/ac-adr-067-coordinate-product-planning-through-intent-bound-skill-contracts.short.md) · [Long](references/ac-adr-067-coordinate-product-planning-through-intent-bound-skill-contracts.long.md) · [Guide](references/ac-adr-067-coordinate-product-planning-through-intent-bound-skill-contracts.guide.md); load for coordinated feature planning, module-contract refinement or relevant Setup adoption. Use [AC-ADR-068 Long](references/ac-adr-068-reuse-explicit-skill-preselection-with-separate-provisioning-grants.long.md) for selected-skill reuse and separately authorized provisioning.
-- **Conflicts:** [AC-ADR-046 Guide](references/ac-adr-046-rank-architecture-evidence-without-expanding-operational-authority.guide.md).
-
-For provider mechanics, resolve the applicable public AC-ADR and load its Long first. Then conditionally read [the internal ADR index](references/internal/internal-adr-index.md) and only `AC-INTERNAL-001` for persistence resolution or `AC-INTERNAL-002` for receipt rendering. Internal ADRs are implementation policy, do not enter target-repository adoption, and cannot relax an accepted public Long decision.
-
-Use the catalog for namespace authority, lineage, canonical Long variants, and task-specific decisions. AC-ADR-001 is superseded historical context only.
-
-For testing work, use the catalog to select AC-ADR-059 for repository validation ownership, AC-ADR-060 for runtime/state effects, AC-ADR-061 for distributed proof, and AC-ADR-062 for transform-cache evaluation. Select only applicable candidates; keep the seven-decision evidence-empty foundation unchanged. Map existing equivalent local decisions instead of duplicating them. Audit adopted outcomes without writes and distinguish `met`, `unmet`, `unmeasured`, `waived`, and `not-applicable` from execution statuses. Use the [testing receipt](assets/testing-outcome-receipt-template.md) within the target's existing evidence convention. Before promoting testing changes, derive public ADR, triplet and adoptable counts from the current catalog; reconcile the complete adoption matrix, decision locks/lineage and eval inventory, then verify regenerated/clean-installed skill byte identity and exclusion of fixture/eval files from installed payloads. Apply the AC-ADR-049 `high` risk floor when promotion changes a public governance or distribution contract, including changes expressed in documentation.
+Before selecting references, read [the catalog](references/adr-catalog.md) and [the reading map](references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md#selective-reference-routing). Preserve canonical Long authority, non-normative Guides and the map's internal-policy and testing-promotion boundaries. Select only applicable decisions. Start workflow authority with [AC-ADR-064 Short](references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.short.md).
 
 ## Inputs to inspect
 
