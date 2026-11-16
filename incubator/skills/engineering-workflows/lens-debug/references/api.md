@@ -3,12 +3,12 @@
 Source: [LiteLLM Lens API](https://docs.litellm.ai/docs/proxy/lens/api).
 Check the deployed version; repository documentation is not live qualification.
 
-| Reader command | Gateway route | Scope |
-| --- | --- | --- |
-| `list` | `GET /v1/traces` | Required start_ms/end_ms; one page; optional cursor. |
-| `show` | `GET /v1/traces/{trace_id}?trace_ref=...` | Use both identifiers from the selected listing. |
-| `schema` | `GET /v1/traces/query/help` | Tables, fields, examples and server rules. |
-| `query` | `POST /v1/traces/query` | Read-only SQL; same row access as trace reads. |
+| Reader command | Gateway route                             | Scope                                                |
+| -------------- | ----------------------------------------- | ---------------------------------------------------- |
+| `list`         | `GET /v1/traces`                          | Required start_ms/end_ms; one page; optional cursor. |
+| `show`         | `GET /v1/traces/{trace_id}?trace_ref=...` | Use both identifiers from the selected listing.      |
+| `schema`       | `GET /v1/traces/query/help`               | Tables, fields, examples and server rules.           |
+| `query`        | `POST /v1/traces/query`                   | Read-only SQL; same row access as trace reads.       |
 
 These calls use a scoped **gateway read key**. Ingestion instead uses a separate
 Lens tracing key on the ingestion base; it is not a read credential. Generating

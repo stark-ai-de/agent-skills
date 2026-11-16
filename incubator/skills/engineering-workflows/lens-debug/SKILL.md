@@ -35,10 +35,10 @@ For comparisons, inspect commit/runtime/model/setup labels and acceptance tests.
 
 ### Choose a route
 
-| Request | Route |
-| --- | --- |
-| Explain one failure or slow session | Read the selected trace and its steps. |
-| Compare calls, cost, or performance | Read bounded runs; use schema-backed SQL only when necessary. |
+| Request                             | Route                                                               |
+| ----------------------------------- | ------------------------------------------------------------------- |
+| Explain one failure or slow session | Read the selected trace and its steps.                              |
+| Compare calls, cost, or performance | Read bounded runs; use schema-backed SQL only when necessary.       |
 | Check whether evidence is available | Verify endpoint/credential type and a bounded listing; report gaps. |
 
 For a clear request, announce the selected route and proceed within its scope.
