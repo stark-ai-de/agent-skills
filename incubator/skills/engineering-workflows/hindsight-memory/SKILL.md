@@ -1,11 +1,11 @@
 ---
 name: hindsight-memory
-description: Set up, diagnose, enable or use project-scoped Hindsight memory without requiring Greppy. Use when the user requests local project memory, qualified session retention or source-backed reflection. Not for global memory cleanup or automatic ingestion of every repository.
+description: Set up, diagnose, enable or use scoped Hindsight memory without requiring Greppy. Use when the user requests approved project or workspace memory, compact Codex/pi session outcomes or source-backed reflection. Not for global memory cleanup or implicit ingestion of search-indexed repositories.
 license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.1.0"
+  version: "0.2.0"
   internal: true
 ---
 
@@ -14,6 +14,7 @@ metadata:
 ## Goal
 
 - Use Hindsight independently for approved project memory.
+- Reuse an accepted workspace scope for normal in-scope repositories; do not repeat enrollment interviews.
 - Greppy may display its readiness, but is not a runtime requirement.
 - This candidate remains in the incubator until fresh-install and fresh-client qualification are recorded.
 
@@ -27,12 +28,12 @@ metadata:
 
 ## Workflow selection
 
-| Workflow | Outcome                                                                                            |
-| -------- | -------------------------------------------------------------------------------------------------- |
-| `setup`  | Inspect/adopt the owner and prepare a pinned local service and client connection                   |
-| `doctor` | Read configuration, running image/route and qualification without repairs or model calls           |
-| `enable` | Enable one explicitly approved project after synthetic qualification, or disable its future intake |
-| `use`    | Perform explicitly authorized retention, recall or reflection in the selected bank                 |
+| Workflow | Outcome                                                                                  |
+| -------- | ---------------------------------------------------------------------------------------- |
+| `setup`  | Inspect/adopt the owner and prepare a pinned local service and client connection         |
+| `doctor` | Read configuration, running image/route and qualification without repairs or model calls |
+| `enable` | Enable an approved project or workspace after qualification, or disable future intake    |
+| `use`    | Perform explicitly authorized retention, recall or reflection in the selected bank       |
 
 - For clear authorized intent, announce the route and proceed.
 - For a bare invocation or options request, show all four.
@@ -56,9 +57,10 @@ metadata:
    namespace and provider explicitly. New setups default to BGE-M3 embeddings;
    preserve an existing qualified embedding model. HTTPS is required for an
    external gateway unless its exact HTTP route was explicitly accepted.
-3. Resolve every placeholder in `assets/project.example.json` into a private
-   mode-0600 policy. Record the approved project/content/provider scope. No marker
-   or skill installation is permission to ingest sessions.
+3. Resolve `assets/workspace.example.json` for accepted roots and sparse exclusions,
+   or retain an existing `assets/project.example.json` policy. Store it privately
+   with mode 0600. Record content/provider scope; search discovery or installation
+   alone does not authorize intake.
 4. Qualify synthetic retain/readback, project isolation, private raw-text behavior
    and embedding dimensions. Compare declared and actually running model routes.
    Use `enable` only after those checks pass; verify a fresh client connection.
@@ -66,6 +68,7 @@ metadata:
 ### doctor
 
 - Run `python3 scripts/project_scope.py doctor --policy /absolute/private/project.json`.
+- For workspace scope, use `scripts/workspace_scope.py doctor --workspace-policy POLICY`.
 - It reads selected private files and Docker metadata; it does not start services, invoke models, retain content, migrate data or create receipts.
 - Report its scoped route/enablement result separately from retrieval quality and freshness.
 - Missing host access is unverified, not proof the service failed.
@@ -82,10 +85,16 @@ metadata:
 - A changed route requires reviewed qualification; disable the old marker before enabling new evidence.
 - `disable` also previews and requires `--apply`; it leaves stored memories and queued records in place.
 
-- For Codex automation, pass `--policy POLICY` to the session hook, weekly worker and MCP launcher.
+- For workspace scope, preview/apply `scripts/workspace_scope.py enable --workspace-policy POLICY --evidence EVIDENCE`.
+- Its one activation cutoff covers exact active repositories under accepted roots.
+- Keep reference clones excluded; map linked worktrees explicitly. Preserve existing bank IDs through overrides.
+- Pass exactly one of `--workspace-policy POLICY` or `--policy POLICY` to the session hook, worker and MCP launcher.
 - Preserve an existing hook chain.
 - Qualify one actual trigger; prompt instructions alone are not an automatic schedule.
-- The hook records only eligible session references, and each worker call rechecks route qualification.
+- Use Codex `Stop`/`SessionEnd` and pi `agent_settled`/`session_shutdown` as local checkpoints.
+- Keep capture local and cheap. The worker rechecks route qualification before each dispatch.
+- Run bounded `weekly.py --mode intake --max-sessions 8` separately from `--mode weekly` reflection.
+- Respect `HINDSIGHT_MEMORY_DISABLED=1` and source-specific session roots. Missing explicit policies never select legacy defaults.
 
 ### use
 
@@ -94,6 +103,7 @@ metadata:
 - Retain only authorized content and verify result status, nonempty memory IDs and readback.
 - Use synchronous retain: asynchronous queues can persist raw input.
 - Reflection needs source IDs and explicit uncertainty; a synthesized answer is not new verified project policy.
+- Let each agent choose relevant recall through its existing bank-bound MCP transport; do not inject every result on every prompt.
 
 ## Safety rules
 
@@ -114,14 +124,15 @@ metadata:
 ## References
 
 - Use [setup and qualification](references/setup.md) and the private policy example in `assets/project.example.json`.
-- The Compose and parser assets pin upstream 1.2.1.
+- Compose pins Hindsight 1.2.1. Compact intake uses the bundled Python Codex/pi reader; the old parser build assets remain compatibility tools.
 
 ## Scripts
 
 - `project_scope.py` previews enable/disable and diagnoses without writes; `--apply` performs the selected enablement change.
+- `workspace_scope.py` manages the accepted workspace grant and persistent exact-root bank registry.
 - `initialize.py` creates private settings without overwriting.
 - `build_parser.py` previews, then downloads/builds only with `--apply`.
-- The hook/weekly/MCP helpers require an explicitly adopted project policy for new installations.
+- The hook/weekly/MCP helpers require an explicitly adopted project or workspace policy for new installations.
 - `activate.py` exists only for legacy migration compatibility.
 
 ## Output format
@@ -133,6 +144,7 @@ metadata:
 
 - The selected workflow is verified at its own layer; setup/enablement are not called complete from a health check.
 - New automation has a tested trigger and exact scope.
+- Check result counts and pending records; an empty checkpoint is not proof that an outcome was retained.
 
 ## Failure modes
 

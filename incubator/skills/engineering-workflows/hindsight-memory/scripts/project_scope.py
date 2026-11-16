@@ -114,7 +114,14 @@ def fingerprint(policy, docker="docker"):
     mounts = [m for m in actual["mounts"] if m.get("Destination") == "/hindsight/private_policy.py"]
     if len(mounts) != 1 or mounts[0].get("RW") is not False or Path(mounts[0]["Source"]).resolve() != Path(policy["privatePolicyFile"]):
         raise ValueError("privacy extension mount differs")
-    digest = hashlib.sha256(json.dumps(policy, sort_keys=True, separators=(",", ":")).encode())
+    bound_policy = policy
+    if policy.get("kind") == "hindsight-workspace":
+        # Repository switches only pause/resume capture inside the qualified
+        # maximum scope. Roots, static exclusions, identities and routes stay bound.
+        overrides = {root: {key: value for key, value in item.items() if key != "enabled"}
+                     for root, item in policy.get("repositories", {}).items()}
+        bound_policy = {**policy, "repositories": {root: item for root, item in overrides.items() if item}}
+    digest = hashlib.sha256(json.dumps(bound_policy, sort_keys=True, separators=(",", ":")).encode())
     digest.update(json.dumps({k: v for k, v in values.items() if k.startswith("HINDSIGHT_")}, sort_keys=True).encode())
     digest.update(Path(policy["privatePolicyFile"]).read_bytes())
     for source in sorted(Path(__file__).parent.glob("*.py")):
@@ -149,15 +156,24 @@ def fingerprint(policy, docker="docker"):
     return digest.hexdigest()
 
 
-def active(policy, docker="docker"):
+def local_active(policy):
+    """Read only the local grant; outbound callers must also call active()."""
     if not policy["enabled"]:
         raise ValueError("project disabled")
     record = json.loads(private_read(Path(policy["stateRoot"]) / "activation.json"))
-    if record.get("schemaVersion") != 1 or record.get("bindingSha256") != fingerprint(policy, docker):
-        raise ValueError("qualification binding changed")
+    if record.get("schemaVersion") != 1 or not re.fullmatch(r"[a-f0-9]{64}", record.get("bindingSha256", "")):
+        raise ValueError("qualification record")
     cutoff = dt.datetime.fromisoformat(record["enabledAt"])
     if cutoff.tzinfo is None:
         raise ValueError("qualification time")
+    return cutoff
+
+
+def active(policy, docker="docker"):
+    cutoff = local_active(policy)
+    record = json.loads(private_read(Path(policy["stateRoot"]) / "activation.json"))
+    if record.get("bindingSha256") != fingerprint(policy, docker):
+        raise ValueError("qualification binding changed")
     return cutoff
 
 

@@ -60,8 +60,12 @@ Default descriptor: `$XDG_CONFIG_HOME/karakeep/knowledge/config.json`, otherwise
 
 An empty `projects` list is valid: global checks work before individual adoption.
 `collectionPolicy` permits a small connection probe even for an unadopted project.
-A repository policy is matched by its exact `origin` URL. An installation alone
-never grants all-repository import. Setup creates policies/lists using the existing
+A repository policy is matched by the exact URL of its `repo.remoteName` (default
+`origin`). The descriptor URL must agree with that policy. A missing named remote
+means that entry does not match; it does not prevent a collection read check.
+`connection: ready` with `sync: not_enabled` is a successful read-only state, not a
+request to adopt the repository. An installation alone never grants all-repository
+import. Setup creates policies/lists using the existing
 account and explicit grant; the helper consumes them and never invents a grant.
 
 ## Policy schema
@@ -208,16 +212,17 @@ receipts without this proof remain uncertain. No receipt deletion or migration i
 Inspect the JSON status, not only the process exit code. `check` can exit zero with
 `needs_setup`; that does not mean the project or collection is ready.
 
-| Status / code                       | Next step                                                                                |
-| ----------------------------------- | ---------------------------------------------------------------------------------------- |
-| `ready`                             | Continue normal work; `inspect` still verifies remote canonical freshness.               |
-| `needs_setup`                       | Inspect the existing connection and adopt a project policy once; no implied upload.      |
-| `pending` / `needs_agent`           | Inspect missing content, stale inputs or failed items; assess and replan within scope.   |
-| `failed` with `not_applied`         | Correct the cause; explicit resume makes one attempt, or prepare a fresh plan.           |
-| `uncertain`                         | Resume identity reconciliation; never infer permission to recreate from an empty search. |
-| `conflict` / `needs_replan`         | Preserve human fields, compare source/policy identity and prepare current evidence.      |
-| `unreachable`                       | Diagnose the existing endpoint from the failing runtime; keep repository work moving.    |
-| `http_401` / `http_403` / `account` | Check the private credential reference, expected account and granted scope.              |
+| Status / code                       | Next step                                                                                                   |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `ready`                             | Read `connection` and `sync` separately; `inspect` still verifies canonical freshness when sync is enabled. |
+| `sync: not_enabled`                 | Use configured collection reads; adopt a project only when document sync is requested.                      |
+| `needs_setup`                       | Read configuration is missing; inspect or set it up when relevant, with no implied upload.                  |
+| `pending` / `needs_agent`           | Inspect missing content, stale inputs or failed items; assess and replan within scope.                      |
+| `failed` with `not_applied`         | Correct the cause; explicit resume makes one attempt, or prepare a fresh plan.                              |
+| `uncertain`                         | Resume identity reconciliation; never infer permission to recreate from an empty search.                    |
+| `conflict` / `needs_replan`         | Preserve human fields, compare source/policy identity and prepare current evidence.                         |
+| `unreachable`                       | Diagnose the existing endpoint from the failing runtime; keep repository work moving.                       |
+| `http_401` / `http_403` / `account` | Check the private credential reference, expected account and granted scope.                                 |
 
 | Observation surface | What to check                                                              | What success establishes                                         |
 | ------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------- |

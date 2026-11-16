@@ -4,12 +4,14 @@ import importlib.util
 import json
 from pathlib import Path
 import tempfile
+import sys
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
 
 path = Path(__file__).resolve().parents[2] / "incubator/skills/engineering-workflows/hindsight-memory/scripts/worker.py"
+sys.path.insert(0, str(path.parent))
 spec = importlib.util.spec_from_file_location("worker", path)
 worker = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(worker)
@@ -49,7 +51,7 @@ class GroundingTests(unittest.TestCase):
         self.assertTrue(any(pattern.search("api_key='abcdefghijklmnopqrstuvwxyz'") for pattern in worker.SECRET_PATTERNS))
         self.assertFalse(any(pattern.search("The API key is held in the private environment file.") for pattern in worker.SECRET_PATTERNS))
 
-    def test_tool_outputs_are_preserved_in_timestamp_order(self):
+    def test_tool_outputs_and_reasoning_are_not_added_to_outcomes(self):
         turns = [{"role": "user", "content": "question", "timestamp": "2026-11-10T10:00:00Z"},
                  {"role": "assistant", "content": "answer", "timestamp": "2026-11-10T10:02:00Z"}]
         events = [
@@ -59,13 +61,13 @@ class GroundingTests(unittest.TestCase):
              "payload": {"type": "reasoning", "output": "private reasoning"}},
         ]
         merged = worker.add_tool_details(turns, "\n".join(json.dumps(event) for event in events))
-        self.assertEqual([turn["content"] for turn in merged], ["question", "result", "answer"])
+        self.assertEqual([turn["content"] for turn in merged], ["question", "answer"])
 
-    def test_tool_inputs_are_not_reduced_to_parser_action_summaries(self):
+    def test_bulk_tool_inputs_are_never_added(self):
         raw = {"type": "response_item", "timestamp": "2026-11-10T10:01:00Z",
                "payload": {"type": "function_call", "name": "exec_command", "arguments": "a" * 150}}
         turns = worker.add_tool_details([], json.dumps(raw))
-        self.assertEqual(json.loads(turns[0]["content"])["input"], "a" * 150)
+        self.assertEqual(turns, [])
 
 
 class IngestTests(unittest.TestCase):
@@ -75,11 +77,16 @@ class IngestTests(unittest.TestCase):
         self.transcript = Path(root.name) / "transcript.jsonl"
         self.session = "12345678-1234-1234-1234-123456789abc"
         self.records = [
-            {"type": "session_meta", "payload": {"id": self.session, "source": "cli", "timestamp": "2026-11-10T10:00:00Z"}},
+            {"type": "session_meta", "payload": {"id": self.session, "source": "cli", "cwd": str(Path(root.name)), "timestamp": "2026-11-10T10:00:00Z"}},
             {"type": "response_item", "payload": {"type": "message", "role": "user", "content": [{"type": "input_text", "text": "Safe question"}]}},
+            {"type": "response_item", "timestamp": "2026-11-10T10:01:00Z", "payload": {"type": "message", "role": "assistant", "phase": "final", "content": [{"type": "output_text", "text": "Safe outcome with a verified source reference."}]}},
         ]
-        self.responses = [{"success": True, "async": False},
-                          {"id": "conversation-" + self.session, "memory_unit_count": 1}]
+        self.responses = [{"success": True, "async": False}]
+
+    def response(self, endpoint, body=None):
+        if endpoint == "/memories":
+            return {"success": True, "async": False}
+        return {"id": endpoint.removeprefix("/documents/"), "memory_unit_count": 1}
 
     def write_transcript(self, records):
         raw = ("\n".join(json.dumps(record) for record in records) + "\n").encode()
@@ -91,23 +98,19 @@ class IngestTests(unittest.TestCase):
         raw = self.write_transcript(self.records)
         secret = "sk-" + "a" * 30
 
-        def parse(command, **kwargs):
+        original_parse = worker.parse
+        def parse(scanned, *args):
             late = {"type": "response_item", "payload": {"type": "message", "role": "user", "content": [{"text": secret}]}}
             self.write_transcript([*self.records, late])
-            if "stdin" in kwargs:
-                self.assertTrue(kwargs["stdin"].seekable())
-                source = kwargs["stdin"].read()
-            else:
-                source = Path(command[-1]).read_bytes()
-            turns = [{"role": "user", "content": event["payload"]["content"][0]["text"]}
-                     for line in source.splitlines() if (event := json.loads(line)).get("type") == "response_item"]
-            return SimpleNamespace(stdout=json.dumps(turns))
+            self.assertEqual(scanned, raw)
+            return original_parse(scanned, *args)
 
-        with patch.object(worker.subprocess, "run", side_effect=parse), \
-                patch.object(worker, "request", side_effect=self.responses) as request:
+        with patch.object(worker, "parse", side_effect=parse), \
+                patch.object(worker, "request", side_effect=self.response) as request:
             result = worker.ingest(self.transcript, self.session, Path("parser.cjs"))
         item = request.call_args_list[0].args[1]["items"][0]
-        self.assertEqual(json.loads(item["content"]), [{"role": "user", "content": "Safe question"}])
+        self.assertEqual(json.loads(item["content"])["task"], "Safe question")
+        self.assertNotIn(secret, item["content"])
         self.assertEqual(item["metadata"]["sha256"], hashlib.sha256(raw).hexdigest())
         self.assertEqual(result["sha256"], item["metadata"]["sha256"])
         self.assertIn(secret.encode(), self.transcript.read_bytes())
@@ -133,8 +136,8 @@ class IngestTests(unittest.TestCase):
 
     def test_parser_output_is_checked_before_upload(self):
         self.write_transcript(self.records)
-        turns = [{"role": "user", "content": "sk-" + "a" * 30}]
-        with patch.object(worker.subprocess, "run", return_value=SimpleNamespace(stdout=json.dumps(turns))), \
+        turns = [{"id": "a" * 64, "content": "sk-" + "a" * 30}]
+        with patch.object(worker, "parse", return_value=({"source": "codex"}, turns)), \
                 patch.object(worker, "request", side_effect=self.responses) as request:
             with self.assertRaisesRegex(ValueError, "credential pattern"):
                 worker.ingest(self.transcript, self.session, Path("parser.cjs"))
@@ -142,7 +145,7 @@ class IngestTests(unittest.TestCase):
 
     def test_raw_credentials_are_rejected_before_parsing(self):
         self.write_transcript([*self.records, {"token": "sk-" + "a" * 30}])
-        with patch.object(worker.subprocess, "run") as parse, patch.object(worker, "request") as request:
+        with patch.object(worker, "parse") as parse, patch.object(worker, "request") as request:
             with self.assertRaisesRegex(ValueError, "credential pattern"):
                 worker.ingest(self.transcript, self.session, Path("parser.cjs"))
             parse.assert_not_called()

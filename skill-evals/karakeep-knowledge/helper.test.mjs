@@ -518,14 +518,91 @@ test("startup without configuration is a read-only needs_setup result; CLI valid
     exec(process.execPath, [helper, "check", "--repo", f.root, "--unknown", "value"]),
   );
 });
-test("unadopted startup verifies shared connection without enrolling or writing", async (t) => {
+test("unadopted startup reports available reads and disabled sync without enrolling or writing", async (t) => {
   const f = await fixture(t);
   await exec("git", ["init", f.root]);
   const descriptor = path.join(f.root, "config.json");
   await writeJson(descriptor, { schemaVersion: 1, projects: [], collectionPolicy: f.policyFile });
   const result = await check({ repo: f.root, config: descriptor });
-  assert.equal(result.status, "needs_setup");
+  assert.equal(result.status, "ready");
   assert.equal(result.connection, "ready");
+  assert.equal(result.sync, "not_enabled");
+  assert.equal(f.writes.length, 0);
+});
+
+test("a missing project remote still allows the configured collection read check", async (t) => {
+  const f = await fixture(t);
+  await exec("git", ["init", f.root]);
+  const projectFile = path.join(f.root, "project.json");
+  await writeJson(projectFile, {
+    ...f.p,
+    scope: "project",
+    repo: {
+      id: "example/project",
+      remote: "https://example.test/project.git",
+      remoteName: "upstream",
+      branch: "main",
+      include: ["README.md"],
+      exclude: [],
+    },
+  });
+  const config = path.join(f.root, "config.json");
+  await writeJson(config, {
+    schemaVersion: 1,
+    projects: [{ remote: "https://example.test/project.git", policy: projectFile }],
+    collectionPolicy: f.policyFile,
+  });
+  const result = await check({ repo: f.root, config });
+  assert.equal(result.status, "ready");
+  assert.equal(result.connection, "ready");
+  assert.equal(result.sync, "not_enabled");
+  assert.equal(f.writes.length, 0);
+});
+
+test("an unconfigured or unreachable collection is not reported as read ready", async (t) => {
+  const f = await fixture(t);
+  await exec("git", ["init", f.root]);
+  const config = path.join(f.root, "config.json");
+  await writeJson(config, { schemaVersion: 1, projects: [] });
+  const missing = await check({ repo: f.root, config });
+  assert.equal(missing.status, "needs_setup");
+  assert.equal(missing.connection, "not_configured");
+  assert.equal(missing.sync, "not_enabled");
+  await writeJson(config, { schemaVersion: 1, projects: [], collectionPolicy: f.policyFile });
+  t.mock.method(globalThis, "fetch", async () => {
+    throw new TypeError("private endpoint must not leak", {
+      cause: Object.assign(new Error("private details"), { code: "ECONNREFUSED" }),
+    });
+  });
+  const unavailable = await check({ repo: f.root, config });
+  assert.equal(unavailable.status, "unreachable");
+  assert.equal(unavailable.connection, "unreachable");
+  assert.equal(unavailable.sync, "not_enabled");
+  assert.ok(!JSON.stringify(unavailable).includes("private"));
+  assert.equal(f.writes.length, 0);
+});
+
+test("unrelated missing policies do not block reads but a matching missing policy stays an error", async (t) => {
+  const f = await fixture(t);
+  await exec("git", ["init", f.root]);
+  const remote = "https://example.test/active.git";
+  await exec("git", ["-C", f.root, "remote", "add", "upstream", remote]);
+  const config = path.join(f.root, "config.json");
+  const missingPolicy = path.join(f.root, "missing-policy.json");
+  await writeJson(config, {
+    schemaVersion: 1,
+    projects: [{ remote: "https://example.test/unrelated.git", policy: missingPolicy }],
+    collectionPolicy: f.policyFile,
+  });
+  const available = await check({ repo: f.root, config });
+  assert.equal(available.status, "ready");
+  assert.equal(available.sync, "not_enabled");
+  await writeJson(config, {
+    schemaVersion: 1,
+    projects: [{ remote, policy: missingPolicy }],
+    collectionPolicy: f.policyFile,
+  });
+  await assert.rejects(check({ repo: f.root, config }), (e) => e.code === "ENOENT");
   assert.equal(f.writes.length, 0);
 });
 test("a saved URL alone cannot be claimed as a verified source reference", async (t) => {
@@ -1028,32 +1105,42 @@ test("overall Node deadline reports only the timeout category", async (t) => {
   );
 });
 
-test("failed creates remain pending in an adopted project's startup check", async (t) => {
-  const f = await fixture(t),
-    repo = path.join(f.root, "repo"),
-    remote = path.join(f.root, "remote.git");
-  await exec("git", ["init", "--bare", "--initial-branch=main", remote]);
-  await exec("git", ["clone", remote, repo]);
-  const g = (...args) => exec("git", ["-C", repo, ...args]);
-  await g("config", "user.name", "Fixture");
-  await g("config", "user.email", "fixture@example.test");
-  await fs.writeFile(path.join(repo, "README.md"), "Project knowledge.");
-  await g("add", "README.md");
-  await g("commit", "-m", "Initial");
-  await g("push", "origin", "main");
-  f.p.scope = "project";
-  f.p.repo = { id: "example/repo", remote, branch: "main", include: ["README.md"], exclude: [] };
-  await f.savePolicy();
-  const config = path.join(f.root, "config.json"),
-    file = await f.text();
-  await writeJson(config, { schemaVersion: 1, projects: [{ remote, policy: f.policyFile }] });
-  await (await f.prepare([report(file, "predecessor")], { repo })).apply();
-  assert.equal((await check({ repo, config })).status, "ready");
-  const r = await f.prepare([report(file)], { repo });
-  f.faults.rejectCreate = 403;
-  await assert.rejects(r.apply(), (e) => e.code === "http_403");
-  assert.equal((await check({ repo, config })).status, "pending");
-});
+for (const remoteName of ["origin", "upstream"]) {
+  test(`failed creates remain pending using the adopted ${remoteName} remote`, async (t) => {
+    const f = await fixture(t),
+      repo = path.join(f.root, "repo"),
+      remote = path.join(f.root, "remote.git");
+    await exec("git", ["init", "--bare", "--initial-branch=main", remote]);
+    await exec("git", ["clone", remote, repo]);
+    const g = (...args) => exec("git", ["-C", repo, ...args]);
+    await g("config", "user.name", "Fixture");
+    await g("config", "user.email", "fixture@example.test");
+    await fs.writeFile(path.join(repo, "README.md"), "Project knowledge.");
+    await g("add", "README.md");
+    await g("commit", "-m", "Initial");
+    await g("push", "origin", "main");
+    if (remoteName !== "origin") await g("remote", "rename", "origin", remoteName);
+    f.p.scope = "project";
+    f.p.repo = {
+      id: "example/repo",
+      remote,
+      remoteName,
+      branch: "main",
+      include: ["README.md"],
+      exclude: [],
+    };
+    await f.savePolicy();
+    const config = path.join(f.root, "config.json"),
+      file = await f.text();
+    await writeJson(config, { schemaVersion: 1, projects: [{ remote, policy: f.policyFile }] });
+    await (await f.prepare([report(file, "predecessor")], { repo })).apply();
+    assert.equal((await check({ repo, config })).status, "ready");
+    const r = await f.prepare([report(file)], { repo });
+    f.faults.rejectCreate = 403;
+    await assert.rejects(r.apply(), (e) => e.code === "http_403");
+    assert.equal((await check({ repo, config })).status, "pending");
+  });
+}
 
 for (const visible of [false, true]) {
   test(`create timeout with ${visible ? "a visible object" : "empty inventory"} never blindly repeats POST`, async (t) => {

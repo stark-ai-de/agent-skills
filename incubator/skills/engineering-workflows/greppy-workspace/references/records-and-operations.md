@@ -8,7 +8,7 @@ The owner recomputes the actual source root, regular-file bytes, line range and 
 
 ## Triggers and bounds
 
-- `workspace.py notify` accepts a real Codex completion event, records only registered repository ID/time, and coalesces events per repository. The operations root and `GREPPY_MAINTENANCE_RUN=1` are ignored.
+- Optional `greppy codex-stop --config ...` accepts native Codex Stop stdin; legacy `workspace.py notify` accepts a completion argument. Select one producer. Both require the assessor to be enabled, match the actual Git root to an exact active registry entry, record only repository ID/time, and coalesce events. An excluded nested repo never queues its parent. Linked worktrees need an explicit discovery opt-in and their own registered path. The operations root and `GREPPY_MAINTENANCE_RUN=1` are ignored.
 - Discovery timer: reconcile new/moved/removed roots and generated ignore config; restart the owned watcher only on change.
 - Maintenance timer: reconcile known sources, inspect/plan/apply at most the policy batch limit, and optionally assess one eligible queue item with the qualified runner below. The runner has bounded runtime/output and a per-repository cooldown. It never runs on every file save.
 - Source assessment may return zero candidates. Failures remain `needs_agent`; only a newer completion after cooldown permits another automatic assessment. Receipt logs are private. Owner lock contention remains pending until the existing writer finishes. Never interpret an unverified create as a safe retry.

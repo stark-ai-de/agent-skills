@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "kind": "hindsight-workspace",
+  "enabled": false,
+  "bankPrefix": "project",
+  "roots": ["/absolute/accepted/development-root"],
+  "exclude": ["/absolute/accepted/development-root/reference-clones"],
+  "worktrees": {},
+  "repositories": {},
+  "sessionsRoots": {
+    "codex": ["/absolute/private/codex/sessions"],
+    "pi": ["/absolute/private/pi/agent/sessions"]
+  },
+  "stateRoot": "/absolute/private/state/hindsight-workspace",
+  "runtimeEnv": "/absolute/private/config/hindsight/runtime.env",
+  "privatePolicyFile": "/absolute/installed/hindsight-memory/scripts/private_policy.py",
+  "endpoint": "http://127.0.0.1:18888",
+  "container": "hindsight-memory-hindsight-1",
+  "image": "ghcr.io/vectorize-io/hindsight:1.2.1@sha256:d2bc230a714e933affd63753e181a0579328fdcbbc021800a76e0bc7b6e76b31",
+  "embeddingDigest": "REPLACE_WITH_QUALIFIED_OLLAMA_MODEL_DIGEST",
+  "consent": {
+    "status": "REPLACE_WITH_RECORDED_CONSENT",
+    "contentScope": "compact-session-outcomes",
+    "providerReview": "Record the accepted model route and processing/privacy scope"
+  }
+}
