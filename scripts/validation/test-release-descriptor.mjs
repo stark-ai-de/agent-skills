@@ -205,6 +205,13 @@ assert.ok(
   "package.json must be included in release-input hashing",
 );
 assert.match(SOURCE_TREE_HASH_RECIPE, /package\.json/);
+for (const theme of ["light", "dark"]) {
+  const image = `docs/listing/openai/assets/chatgpt-composer-icon-${theme}.png`;
+  assert.ok(
+    digestEntries.some((entry) => entry.path === image),
+    `${theme} Composer image must participate in release-input hashing`,
+  );
+}
 assert.ok(
   digestEntries.every((entry) => entry.mode === "0644" || entry.mode === "0755"),
   "release-input modes must be Git-normalized 0644 or 0755",

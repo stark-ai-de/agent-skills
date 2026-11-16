@@ -48,6 +48,18 @@ function resolveAsset(root, relativeAsset) {
   return asset;
 }
 
+export function openAiImageFiles(listing) {
+  const { assets } = listing.plugin;
+  return Object.entries({
+    logo: "logo.png",
+    composerIcon: "composer-icon.png",
+    ...(assets.logoDark !== undefined ? { logoDark: "logo-dark.png" } : {}),
+    ...(assets.composerIconDark !== undefined
+      ? { composerIconDark: "composer-icon-dark.png" }
+      : {}),
+  }).map(([field, name]) => ({ field, name, source: assets[field] }));
+}
+
 export function openAiManifestFromListing(listing) {
   const { plugin } = listing;
   return {
@@ -76,8 +88,9 @@ export function openAiManifestFromListing(listing) {
       category: plugin.category,
       capabilities: plugin.capabilities,
       defaultPrompt: plugin.starterPrompts,
-      logo: "./assets/logo.png",
-      composerIcon: "./assets/composer-icon.png",
+      ...Object.fromEntries(
+        openAiImageFiles(listing).map(({ field, name }) => [field, `./assets/${name}`]),
+      ),
       websiteURL: plugin.urls.website,
       privacyPolicyURL: plugin.urls.privacyPolicy,
       termsOfServiceURL: plugin.urls.termsOfService,
@@ -91,16 +104,10 @@ export function openAiManifestFromListing(listing) {
 function prepareOpenAiWrite(root, listing) {
   return {
     pluginManifest: openAiManifestFromListing(listing),
-    assetFiles: [
-      {
-        name: "logo.png",
-        source: resolveAsset(root, listing.plugin.assets.logo),
-      },
-      {
-        name: "composer-icon.png",
-        source: resolveAsset(root, listing.plugin.assets.composerIcon),
-      },
-    ],
+    assetFiles: openAiImageFiles(listing).map(({ name, source }) => ({
+      name,
+      source: resolveAsset(root, source),
+    })),
   };
 }
 
@@ -279,8 +286,22 @@ export function validateOpenAiProjection({ root, targetRoot, bundle, listing }) 
   const assetsRoot = path.join(targetRoot, "assets");
   if (fs.existsSync(assetsRoot)) {
     const assetNames = fs.readdirSync(assetsRoot).sort();
-    if (JSON.stringify(assetNames) !== JSON.stringify(["composer-icon.png", "logo.png"])) {
-      errors.push("OpenAI adapter assets must contain exactly logo.png and composer-icon.png");
+    const expectedAssets = prepareOpenAiWrite(root, listing).assetFiles;
+    if (
+      JSON.stringify(assetNames) !== JSON.stringify(expectedAssets.map(({ name }) => name).sort())
+    ) {
+      errors.push("OpenAI adapter assets do not match the listing image fields");
+    }
+    for (const { name, source } of expectedAssets) {
+      const actual = path.join(assetsRoot, name);
+      if (
+        !fs.existsSync(actual) ||
+        !fs.lstatSync(actual).isFile() ||
+        fs.lstatSync(actual).isSymbolicLink() ||
+        hashBytes(fs.readFileSync(actual)) !== hashBytes(fs.readFileSync(source))
+      ) {
+        errors.push(`OpenAI adapter image mismatch: assets/${name}`);
+      }
     }
   }
 

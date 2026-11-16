@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "contractId": "openai-plugin-submission-2026-11-07",
+  "source": {
+    "url": "https://developers.openai.com/plugins/deploy/submission",
+    "title": "OpenAI Developers — Upload and submit your plugin",
+    "checksum": {
+      "algorithm": "sha256",
+      "value": "7f3924720fde08f36851d63cab387b5ef5b31ae8fd25972cac68f804614bc5fc"
+    }
+  },
+  "verifiedOn": "2026-11-07",
+  "verifiedBy": "stark-ai-de",
+  "precedenceClass": "packaging-submission",
+  "facts": {
+    "archiveMaxCompressedBytes": 104857600,
+    "archiveMaxUncompressedBytes": 536870912,
+    "archiveMaxEntries": 5000,
+    "entryMaxBytes": 104857600,
+    "pathSegmentMax": 20,
+    "combinedSkillIdentityMax": 64,
+    "allowedCategories": [
+      "Productivity",
+      "Creativity",
+      "Developer Tools",
+      "Business & Operations",
+      "Data & Analytics",
+      "Communication",
+      "Education & Research",
+      "Security",
+      "Finance",
+      "Healthcare",
+      "Travel",
+      "Entertainment",
+      "Other"
+    ],
+    "mcpRequiredInInitialZip": true,
+    "addingMcpToExistingSkillsOnlySupported": false,
+    "connectedMcpServersMax": 1,
+    "desktopRequiresPartnerAllowlist": true,
+    "portalActionsManual": true,
+    "reviewCaseCounts": {
+      "positive": 5,
+      "negative": 3
+    }
+  },
+  "requirementIds": ["OAI-001", "REP-001", "EVAL-001"],
+  "validators": ["validate:openai-submission", "validate:archives", "validate:plugin-evals"],
+  "unresolvedConflicts": [
+    "Submission says current MCP URL changes require support; app-review permits endpoint-path changes through a new version. Preserve the existing URL and confirm with support before changing it.",
+    "Plugin guidelines say annotation justifications are no longer required; app-review retains legacy justification wording. Verify explicit server annotations and follow current portal findings."
+  ]
+}

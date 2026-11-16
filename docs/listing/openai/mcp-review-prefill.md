@@ -5,7 +5,7 @@ For the Tools remote profile, the OpenAI generator copies it into
 `.codex-plugin/plugin.json` under `extensions.com.openai`. Skills-only packages
 omit these fields. Canonical skill-local `agents/openai.yaml` files are unchanged.
 
-The package supplies exactly five positive and three negative review cases,
+The Tools package supplies exactly five positive and three negative review cases,
 no-commerce information, release notes and German listing text.
 Country targeting is omitted to preserve the portal’s existing targeting; verify it manually before submission.
 English remains the base listing language; localization does not translate the
@@ -41,13 +41,16 @@ Do not package reviewer credentials or private instructions; enter them in the
 secure portal if ever required. This metadata MCP uses No auth and needs no
 reviewer account.
 
-## Current review handoff
+## Historical first-submission handoff
 
 On 17 October 2026 (Europe/Berlin), the maintainer reported that the new plugin
 was uploaded and is in review. This is a maintainer-reported portal observation,
 not an independently verified approval or publication. The existing-identity
-update attempt did not work; the active route is B (`new-remote`). Keep this
-submission active and address any review feedback on this route.
+update attempt did not work; the active route at that time was B (`new-remote`).
+This dated record does not establish current portal state. For current releases,
+update the two existing identities using their matching tagged archives and
+[generated handoffs](../../publishing.md#operator-follow-up). Address review
+feedback on the affected listing without inferring a new identity or migration.
 
 The real domain-verification challenge was deployed as production Vercel
 configuration and verified as public exact bytes at
@@ -62,17 +65,32 @@ challenge is a static file in Vercel public output.
 the video work, authoring lockfile, synthetic responses and static hosting
 payload. They contain no private portal state.
 
-For a future authorized package update, generate a separate upload candidate with the repository package command and
-`--profile new-remote --output dist/openai/candidates/review-prefill/openai.zip`.
-Validate it with the same profile. Re-upload the ZIP in the new plugin draft;
-review cases imported from the package become read-only in the portal. Omitted
-scalar fields preserve previously saved values, so omitting a scalar declaration preserves an existing portal value.
+## Package-managed review information
 
-The published v0.29.0 assets remain immutable. A local candidate with additional
-review metadata is not that releaseasset and needs its own digest and source
-state record. Do not replace published assets or treat an in-review draft as approved or published.
+The [official submission reference](https://developers.openai.com/plugins/deploy/submission#configure-onboarding-review-and-publication),
+checked 2026-11-07, requires exactly five positive and three negative cases for
+initial MCP review. Upload may accept partial lists; complete them before
+submission. Skills-only plugins need no MCP review cases or demo recording.
+Both profiles preserve their existing targeting by omitting
+`publication.countries`; `[]` would remove country restrictions.
 
-Source checked 2026-10-16:
-[OpenAI submission metadata reference](https://developers.openai.com/plugins/deploy/submission).
+Review cases imported from the ZIP are read-only in the dashboard. Change the
+canonical listing source, regenerate and validate a new candidate, then upload
+it to the same listing. Omission or `test_cases: null` preserves saved cases;
+`test_cases: {}` clears both lists. Omitting cases in a later upload does not
+restore dashboard editing.
+
+For scalar review fields and `publication.release_notes`, omission or `null`
+preserves saved values and an empty string clears text. Explicit package values
+are reapplied on submission; remove the declaration if an editable dashboard
+value is intended to govern. Credentials and reviewer instructions stay in the
+secure portal form; never add `test_credentials` or `reviewer_instructions` to
+the ZIP. The current metadata service uses No auth and needs no reviewer account.
+
+Candidate packages are distinct from released assets and need their own digest
+and source-state record. Do not replace immutable published archives or treat
+an in-review draft as approved or published. After approval, explicitly publish
+the replacement while keeping the previous version available during review.
+For later live tool changes, follow [continuous MCP review](../../publishing.md#mcp-updates-after-publication).
 
 The walkthrough is historical first-submission evidence and shows version 1.0.0. Verify that it remains representative before using it for a later submission.

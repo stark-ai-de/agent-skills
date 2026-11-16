@@ -77,6 +77,32 @@ try {
   fs.rmSync(invalidSubmissionFixture, { recursive: true, force: true });
 }
 
+const reviewCountFixture = createFixture();
+try {
+  const { listing, listingPath } = readListing(reviewCountFixture);
+  const originalCases = structuredClone(listing.mcpSubmission.review.test_cases);
+  for (const [kind, count] of [
+    ["positive", 4],
+    ["positive", 6],
+    ["negative", 2],
+    ["negative", 4],
+  ]) {
+    listing.mcpSubmission.review.test_cases = structuredClone(originalCases);
+    listing.mcpSubmission.review.test_cases[kind] = Array.from(
+      { length: count },
+      () => originalCases[kind][0],
+    );
+    writeListing(reviewCountFixture, listing, listingPath);
+    const errors = validateOpenAiListing(reviewCountFixture).errors;
+    assert.ok(
+      errors.some((error) => error.includes(`test_cases.${kind} must contain exactly`)),
+      `${kind}: ${count} cases must be rejected`,
+    );
+  }
+} finally {
+  fs.rmSync(reviewCountFixture, { recursive: true, force: true });
+}
+
 const invalidRegionFixture = createFixture();
 try {
   const { listing, listingPath } = readListing(invalidRegionFixture);
@@ -131,6 +157,33 @@ try {
   );
 } finally {
   fs.rmSync(missingAssetFixture, { recursive: true, force: true });
+}
+
+const optionalImagesFixture = createFixture();
+try {
+  const { listing, listingPath } = readListing(optionalImagesFixture);
+  for (const field of ["logoDark", "composerIconDark"]) delete listing.plugin.assets[field];
+  writeListing(optionalImagesFixture, listing, listingPath);
+  assert.deepEqual(
+    validateOpenAiListing(optionalImagesFixture).errors,
+    [],
+    "dark image fields remain optional",
+  );
+  for (const field of ["logoDark", "composerIconDark"]) {
+    for (const source of ["../outside.png", "docs/listing/openai/assets/missing.png"]) {
+      listing.plugin.assets[field] = source;
+      writeListing(optionalImagesFixture, listing, listingPath);
+      assert.ok(
+        validateOpenAiListing(optionalImagesFixture).errors.some((error) =>
+          error.includes(`listing.plugin.assets.${field}`),
+        ),
+        "invalid optional images must fail validation",
+      );
+    }
+    delete listing.plugin.assets[field];
+  }
+} finally {
+  fs.rmSync(optionalImagesFixture, { recursive: true, force: true });
 }
 
 const leftoverAvailabilityFixture = createFixture();
@@ -272,7 +325,9 @@ const checklist = renderOpenAiSubmissionChecklist(listing, {
 });
 const paths = pluginArtifactPaths(repositoryRoot);
 assert.match(checklist, /\[Composer icon handoff\]/);
-assert.match(checklist, /Keep both existing Plugin Info logos unchanged/);
+assert.match(checklist, /Verify both Plugin Info logos/);
+assert.match(checklist, /composerIconDark/);
+assert.match(checklist, /Skills-only plugins do not need MCP review cases/);
 assert.match(checklist, /Confirm the successful exact-tag Post-release Evidence run/);
 assert.doesNotMatch(checklist, /organization ID|Verified identity|submission ID/i);
 
@@ -314,6 +369,12 @@ for (const profile of ["existing-remote", "desktop-local"]) {
     `${profile} must not inherit Tools submission metadata`,
   );
 }
+const legacyImages = structuredClone(listing);
+delete legacyImages.plugin.assets.logoDark;
+delete legacyImages.plugin.assets.composerIconDark;
+assert.equal(openAiManifestFromListing(legacyImages).interface.logoDark, undefined);
+assert.equal(openAiManifestFromListing(legacyImages).interface.composerIconDark, undefined);
+
 const skillsOnly = openAiManifestFromListing(
   listingForProfile(repositoryRoot, listing, "existing-skills-only"),
 );

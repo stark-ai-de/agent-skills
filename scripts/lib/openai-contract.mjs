@@ -276,7 +276,8 @@ export function validateOpenAiYaml(root, entry) {
   return errors;
 }
 
-function validateMcpSubmission(submission, errors) {
+function validateMcpSubmission(root, submission, errors) {
+  const { reviewCaseCounts } = loadActiveSnapshotFacts(root, "openaiSubmission");
   if (!isMapping(submission)) {
     errors.push("listing.mcpSubmission must be a mapping");
     return;
@@ -291,6 +292,11 @@ function validateMcpSubmission(submission, errors) {
       if (!Array.isArray(cases) || cases.length === 0) {
         errors.push(`listing.mcpSubmission.review.test_cases.${kind} must be a nonempty array`);
         continue;
+      }
+      if (cases.length !== reviewCaseCounts[kind]) {
+        errors.push(
+          `listing.mcpSubmission.review.test_cases.${kind} must contain exactly ${reviewCaseCounts[kind]} cases for initial MCP review`,
+        );
       }
       for (const entry of cases) {
         const fields =
@@ -353,7 +359,8 @@ export function validateOpenAiListing(root) {
   } catch (error) {
     return { bundle, listing: null, errors: [error.message] };
   }
-  if (listing.mcpSubmission !== undefined) validateMcpSubmission(listing.mcpSubmission, errors);
+  if (listing.mcpSubmission !== undefined)
+    validateMcpSubmission(root, listing.mcpSubmission, errors);
   const plugin = listing.plugin;
   if (!isMapping(plugin)) {
     errors.push("listing.plugin must be a mapping");

@@ -31,6 +31,8 @@ export const SOURCE_TREE_INPUTS = [
   "LICENSE",
   "site/public/logo.png",
   "site/public/logo-dark.png",
+  "docs/listing/openai/assets/chatgpt-composer-icon-light.png",
+  "docs/listing/openai/assets/chatgpt-composer-icon-dark.png",
 ];
 
 export const SOURCE_TREE_HASH_RECIPE = `For each Git-tracked blob under ${SOURCE_TREE_INPUTS.join(", ")} in bytewise lexicographic path order: relative path, NUL, Git-normalized mode 0644 or 0755, NUL, file SHA-256, NUL; then SHA-256. Untracked and ignored files under those roots are rejected.`;

@@ -56,19 +56,19 @@
     "openaiPlugin": "stark-ai-developer-tools"
   },
   "pluginId": "stark-ai-developer",
-  "version": "1.23.0",
+  "version": "1.23.1",
   "listingId": "stark-ai-developer",
   "submissionType": "skills-only",
   "publicListingStrategy": "single-plugin-bundled-skills",
   "outputs": {
     "portableProjection": "plugins/stark-ai-developer",
-    "openaiArchive": "dist/openai/stark-ai-developer-tools-1.4.0.zip",
+    "openaiArchive": "dist/openai/stark-ai-developer-tools-1.4.1.zip",
     "repositoryMarketplaceTarget": "plugins/stark-ai-developer"
   },
   "contractSnapshots": {
     "agentPlugins": "agent-plugins-1.0.0",
-    "openaiPackaging": "openai-plugin-packaging-2026-10-16",
-    "openaiSubmission": "openai-plugin-submission-2026-10-16"
+    "openaiPackaging": "openai-plugin-packaging-2026-11-07",
+    "openaiSubmission": "openai-plugin-submission-2026-11-07"
   },
   "build": {
     "nodeVersion": "24.18.0",
@@ -104,7 +104,7 @@
       },
       "new-remote": {
         "pluginId": "stark-ai-developer-tools",
-        "version": "1.4.0",
+        "version": "1.4.1",
         "displayName": "stark AI Developer Tools",
         "transport": "http",
         "url": "https://skills-mcp.stark-ai.de/mcp",
