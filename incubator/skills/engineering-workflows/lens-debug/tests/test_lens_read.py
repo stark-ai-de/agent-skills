@@ -1,6 +1,7 @@
 """Offline HTTP contract tests; no real Lens or model calls."""
 import importlib.util
 import io
+from http.client import HTTPException
 import json
 from pathlib import Path
 import tempfile
@@ -46,6 +47,52 @@ class LensReadTests(unittest.TestCase):
     def test_invalid_trace_path_rejected(self):
         with self.assertRaises(ValueError):
             self.module.request_spec(self.args('show', '--trace-id', '../delete', '--trace-ref', 'r'))
+
+    def test_span_fetches_full_content_without_another_model_call(self):
+        self.assertIn('span', self.module.parser().format_help())
+        spec = self.module.request_spec(self.args('span', '--trace-id', 'a' * 32,
+            '--trace-ref', 'r&x', '--span-id', 'b' * 16))
+        self.assertEqual(spec, ('https://gateway.example/v1/traces/' + 'a' * 32
+            + '/spans/' + 'b' * 16 + '?trace_ref=r%26x', 'GET', None))
+
+    def test_span_error_uses_the_documented_read_endpoint(self):
+        self.assertIn('span', self.module.parser().format_help())
+        url, method, body = self.module.request_spec(self.args('span', '--trace-id', 'a' * 32,
+            '--trace-ref', 'r', '--span-id', 'b' * 16, '--error'))
+        self.assertTrue(url.endswith('/spans/' + 'b' * 16 + '/error?trace_ref=r'))
+        self.assertEqual((method, body), ('GET', None))
+
+    def test_span_id_cannot_redirect_the_path(self):
+        self.assertIn('span', self.module.parser().format_help())
+        with self.assertRaises(ValueError):
+            self.module.request_spec(self.args('span', '--trace-id', 'a' * 32,
+                '--trace-ref', 'r', '--span-id', '../admin'))
+
+    def test_show_supports_explicit_bounded_pagination(self):
+        args = self.args('show', '--trace-id', 'a' * 32, '--trace-ref', 'r')
+        args.cursor, args.page_size = 'next&cursor', 10
+        url, method, body = self.module.request_spec(args)
+        self.assertTrue(url.endswith('?trace_ref=r&cursor=next%26cursor&page_size=10'))
+        self.assertEqual((method, body), ('GET', None))
+
+    def test_show_refuses_invalid_page_size(self):
+        for value in (0, 1001):
+            args = self.args('show', '--trace-id', 'a' * 32, '--trace-ref', 'r')
+            args.cursor, args.page_size = None, value
+            with self.subTest(page_size=value), self.assertRaises(ValueError):
+                self.module.request_spec(args)
+
+    def test_http_protocol_errors_do_not_echo_remote_content(self):
+        def fail(*args, **kwargs):
+            raise HTTPException('private remote content')
+        with self.assertRaisesRegex(ValueError, '^Gateway connection failed') as result:
+            self.module.fetch_json('https://gateway.example/v1/traces', 'GET', None, 'token', opener=fail)
+        self.assertNotIn('private', str(result.exception))
+
+    def test_invalid_key_encoding_has_a_safe_error(self):
+        self.key.write_bytes(b'\xffprivate-token')
+        with self.assertRaisesRegex(ValueError, '^The key file must contain one ASCII token'):
+            self.module.read_key(self.key)
 
     def test_schema_is_read_only(self):
         url, method, data = self.module.request_spec(self.args('schema'))
