@@ -130,6 +130,9 @@ metadata:
 
 - `project_scope.py` previews enable/disable and diagnoses without writes; `--apply` performs the selected enablement change.
 - `workspace_scope.py` manages the accepted workspace grant and persistent exact-root bank registry.
+- `mcp_launcher.py` checks the qualified workspace's exact bank before connecting;
+  it creates a missing empty bank after a 404 without retaining facts. Keep its
+  private state separate from other tools and requalify after helper changes.
 - `initialize.py` creates private settings without overwriting.
 - `build_parser.py` previews, then downloads/builds only with `--apply`.
 - The hook/weekly/MCP helpers require an explicitly adopted project or workspace policy for new installations.

@@ -161,6 +161,13 @@ def resolve(policy, cwd, register=False):
         registry = json.loads(project_scope.private_read(registry_path)) if registry_path.exists() else {}
         if not isinstance(registry, dict) or len(registry) > 4096:
             raise ValueError("repository registry")
+        for repo_id, item in registry.items():
+            if (not isinstance(repo_id, str) or not IDENTIFIER.fullmatch(repo_id)
+                    or not isinstance(item, dict) or set(item) != {"root", "commonDir", "device", "inode", "bankId"}
+                    or any(not isinstance(item[name], str) or not Path(item[name]).is_absolute() for name in ("root", "commonDir"))
+                    or any(type(item[name]) is not int or item[name] < 0 for name in ("device", "inode"))
+                    or not isinstance(item["bankId"], str) or not IDENTIFIER.fullmatch(item["bankId"])):
+                raise ValueError("foreign or malformed repository registry; use a dedicated Hindsight stateRoot")
         matches = [(key, item) for key, item in registry.items() if item["root"] == canonical]
         if len(matches) > 1 or len({item["root"] for item in registry.values()}) != len(registry):
             raise ValueError("duplicate repository registry roots")
