@@ -76,9 +76,16 @@ workspace content mode. Search discovery alone is not enrollment authority.
   the override before using the new path. Do not repurpose an old bank for an
   unrelated clone.
 
-Keep `stateRoot` outside all source roots. Reuse the existing runtime environment,
-immutable image, embedding model/digest and privacy extension. Do not change an
-embedding model in an existing bank as part of this migration.
+Keep `stateRoot` outside all source roots and dedicated to Hindsight, for example
+the absolute path to `~/.local/state/hindsight-workspace`. Do not reuse Greppy's
+`~/.local/state/greppy` or another tool's registry directory: their
+`repositories.json` formats have different owners. A foreign or malformed registry
+is rejected and preserved. Resolve an existing collision through the host owner;
+the launcher does not move, merge or overwrite that state.
+
+Reuse the existing runtime environment, immutable image, embedding model/digest
+and privacy extension. Do not change an embedding model in an existing bank as
+part of this migration.
 
 ```sh
 python3 scripts/workspace_scope.py doctor --workspace-policy POLICY
@@ -184,6 +191,26 @@ be the current repository. A connection is bound to that bank at startup. Reconn
 after switching repositories, narrowing a grant, changing the route or disabling
 memory; an already-running MCP proxy cannot revalidate each call. A session capture
 off switch does not revoke an existing MCP connection.
+
+An eligible workspace launch checks that its mapped API bank exists before
+starting the proxy. Hindsight 1.2.1 intentionally returns an error for reads of a
+missing bank; local repository registration alone does not create it. After a
+config read returns 404, the qualified launcher creates that exact bank with
+`PUT /v1/default/banks/{bank_id}` and `{}`, then verifies its config. Existing banks
+receive no update. This creates no facts and changes no model or bank settings.
+An existing empty bank can return a successful empty memory list or recall.
+
+The bank HTTP checks share a five-second budget and reject redirects, malformed
+responses, unexpected bank IDs and errors other than the initial 404. Local policy,
+activation, runtime and mapping changes stop creation or startup. A failed request
+does not delete a bank or start a second service; a later launch checks again. No
+bank initialization runs in the hook, doctor, repository discovery, or legacy and
+single-project launcher interfaces. Real retention already creates its bank.
+
+Installing changed Python helpers changes the qualification fingerprint. Run the
+real synthetic checks and reviewed enablement again for that payload before using
+it; never copy a prior success receipt or rewrite its activation marker. Verify an
+actual bank read in a fresh native client, not only initialization and tools/list.
 
 Use the client's existing MCP mechanism. Pi 1.5.2 supports native MCP; a separate
 retrieval gateway or tool-routing agent is unnecessary. Preserve unrelated tools,
@@ -299,7 +326,9 @@ the source outcome happened; actual outcome revisions belong in its source text.
 - Do not downgrade a migrated database implicitly.
 - Review raw transcripts before admitting them: pattern-based secret rejection is useful but cannot guarantee detection of every credential format.
 
-- Sources: [upstream Hindsight](https://github.com/vectorize-io/hindsight), its pinned 1.2.1 coding-agent parser and configuration interfaces.
+- Sources: [upstream Hindsight](https://github.com/vectorize-io/hindsight), its pinned 1.2.1 coding-agent parser and configuration interfaces;
+  [bank HTTP contract](https://github.com/vectorize-io/hindsight/blob/v1.2.1/hindsight-api-slim/hindsight_api/api/http.py)
+  and [missing/empty bank read tests](https://github.com/vectorize-io/hindsight/blob/v1.2.1/hindsight-api-slim/tests/test_bank_scoped_read_404.py).
 - Upstream main documentation does not establish compatibility for another image version.
 
 ## Embedding and generative model identity
