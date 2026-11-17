@@ -1,7 +1,7 @@
 import datetime as dt
 import hashlib
 from contextlib import redirect_stdout
-from io import StringIO
+from io import BytesIO, StringIO
 import json
 import os
 from pathlib import Path
@@ -10,7 +10,8 @@ import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
+import urllib.error
 
 SCRIPTS = Path(__file__).resolve().parents[2] / "incubator/skills/engineering-workflows/hindsight-memory/scripts"
 sys.path.insert(0, str(SCRIPTS))
@@ -384,11 +385,126 @@ class WorkspaceScopeTests(unittest.TestCase):
         self.assertEqual(result.stdout, "{}\n")
 
     def test_mcp_uses_workspace_credentials_bank_and_current_repository(self):
-        with patch.object(scope, "active", return_value=CUTOFF), patch.object(Path, "cwd", return_value=self.project), patch.object(mcp_launcher.os, "execve") as execute:
+        with patch.object(scope, "active", return_value=CUTOFF), patch.object(Path, "cwd", return_value=self.project), \
+                patch.object(mcp_launcher, "ensure_workspace_bank") as ensure, patch.object(mcp_launcher.os, "execve") as execute:
             mcp_launcher.launch(self.home / "wrong-legacy-runtime", "/synthetic/proxy", workspace_policy_path=self.file)
         self.assertEqual(execute.call_args.args[2]["API_ACCESS_TOKEN"], "synthetic-token")
         bank = scope.resolve(self.policy, self.project)["bankId"]
         self.assertIn("/mcp/" + bank + "/", execute.call_args.args[1][-1])
+        self.assertEqual(ensure.call_args.args[:3], (self.value["endpoint"], bank, "synthetic-token"))
+        ensure.call_args.args[3]()  # The bounded local startup guard remains valid.
+
+    def test_mcp_creates_missing_override_bank_before_launch_without_facts(self):
+        self.value["repositories"][str(self.project)] = {"bankId": "preserved-bank"}
+        self.save()
+        scope.resolve(self.policy, self.project, register=True)
+        registry = self.state / "repositories.json"
+        preserved = {path: path.read_bytes() for path in (self.file, self.runtime, self.activation, registry)}
+        calls = []
+        created = False
+
+        def respond(request, timeout):
+            nonlocal created
+            calls.append(request.get_method())
+            base = self.value["endpoint"] + "/v1/default/banks/preserved-bank"
+            if request.get_method() == "PUT":
+                self.assertEqual(request.full_url, base)
+                self.assertEqual(request.data, b"{}")
+                created = True
+                payload = {"bank_id": "preserved-bank"}
+            else:
+                self.assertEqual(request.full_url, base + "/config")
+                if not created:
+                    raise urllib.error.HTTPError(request.full_url, 404, "missing", {}, BytesIO())
+                payload = {"bank_id": "preserved-bank", "config": {}, "overrides": {}}
+            response = BytesIO(json.dumps(payload).encode())
+            response.status = 200
+            return response
+
+        def execute(*args):
+            self.assertTrue(created, "The proxy started before its bank became readable")
+            self.assertEqual(calls, ["GET", "PUT", "GET"])
+            self.assertEqual(args[1][-1], self.value["endpoint"] + "/mcp/preserved-bank/")
+
+        with patch.object(scope, "active", return_value=CUTOFF) as active, patch.object(Path, "cwd", return_value=self.project), \
+                patch.object(mcp_launcher.urllib.request, "build_opener", return_value=Mock(open=respond)), \
+                patch.object(mcp_launcher.os, "execve", side_effect=execute) as proxy:
+            mcp_launcher.launch(self.runtime, "/synthetic/proxy", workspace_policy_path=self.file)
+        proxy.assert_called_once()
+        active.assert_called_once()  # No repeated Docker/Ollama route probes in startup.
+        self.assertEqual({path: path.read_bytes() for path in preserved}, preserved)
+
+    def test_mcp_scope_and_qualification_failures_make_no_bank_request(self):
+        with patch.object(mcp_launcher.urllib.request, "build_opener") as requests, \
+                patch.object(mcp_launcher.os, "execve") as proxy, patch.object(Path, "cwd", return_value=self.project):
+            with patch.object(scope, "active", side_effect=ValueError("unqualified")), self.assertRaises(ValueError):
+                mcp_launcher.launch(self.runtime, "/synthetic/proxy", workspace_policy_path=self.file)
+            with patch.object(scope, "active", return_value=CUTOFF):
+                self.value["exclude"] = [str(self.project)]
+                self.save()
+                with self.assertRaises(scope.RepositoryIneligible):
+                    mcp_launcher.launch(self.runtime, "/synthetic/proxy", workspace_policy_path=self.file)
+            with patch.dict(os.environ, {"HINDSIGHT_MEMORY_DISABLED": "1"}), self.assertRaises(SystemExit):
+                mcp_launcher.launch(self.runtime, "/synthetic/proxy", workspace_policy_path=self.file)
+            self.value["enabled"] = False
+            self.save()
+            with self.assertRaises(ValueError):
+                mcp_launcher.launch(self.runtime, "/synthetic/proxy", workspace_policy_path=self.file)
+        requests.assert_not_called()
+        proxy.assert_not_called()
+
+    def test_mcp_local_changes_after_404_prevent_creation_and_proxy_start(self):
+        scope.resolve(self.policy, self.project, register=True)
+        registry = self.state / "repositories.json"
+        originals = {path: path.read_bytes() for path in (self.file, self.runtime, self.activation, registry)}
+        for changed in originals:
+            with self.subTest(changed=changed.name):
+                calls = []
+
+                def respond(request, timeout):
+                    calls.append(request.get_method())
+                    if changed == registry:
+                        data = json.loads(changed.read_text())
+                        next(iter(data.values()))["bankId"] = "changed-bank"
+                        changed.write_text(json.dumps(data))
+                    else:
+                        changed.write_bytes(originals[changed] + b"\n")
+                    raise urllib.error.HTTPError(request.full_url, 404, "missing", {}, BytesIO())
+
+                with patch.object(scope, "active", return_value=CUTOFF), patch.object(Path, "cwd", return_value=self.project), \
+                        patch.object(mcp_launcher.urllib.request, "build_opener", return_value=Mock(open=respond)), \
+                        patch.object(mcp_launcher.os, "execve") as proxy, self.assertRaises(mcp_launcher.BankBootstrapError):
+                    mcp_launcher.launch(self.runtime, "/synthetic/proxy", workspace_policy_path=self.file)
+                self.assertEqual(calls, ["GET"])
+                proxy.assert_not_called()
+                for path, raw in originals.items():
+                    path.write_bytes(raw)
+
+    def test_mcp_bank_failure_does_not_start_proxy(self):
+        def unavailable(request, timeout):
+            raise urllib.error.HTTPError(request.full_url, 503, "unavailable", {}, BytesIO())
+        with patch.object(scope, "active", return_value=CUTOFF), patch.object(Path, "cwd", return_value=self.project), \
+                patch.object(mcp_launcher.urllib.request, "build_opener", return_value=Mock(open=unavailable)), \
+                patch.object(mcp_launcher.os, "execve") as proxy, self.assertRaises(mcp_launcher.BankBootstrapError):
+            mcp_launcher.launch(self.runtime, "/synthetic/proxy", workspace_policy_path=self.file)
+        proxy.assert_not_called()
+
+    def test_foreign_or_malformed_registry_is_preserved_and_requires_dedicated_state(self):
+        mapping = scope.resolve(self.policy, self.project, register=True)
+        registry = self.state / "repositories.json"
+        valid = json.loads(registry.read_text())[mapping["repoId"]]
+        for data in (
+            {"schemaVersion": 1, "projects": []}, {"project": []},
+            {"project": {"root": str(self.project)}},
+            {"project": {**valid, "device": True}}, {"project": {**valid, "bankId": "../other"}},
+        ):
+            with self.subTest(data=data):
+                scope.write_json(registry, data)
+                original = registry.read_bytes()
+                for register in (False, True):
+                    with self.assertRaisesRegex(ValueError, "dedicated Hindsight stateRoot"):
+                        scope.resolve(self.policy, self.project, register=register)
+                    self.assertEqual(registry.read_bytes(), original)
 
     def test_registry_lock_contention_does_not_wait_in_a_hook(self):
         with patch.object(scope.fcntl, "flock", side_effect=BlockingIOError("busy")) as lock:
