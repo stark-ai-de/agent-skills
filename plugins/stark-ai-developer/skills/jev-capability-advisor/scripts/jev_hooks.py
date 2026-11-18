@@ -532,7 +532,9 @@ def registration_run(args):
         # receipt_entry already proved a before/after snapshot. Report metadata
         # for that actual registration and finalize only on explicit mutation.
         receipt = dict(receipt)
-        if digest(config_snapshot.data) == receipt.get('before_sha256'):
+        # Match receipt_entry's after-first selection even when a receipt-only
+        # repair leaves identical before/after configuration bytes.
+        if digest(config_snapshot.data) != receipt.get('after_sha256'):
             receipt['interpreter'] = receipt.get('previous_interpreter')
             receipt['guidance'] = receipt.get('previous_guidance')
             receipt['advice_consent'] = receipt.get('previous_advice_consent')

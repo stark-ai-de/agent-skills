@@ -479,6 +479,64 @@ class HookRegistrationTests(unittest.TestCase):
                 self.assertEqual(status["advice_consent"], installed["advice_consent"])
                 self.assertEqual(self.read_config()["hooks"][EVENT][1:], drifted["hooks"][EVENT][1:])
 
+    @unittest.skipIf(os.name == "nt", "POSIX Codex interpreter paths")
+    def test_interrupted_receipt_only_interpreter_repair_keeps_matching_metadata(self):
+        spec = importlib.util.spec_from_file_location("jev_hooks_receipt_repair_fixture", SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        self.addCleanup(sys.modules.pop, spec.name, None)
+        spec.loader.exec_module(module)
+        original_write = module.atomic_write
+        legacy = self.make_python_link("legacy-python")
+        profile = self.make_python_link("profile-python")
+        installed = self.run_cli("install", "codex", "--advice-consent", "allow",
+                                 interpreter=legacy)
+        target = self.config_path()
+        # Preserve installer formatting and use the exact live interpreter for
+        # repair, so only the ownership receipt needs to change.
+        drifted = target.read_bytes().replace(os.fsencode(legacy), os.fsencode(profile))
+        receipt_path = Path(installed["receipt_path"])
+        initial_receipt = receipt_path.read_bytes()
+        legacy.unlink()
+        for phase in ("before-config", "after-config"):
+            with self.subTest(phase=phase):
+                target.write_bytes(drifted)
+                receipt_path.write_bytes(initial_receipt)
+
+                def interrupt(path, data, expected):
+                    if path == target:
+                        if phase == "after-config":
+                            original_write(path, data, expected)
+                        raise OSError("synthetic interrupted receipt-only repair")
+                    return original_write(path, data, expected)
+
+                arguments = SimpleNamespace(action="install", host="codex", scope="user",
+                                            project_root=None, dry_run=False, repair_interpreter=True)
+                with patch.dict(os.environ, self.env, clear=True), \
+                        patch.object(sys, "executable", str(profile)), \
+                        patch.object(module, "atomic_write", side_effect=interrupt):
+                    with self.assertRaisesRegex(OSError, "synthetic interrupted receipt-only repair"):
+                        module.run(arguments)
+                journal = json.loads(receipt_path.read_bytes())
+                self.assertEqual(journal["phase"], "prepared")
+                self.assertEqual(journal["before_sha256"], journal["after_sha256"])
+                before = self.snapshot()
+                status = self.run_cli("status")
+                self.assertEqual(status["interpreter"], str(profile))
+                self.assertTrue(status["interpreter_available"])
+                self.assertEqual(status["advice_consent"], installed["advice_consent"])
+                self.assertEqual(status["guidance"], installed["guidance"])
+                preview = self.run_cli("install", "codex", "--repair-interpreter", "--dry-run",
+                                       interpreter=profile)
+                self.assertEqual(preview["status"], "unchanged")
+                self.assertEqual(self.snapshot(), before)
+                repaired = self.run_cli("install", "codex", "--repair-interpreter",
+                                        interpreter=profile)
+                self.assertEqual(repaired["status"], "unchanged")
+                self.assertEqual(json.loads(receipt_path.read_bytes())["phase"], "complete")
+                self.assertEqual(target.read_bytes(), drifted)
+                self.assertEqual(self.run_cli("status")["advice_consent"], installed["advice_consent"])
+
     def test_hook_file_symlink_is_rejected_without_changing_its_target(self):
         target = self.root / "must-not-change.json"
         target.write_text('{"other": true}\n', encoding="utf-8")

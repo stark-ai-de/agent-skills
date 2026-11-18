@@ -90,7 +90,7 @@
       "byteLength": 756,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "6558b277e39aa868309b632fe12d3c536d9231a260dc0ac5d142e1d89fd9b3d9"
+      "sha256": "f00ac72e7de13d390f9f540e7333dfebd22d444a87c8e97a8bc2d5c1db13b7da"
     },
     {
       "byteLength": 2128,
@@ -2349,10 +2349,10 @@
       "sha256": "21cad3fe64b4bf50c04374b3f7518881a17d3108d4c30e4effd8e0af2d6d401b"
     },
     {
-      "byteLength": 45224,
+      "byteLength": 45370,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/scripts/jev_hooks.py",
-      "sha256": "0e2e2b0a4863ef3e80ba2aeb0c70314fd887bf8253239beea2a5240d9a989083"
+      "sha256": "79c62ddaeb3a22afd0b10f57130f910e9b600e59ed1540f87eeab1b665107f12"
     },
     {
       "byteLength": 18993,
@@ -2915,9 +2915,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.23.2"
+    "version": "1.23.3"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "5878b3e5eaa3c3094b01e56c49802bf3a6678466bb8c8de485e8d3e047f98138"
+  "treeHash": "cf11f318eca3ba52e454d369c12b460c1195616eb9cda5f50b71e9447a65e548"
 }
