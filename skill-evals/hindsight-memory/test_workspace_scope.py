@@ -15,12 +15,14 @@ import urllib.error
 
 SCRIPTS = Path(__file__).resolve().parents[2] / "incubator/skills/engineering-workflows/hindsight-memory/scripts"
 sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parent / "diagnostics"))
 import mcp_launcher
 import project_scope
 import session_hook
 import weekly
 import worker
 import workspace_scope as scope
+import workspace_status
 
 SID = "12345678-1234-1234-1234-123456789abc"
 CUTOFF = dt.datetime.fromisoformat("2026-11-16T00:00:00+00:00")
@@ -77,6 +79,34 @@ class WorkspaceScopeTests(unittest.TestCase):
         return SimpleNamespace(workspace_policy=self.file, policy=None, docker="docker", compose="compose.yaml",
                                worker=str(SCRIPTS / "worker.py"), parser=None, mode="intake", memory_state=self.state,
                                max_sessions=kwargs.get("max_sessions", 8), max_seconds=20)
+
+    def doctor(self, repo):
+        output = StringIO()
+        with patch.object(sys, "argv", ["workspace_status.py", "--workspace-policy", str(self.file), "--repo", str(repo)]), \
+                patch.object(project_scope, "fingerprint", return_value="a" * 64), \
+                patch.object(scope, "resolve", side_effect=AssertionError("doctor may not bind or register a bank")), \
+                redirect_stdout(output):
+            return workspace_status.main(), json.loads(output.getvalue())
+
+    def test_doctor_checks_eligible_repository_without_creating_state(self):
+        before = {path.name: path.read_bytes() for path in self.state.iterdir()}
+        code, result = self.doctor(self.project)
+        self.assertEqual(code, 0)
+        self.assertEqual((result["status"], result["eligibility"], result["projectRoot"]),
+                         ("ready", "eligible", str(self.project)))
+        self.assertEqual({path.name: path.read_bytes() for path in self.state.iterdir()}, before)
+        self.value["stateRoot"] = str(self.home / "not-created")
+        self.save()
+        self.assertEqual(self.doctor(self.project)[1]["status"], "unverified")
+        self.assertFalse((self.home / "not-created").exists())
+
+    def test_doctor_preserves_opt_out_and_requires_exact_root(self):
+        self.value["repositories"] = {str(self.project): {"enabled": False}}
+        self.save()
+        self.assertEqual(self.doctor(self.project)[1]["eligibility"], "excluded")
+        child = self.project / "child"
+        child.mkdir()
+        self.assertEqual(self.doctor(child)[0], 1)
 
     def test_hook_is_local_and_repeat_replaces_only_its_private_reference(self):
         with patch.object(project_scope, "fingerprint", side_effect=AssertionError("service probe")), \
