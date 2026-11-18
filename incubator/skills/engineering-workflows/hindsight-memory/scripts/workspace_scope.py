@@ -136,6 +136,24 @@ def write_json(path, value):
             os.unlink(name)
 
 
+def validate_registry(registry):
+    """Validate a registry snapshot without creating state or acquiring a lock."""
+    if not isinstance(registry, dict) or len(registry) > 4096:
+        raise ValueError("repository registry")
+    for repo_id, item in registry.items():
+        if (not isinstance(repo_id, str) or not IDENTIFIER.fullmatch(repo_id)
+                or not isinstance(item, dict) or set(item) != {"root", "commonDir", "device", "inode", "bankId"}
+                or any(not isinstance(item[name], str) or not Path(item[name]).is_absolute() for name in ("root", "commonDir"))
+                or any(type(item[name]) is not int or item[name] < 0 for name in ("device", "inode"))
+                or not isinstance(item["bankId"], str) or not IDENTIFIER.fullmatch(item["bankId"])):
+            raise ValueError("foreign or malformed repository registry; use a dedicated Hindsight stateRoot")
+    if len({item["root"] for item in registry.values()}) != len(registry):
+        raise ValueError("duplicate repository registry roots")
+    if len({item["bankId"] for item in registry.values()}) != len(registry):
+        raise ValueError("independent repositories cannot share a bank")
+    return registry
+
+
 def resolve(policy, cwd, register=False):
     actual = git_identity(cwd)
     root = actual["root"]
@@ -158,19 +176,8 @@ def resolve(policy, cwd, register=False):
     fd = os.open(state / "repositories.lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
     with os.fdopen(fd, "a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        registry = json.loads(project_scope.private_read(registry_path)) if registry_path.exists() else {}
-        if not isinstance(registry, dict) or len(registry) > 4096:
-            raise ValueError("repository registry")
-        for repo_id, item in registry.items():
-            if (not isinstance(repo_id, str) or not IDENTIFIER.fullmatch(repo_id)
-                    or not isinstance(item, dict) or set(item) != {"root", "commonDir", "device", "inode", "bankId"}
-                    or any(not isinstance(item[name], str) or not Path(item[name]).is_absolute() for name in ("root", "commonDir"))
-                    or any(type(item[name]) is not int or item[name] < 0 for name in ("device", "inode"))
-                    or not isinstance(item["bankId"], str) or not IDENTIFIER.fullmatch(item["bankId"])):
-                raise ValueError("foreign or malformed repository registry; use a dedicated Hindsight stateRoot")
+        registry = validate_registry(json.loads(project_scope.private_read(registry_path)) if registry_path.exists() else {})
         matches = [(key, item) for key, item in registry.items() if item["root"] == canonical]
-        if len(matches) > 1 or len({item["root"] for item in registry.values()}) != len(registry):
-            raise ValueError("duplicate repository registry roots")
         explicit_id = override.get("repoId")
         if matches and explicit_id and explicit_id != matches[0][0]:
             raise ValueError("repository root is already mapped to another identity")

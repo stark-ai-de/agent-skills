@@ -3,6 +3,8 @@
 ## Contents
 
 - [Workspace scope](#workspace-scope)
+- [Repository status](#repository-status)
+- [Optional bank display names](#optional-bank-display-names)
 - [Existing single-project scope](#project-enablement)
 - [Agent access and session automation](#agent-access-and-optional-session-automation)
 - [Compact content and bounded intake](#compact-content-and-bounded-intake)
@@ -110,6 +112,58 @@ activation marker, or set the workspace/repository off switch to stop new work.
 Keep pending references and stored memories. Re-enabling with a new activation
 cutoff does not make old pending sessions eligible. Review those separately; do not
 discard them automatically.
+
+### Repository status
+
+Check the owner's policy for one exact Git root without enrolling it, creating
+state or opening a bank:
+
+```sh
+python3 diagnostics/workspace_status.py --workspace-policy POLICY --repo /absolute/repository
+```
+
+The helper reports `eligible` or `excluded`, with qualification `ready`,
+`unverified` or `disabled`. Invalid inputs or an unverifiable effective route
+produce `attention` and exit 1. `ready` means the recorded workspace qualification
+matches the effective route for this eligible root; it does not prove that its
+bank exists, that memories were retained or that retrieval is current. The command
+does not call models. It honors accepted roots, exclusions, repository opt-outs
+and explicit worktree mappings; a subdirectory is not an exact repository root.
+
+### Optional bank display names
+
+When readable bank names are explicitly requested, preview the existing registry:
+
+```sh
+python3 diagnostics/bank_aliases.py --workspace-policy POLICY
+python3 diagnostics/bank_aliases.py --workspace-policy POLICY --apply
+```
+
+Preview performs reads only. `--apply` adds a primary alias derived from the
+repository basename, or promotes that alias when it already belongs to the bank.
+A name owned elsewhere uses a deterministic bank-hash suffix. Existing primary
+names and readable canonical IDs are preserved. Output contains result counts
+such as `planned`, `named`, `already_named`, `bank_missing` and `collision`.
+
+Only registered, eligible repositories with matching current Git identities and
+policy mappings are selected. Stale overrides or malformed/ambiguous registries
+must be resolved through the existing owner; the helper does not repair them.
+It rechecks private policy, activation, runtime and registry snapshots, repository
+identity and effective route qualification before each write. Workspace or
+repository opt-outs and `HINDSIGHT_MEMORY_DISABLED=1` prevent naming changes.
+Missing banks remain missing. The command does not create banks, change canonical
+IDs or registry mappings, move memories, retain content or call models.
+
+The helper uses the pinned [Hindsight 1.2.1 alias API](https://github.com/vectorize-io/hindsight/blob/v1.2.1/hindsight-api-slim/hindsight_api/api/http.py):
+GET/POST on `/v1/default/banks/{bank_id}/aliases`, and PATCH with
+`{"primary": true}` on `/v1/default/banks/{bank_id}/aliases/{alias}` for promotion.
+Successful writes require a readback for the exact canonical bank and primary
+alias. A failed or interrupted run may have completed earlier naming changes;
+inspect current names before retrying. No rollback deletes an alias.
+
+Updating bundled helpers changes the qualification fingerprint. Have the host
+owner install the matching helper payload and repeat the existing qualification
+and enablement flow before applying names; do not invent replacement evidence.
 
 ## Project enablement
 

@@ -108,6 +108,39 @@ class WorkspaceScopeTests(unittest.TestCase):
         child.mkdir()
         self.assertEqual(self.doctor(child)[0], 1)
 
+    def test_repository_doctor_handles_disabled_and_unqualified_scope_without_writes(self):
+        self.activation.unlink()
+        before = {path.name: path.read_bytes() for path in self.state.iterdir()}
+        self.assertEqual(self.doctor(self.project)[1]["status"], "unverified")
+        self.assertEqual({path.name: path.read_bytes() for path in self.state.iterdir()}, before)
+        self.value = {"schemaVersion": 1, "kind": "hindsight-workspace", "enabled": False}
+        self.save()
+        with patch.object(scope, "git_identity", side_effect=AssertionError("disabled scope must not inspect repositories")):
+            self.assertEqual(self.doctor(self.project)[1]["status"], "disabled")
+
+    def test_repository_doctor_respects_exclusions_and_exact_worktree_mapping(self):
+        outside = self.repository(self.home / "outside")
+        self.assertEqual(self.doctor(outside)[1]["eligibility"], "excluded")
+        self.value["exclude"] = [str(self.project)]
+        self.save()
+        self.assertEqual(self.doctor(self.project)[1]["eligibility"], "excluded")
+        self.value["exclude"] = []
+        self.save()
+        subprocess.run(["git", "-C", str(self.project), "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                        "commit", "--allow-empty", "-qm", "fixture"], check=True, capture_output=True)
+        worktree = self.home / "worktree"
+        subprocess.run(["git", "-C", str(self.project), "worktree", "add", "--detach", str(worktree), "HEAD"],
+                       check=True, capture_output=True)
+        self.assertEqual(self.doctor(worktree)[1]["eligibility"], "excluded")
+        self.value["worktrees"][str(worktree)] = str(self.project)
+        self.save()
+        before = {path.name: path.read_bytes() for path in self.state.iterdir()}
+        self.assertEqual(self.doctor(worktree)[1]["eligibility"], "eligible")
+        self.assertEqual({path.name: path.read_bytes() for path in self.state.iterdir()}, before)
+        self.value["exclude"] = [str(self.project)]
+        self.save()
+        self.assertEqual(self.doctor(worktree)[1]["eligibility"], "excluded")
+
     def test_hook_is_local_and_repeat_replaces_only_its_private_reference(self):
         with patch.object(project_scope, "fingerprint", side_effect=AssertionError("service probe")), \
                 patch.object(scope, "active", side_effect=AssertionError("route probe")):

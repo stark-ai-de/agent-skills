@@ -3,7 +3,7 @@ name: lens-debug
 description: Use when the user explicitly requests Lens-based diagnosis of a coding-agent run, unexpected model requests, tool failures, latency, token usage, or cost, or asks to compare a bounded set of recorded runs.
 metadata:
   internal: true
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Lens Debug
@@ -49,12 +49,15 @@ infer permission to read unrelated traces or change configuration.
 ## Safety rules
 
 Use the user's approved HTTPS **LiteLLM gateway base**, not the Lens ingestion
-URL. The reader needs a user/workspace-scoped gateway key with trace-read access;
-a tracing-only ingestion key cannot read traces. Never request a master/admin key.
-The script reads a private key file specified by `LENS_READ_KEY_FILE` or
-`--key-file`. Never ask the user to paste credentials into chat, print the file,
-put the token in a command line, or reuse a provider credential without verifying
-its read scope. Missing access is a blocker, not permission to broaden access.
+URL. Use an existing user-owned LiteLLM virtual key authorized for these traces.
+`TRACE_READ` is not a key type; `LENS_READ_KEY_FILE` only selects its private file.
+A separate read key is optional. A tracing key cannot authorize gateway content
+reads; never request a master/admin key. Verify ownership and team sharing before
+reusing an inference key. Missing access is not permission to broaden it.
+
+Use `--key-file` or `LENS_READ_KEY_FILE`; never paste or print credentials, put
+tokens in command arguments, rotate working keys, or change permissions as part
+of diagnosis. See the API reference for user ownership and team-sharing rules.
 
 Identify the trace ID and trace_ref, or an explicit start/end time window, from
 current context. Do not choose the latest run and pretend it is this session.
@@ -70,12 +73,18 @@ Run from the installed skill directory, or use its absolute script path:
 ```bash
 python3 scripts/lens_read.py list --start-ms 1794848400000 --end-ms 1794852000000
 python3 scripts/lens_read.py show --trace-id <trace_id> --trace-ref <trace_ref>
+python3 scripts/lens_read.py span --trace-id <trace_id> --trace-ref <trace_ref> --span-id <span_id>
 python3 scripts/lens_read.py schema
 ```
 
 The timestamps above are examples; resolve the user's actual interval before
 running. Set `LENS_GATEWAY_URL` and `LENS_READ_KEY_FILE` outside chat, or pass the
-non-secret base and file path as options **before** the subcommand.
+non-secret base and file path as options **before** the subcommand. Keep the
+base free of an extra `/v1` suffix. For long traces, explicitly pass `show
+--cursor <next_cursor> --page-size 50` until the scoped evidence is complete.
+`show` contains previews; use `span` for actual input/output and `span --error`
+when the error was truncated. Disclose any unread pages or content; do not infer
+full input/output from previews. A receipt or health check is not this evidence.
 
 Read the [API contract](references/api.md) before SQL. Call `schema` first; do not
 invent table columns. The reader rejects redirects, caps responses at 2 MiB,
