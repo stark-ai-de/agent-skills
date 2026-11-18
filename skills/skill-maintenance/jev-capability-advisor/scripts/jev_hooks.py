@@ -427,6 +427,34 @@ def inspect_ownership(entries, owned):
     return matches[0]
 
 
+def codex_interpreter_drift(entries, owned, receipt):
+    saved_python = receipt.get('interpreter')
+    guidance = receipt.get('guidance')
+    if (not isinstance(saved_python, str) or not Path(saved_python).is_absolute()
+            or not isinstance(guidance, str)
+            or owned != build_registration('codex', saved_python, guidance=guidance)):
+        return None
+    marked = [(index, entry) for index, entry in enumerate(entries) if MARKER in json.dumps(entry)]
+    if len(marked) != 1:
+        return None
+    index, entry = marked[0]
+    handlers = entry['hooks']
+    command = handlers[0].get('command') if len(handlers) == 1 else None
+    if not isinstance(command, str):
+        return None
+    try:
+        arguments = shlex.split(command)
+    except ValueError:
+        return None
+    if not arguments:
+        return None
+    current_python = arguments[0]
+    if (current_python != saved_python and Path(current_python).is_absolute()
+            and entry == build_registration('codex', current_python, guidance=guidance)):
+        return index, current_python
+    return None
+
+
 @contextmanager
 def manager_lock(receipt_path):
     parent = safe_path(receipt_path.parent)
@@ -492,28 +520,59 @@ def registration_run(args):
     receipt = parse_object(receipt_snapshot, 'ownership_receipt')
     entries = event_entries(config)
     owned = receipt_entry(receipt, config_path, config_snapshot, args.host, args.scope)
-    index = inspect_ownership(entries, owned)
+    posix_codex = args.host == 'codex' and os.name == 'posix'
+    interpreter = (os.path.abspath(sys.executable) if posix_codex
+                   else str(Path(sys.executable).resolve()))
+    repair = getattr(args, 'repair_interpreter', False)
     exclusion, _ = state_exclusion(receipt_path.parent)
     if args.action != 'status' and exclusion == 'changed':
         raise HookError('state_git_exclusion_changed')
-    if receipt.get('phase') == 'prepared':
+    prepared = receipt.get('phase') == 'prepared'
+    if prepared:
         # receipt_entry already proved a before/after snapshot. Report metadata
         # for that actual registration and finalize only on explicit mutation.
         receipt = dict(receipt)
-        if digest(config_snapshot.data) == receipt.get('before_sha256'):
+        # Match receipt_entry's after-first selection even when a receipt-only
+        # repair leaves identical before/after configuration bytes.
+        if digest(config_snapshot.data) != receipt.get('after_sha256'):
             receipt['interpreter'] = receipt.get('previous_interpreter')
             receipt['guidance'] = receipt.get('previous_guidance')
             receipt['advice_consent'] = receipt.get('previous_advice_consent')
         receipt.update(entry=owned, phase='complete')
-        if args.action != 'status' and not args.dry_run:
-            with manager_lock(receipt_path):
-                if read_snapshot(config_path) != config_snapshot:
-                    raise HookError('concurrent_modification')
-                atomic_write(receipt_path, encode(receipt), receipt_snapshot)
-            receipt_snapshot = read_snapshot(receipt_path)
-            exclusion = 'present'
+    drift = None
+    try:
+        index = inspect_ownership(entries, owned)
+    except HookError:
+        if posix_codex and owned is not None:
+            drift = codex_interpreter_drift(entries, owned, receipt)
+        if drift is None:
+            raise
+        if not repair:
+            raise HookError('owned_hook_interpreter_changed') from None
+        index, current_python = drift
+        try:
+            same_python = os.path.samefile(current_python, interpreter)
+        except (OSError, ValueError):
+            same_python = False
+        if not same_python:
+            raise HookError('repair_interpreter_does_not_match_running_python') from None
     consent = active_consent(receipt, owned)
-    interpreter = str(Path(sys.executable).resolve())
+    if repair:
+        guidance = receipt.get('guidance')
+        saved_python = receipt.get('interpreter')
+        if (not isinstance(guidance, str) or not isinstance(saved_python, str)
+                or not Path(saved_python).is_absolute()
+                or owned != build_registration(args.host, saved_python, guidance=guidance)
+                or (consent is None and (receipt.get('advice_consent') is not None
+                                         or CONSENT_NOTICE in guidance))):
+            raise HookError('repair_requires_valid_owned_registration')
+    if prepared and drift is None and args.action != 'status' and not args.dry_run:
+        with manager_lock(receipt_path):
+            if read_snapshot(config_path) != config_snapshot:
+                raise HookError('concurrent_modification')
+            atomic_write(receipt_path, encode(receipt), receipt_snapshot)
+        receipt_snapshot = read_snapshot(receipt_path)
+        exclusion = 'present'
     result = {
         'host': args.host, 'scope': args.scope, 'config_path': str(config_path),
         'receipt_path': str(receipt_path), 'qualification': 'not_verified',
@@ -531,7 +590,8 @@ def registration_run(args):
                       ])
         registered_python = receipt.get('interpreter') if owned else None
         result['interpreter_available'] = bool(
-            isinstance(registered_python, str) and Path(registered_python).is_file())
+            isinstance(registered_python, str) and Path(registered_python).is_file()
+            and (not posix_codex or os.access(registered_python, os.X_OK)))
         result['known_obstacles'] = []
         if not consent:
             result['known_obstacles'].append('advice_consent_missing_or_changed')
@@ -546,7 +606,7 @@ def registration_run(args):
     if args.action == 'install':
         if sys.version_info < (3, 10):
             raise HookError('python_3_10_required')
-        if not Path(interpreter).is_file():
+        if not Path(interpreter).is_file() or (posix_codex and not os.access(interpreter, os.X_OK)):
             raise HookError('python_interpreter_unavailable')
         if sys.platform == 'win32':
             if Path(interpreter).suffix.lower() != '.exe':
@@ -559,11 +619,12 @@ def registration_run(args):
             consent = consent or new_consent()
         elif choice == 'revoke':
             consent = None
-        result['advice_consent'] = consent_status(consent, args.dry_run)
-        guidance = registration_guidance(args.host, args.scope, args.project_root, consent)
+        result['advice_consent'] = consent_status(consent, args.dry_run and not repair)
+        if not repair:
+            guidance = registration_guidance(args.host, args.scope, args.project_root, consent)
         replacement = build_registration(args.host, interpreter, guidance=guidance)
         result.update(registration=replacement, interpreter=interpreter, guidance=guidance)
-        if owned == replacement and consent == receipt.get('advice_consent'):
+        if drift is None and owned == replacement and consent == receipt.get('advice_consent'):
             if not args.dry_run and exclusion == 'missing':
                 with manager_lock(receipt_path):
                     pass
@@ -576,7 +637,10 @@ def registration_run(args):
         else:
             updated[index] = replacement
         config.setdefault('hooks', {})['UserPromptSubmit'] = updated
-        result['status'] = 'would_install' if args.dry_run else 'installed'
+        if repair:
+            result['status'] = 'would_repair_interpreter' if args.dry_run else 'repaired_interpreter'
+        else:
+            result['status'] = 'would_install' if args.dry_run else 'installed'
     else:
         consent = None
         result['advice_consent'] = consent_status(None)
@@ -744,6 +808,11 @@ def run(args):
     key_file = getattr(args, 'key_file', None)
     if key_file is not None and args.action != 'install':
         raise HookError('key_file_requires_install')
+    if getattr(args, 'repair_interpreter', False):
+        if args.action != 'install' or args.host != 'codex' or os.name != 'posix':
+            raise HookError('repair_interpreter_requires_posix_codex_install')
+        if key_file is not None or getattr(args, 'advice_consent', None) is not None:
+            raise HookError('repair_interpreter_cannot_change_credentials_or_consent')
     _, receipt_path = locations(args.host, args.scope, args.project_root)
     settings_path = receipt_path.parent / (args.host + '-settings.json')
     pending_path = settings_path.with_suffix('.pending.json')
@@ -853,12 +922,15 @@ def main(argv=None):
                         help='Install only: record or revoke explicit TypeSafe processing consent for this registration. ' + CONSENT_TERMS)
     parser.add_argument('--policy', choices=('repository-adopted',))
     parser.add_argument('--key-file', type=Path, help='Install only: save an existing key-file reference privately; never copy its contents')
+    parser.add_argument('--repair-interpreter', action='store_true',
+                        help='POSIX Codex install only: repair reviewed interpreter drift without changing consent or credentials')
     try:
         args = parser.parse_args(argv)
         if args.action == 'render':
             if (args.host != 'codex' or args.policy != 'repository-adopted'
                     or args.scope is not None or args.project_root is not None or args.dry_run
-                    or args.key_file is not None or args.advice_consent is not None):
+                    or args.key_file is not None or args.advice_consent is not None
+                    or args.repair_interpreter):
                 raise HookError('invalid_arguments: render requires --host codex '
                                 '--policy repository-adopted and no installer options')
             result = render_policy(args.host, args.policy)

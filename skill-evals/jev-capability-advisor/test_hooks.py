@@ -6,6 +6,7 @@ import io
 import json
 import os
 from pathlib import Path
+import shlex
 import shutil
 import socket
 import subprocess
@@ -339,6 +340,202 @@ class HookRegistrationTests(unittest.TestCase):
         before = self.snapshot()
         self.run_cli("uninstall", success=False)
         self.assertEqual(self.snapshot(), before)
+
+    def make_python_link(self, name):
+        link = self.root / name
+        link.symlink_to(Path(sys.executable).resolve())
+        return link
+
+    def interpreter_drift_fixture(self):
+        legacy = self.make_python_link("legacy-python")
+        installed = self.run_cli("install", "codex", "--advice-consent", "allow",
+                                 interpreter=legacy)
+        legacy.unlink()
+        active = self.make_python_link("profile-python3.14")
+        profile = self.make_python_link("profile-python3")
+        self.assertEqual(installed["interpreter"], str(legacy))
+        config = self.read_config()
+        command = config["hooks"][EVENT][0]["hooks"][0]["command"]
+        config["hooks"][EVENT][0]["hooks"][0]["command"] = command.replace(
+            shlex.quote(str(legacy)), shlex.quote(str(active)), 1)
+        config["hooks"][EVENT].append({"hooks": [{"type": "command", "command": "personal"}]})
+        self.write_config("codex", config)
+        return installed, config, profile
+
+    @unittest.skipIf(os.name == "nt", "POSIX Codex interpreter paths")
+    def test_interpreter_repair_preserves_guidance_consent_and_siblings(self):
+        installed, config, profile = self.interpreter_drift_fixture()
+        before = self.snapshot()
+        failure = self.run_cli("status", success=False)
+        self.assertEqual(failure["reason"], "owned_hook_interpreter_changed")
+        self.run_cli("install", success=False)
+        self.run_cli("uninstall", success=False)
+        preview = self.run_cli("install", "codex", "--repair-interpreter", "--dry-run",
+                               interpreter=profile)
+        self.assertEqual(preview["status"], "would_repair_interpreter")
+        self.assertEqual(self.snapshot(), before)
+        repaired = self.run_cli("install", "codex", "--repair-interpreter",
+                                interpreter=profile)
+        self.assertEqual(repaired["status"], "repaired_interpreter")
+        status = self.run_cli("status")
+        self.assertEqual(status["status"], "configured")
+        self.assertTrue(status["interpreter_available"])
+        self.assertEqual(status["interpreter"], str(profile))
+        self.assertEqual(status["advice_consent"], installed["advice_consent"])
+        self.assertEqual(status["guidance"], installed["guidance"])
+        self.assertEqual(self.read_config()["hooks"][EVENT][1:], config["hooks"][EVENT][1:])
+        self.assertEqual(json.loads(Path(repaired["backup_path"]).read_bytes()), config)
+        after = self.snapshot()
+        self.assertEqual(self.run_cli("install", "codex", "--repair-interpreter",
+                                      interpreter=profile)["status"], "unchanged")
+        self.assertEqual(self.snapshot(), after)
+
+    @unittest.skipIf(os.name == "nt", "POSIX Codex interpreter paths")
+    def test_profile_python_target_can_rotate_without_hook_or_receipt_changes(self):
+        first = self.make_python_link("generation-one")
+        second = self.make_python_link("generation-two")
+        profile = self.root / "profile-python"
+        profile.symlink_to(first)
+        result = self.run_cli("install", "codex", interpreter=profile)
+        self.assertEqual(result["interpreter"], str(profile))
+        before = self.config_path().read_bytes(), Path(result["receipt_path"]).read_bytes()
+        profile.unlink()
+        profile.symlink_to(second)
+        first.unlink()
+        self.assertTrue(self.run_cli("status")["interpreter_available"])
+        self.execute_registration("codex", self.registration())
+        self.assertEqual(self.run_cli("install", "codex", interpreter=profile)["status"], "unchanged")
+        self.assertEqual((self.config_path().read_bytes(), Path(result["receipt_path"]).read_bytes()), before)
+
+    @unittest.skipIf(os.name == "nt", "POSIX Codex interpreter paths")
+    def test_interpreter_repair_rejects_unproven_candidates(self):
+        _, fixture, profile = self.interpreter_drift_fixture()
+        for change in ("duplicate", "payload", "metadata", "different executable", "missing"):
+            with self.subTest(change=change):
+                config = json.loads(json.dumps(fixture))
+                entries = config["hooks"][EVENT]
+                handler = entries[0]["hooks"][0]
+                if change == "duplicate":
+                    entries.append(entries[0])
+                elif change == "payload":
+                    argv = shlex.split(handler["command"])
+                    argv[5] = "ZGlmZmVyZW50"
+                    handler["command"] = shlex.join(argv[:6]) + " || exit 1"
+                elif change == "metadata":
+                    handler["timeout"] += 1
+                elif change == "different executable":
+                    unexpected = self.root / "must-not-execute"
+                    unexpected.write_text("not Python", encoding="utf-8")
+                    unexpected.chmod(0o700)
+                    argv = shlex.split(handler["command"])
+                    argv[0] = str(unexpected)
+                    handler["command"] = shlex.join(argv[:6]) + " || exit 1"
+                else:
+                    entries.pop(0)
+                self.write_config("codex", config)
+                before = self.snapshot()
+                self.run_cli("install", "codex", "--repair-interpreter", success=False,
+                             interpreter=profile)
+                self.assertEqual(self.snapshot(), before)
+
+    @unittest.skipIf(os.name == "nt", "POSIX Codex interpreter paths")
+    def test_interrupted_interpreter_repair_resumes_from_either_snapshot(self):
+        spec = importlib.util.spec_from_file_location("jev_hooks_repair_fixture", SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        self.addCleanup(sys.modules.pop, spec.name, None)
+        spec.loader.exec_module(module)
+        original_write = module.atomic_write
+        installed, drifted, profile = self.interpreter_drift_fixture()
+        receipt_path = Path(installed["receipt_path"])
+        initial_receipt = receipt_path.read_bytes()
+        target = self.config_path()
+        for phase in ("before-config", "after-config"):
+            with self.subTest(phase=phase):
+                self.write_config("codex", drifted)
+                receipt_path.write_bytes(initial_receipt)
+
+                def interrupt(path, data, expected):
+                    if path == target:
+                        if phase == "after-config":
+                            original_write(path, data, expected)
+                        raise OSError("synthetic interrupted repair")
+                    return original_write(path, data, expected)
+
+                arguments = SimpleNamespace(action="install", host="codex", scope="user",
+                                            project_root=None, dry_run=False, repair_interpreter=True)
+                with patch.dict(os.environ, self.env, clear=True), \
+                        patch.object(sys, "executable", str(profile)), \
+                        patch.object(module, "atomic_write", side_effect=interrupt):
+                    with self.assertRaisesRegex(OSError, "synthetic interrupted repair"):
+                        module.run(arguments)
+                self.assertEqual(json.loads(receipt_path.read_bytes())["phase"], "prepared")
+                if phase == "before-config":
+                    self.assertEqual(self.run_cli("status", success=False)["reason"],
+                                     "owned_hook_interpreter_changed")
+                self.run_cli("install", "codex", "--repair-interpreter", interpreter=profile)
+                self.assertEqual(json.loads(receipt_path.read_bytes())["phase"], "complete")
+                status = self.run_cli("status")
+                self.assertEqual(status["advice_consent"], installed["advice_consent"])
+                self.assertEqual(self.read_config()["hooks"][EVENT][1:], drifted["hooks"][EVENT][1:])
+
+    @unittest.skipIf(os.name == "nt", "POSIX Codex interpreter paths")
+    def test_interrupted_receipt_only_interpreter_repair_keeps_matching_metadata(self):
+        spec = importlib.util.spec_from_file_location("jev_hooks_receipt_repair_fixture", SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        self.addCleanup(sys.modules.pop, spec.name, None)
+        spec.loader.exec_module(module)
+        original_write = module.atomic_write
+        legacy = self.make_python_link("legacy-python")
+        profile = self.make_python_link("profile-python")
+        installed = self.run_cli("install", "codex", "--advice-consent", "allow",
+                                 interpreter=legacy)
+        target = self.config_path()
+        # Preserve installer formatting and use the exact live interpreter for
+        # repair, so only the ownership receipt needs to change.
+        drifted = target.read_bytes().replace(os.fsencode(legacy), os.fsencode(profile))
+        receipt_path = Path(installed["receipt_path"])
+        initial_receipt = receipt_path.read_bytes()
+        legacy.unlink()
+        for phase in ("before-config", "after-config"):
+            with self.subTest(phase=phase):
+                target.write_bytes(drifted)
+                receipt_path.write_bytes(initial_receipt)
+
+                def interrupt(path, data, expected):
+                    if path == target:
+                        if phase == "after-config":
+                            original_write(path, data, expected)
+                        raise OSError("synthetic interrupted receipt-only repair")
+                    return original_write(path, data, expected)
+
+                arguments = SimpleNamespace(action="install", host="codex", scope="user",
+                                            project_root=None, dry_run=False, repair_interpreter=True)
+                with patch.dict(os.environ, self.env, clear=True), \
+                        patch.object(sys, "executable", str(profile)), \
+                        patch.object(module, "atomic_write", side_effect=interrupt):
+                    with self.assertRaisesRegex(OSError, "synthetic interrupted receipt-only repair"):
+                        module.run(arguments)
+                journal = json.loads(receipt_path.read_bytes())
+                self.assertEqual(journal["phase"], "prepared")
+                self.assertEqual(journal["before_sha256"], journal["after_sha256"])
+                before = self.snapshot()
+                status = self.run_cli("status")
+                self.assertEqual(status["interpreter"], str(profile))
+                self.assertTrue(status["interpreter_available"])
+                self.assertEqual(status["advice_consent"], installed["advice_consent"])
+                self.assertEqual(status["guidance"], installed["guidance"])
+                preview = self.run_cli("install", "codex", "--repair-interpreter", "--dry-run",
+                                       interpreter=profile)
+                self.assertEqual(preview["status"], "unchanged")
+                self.assertEqual(self.snapshot(), before)
+                repaired = self.run_cli("install", "codex", "--repair-interpreter",
+                                        interpreter=profile)
+                self.assertEqual(repaired["status"], "unchanged")
+                self.assertEqual(json.loads(receipt_path.read_bytes())["phase"], "complete")
+                self.assertEqual(target.read_bytes(), drifted)
+                self.assertEqual(self.run_cli("status")["advice_consent"], installed["advice_consent"])
 
     def test_hook_file_symlink_is_rejected_without_changing_its_target(self):
         target = self.root / "must-not-change.json"
