@@ -135,6 +135,8 @@ Compass `setup` records the local mapping, host scope and missing prerequisites 
 
 Run from the installed skill directory with an existing Python 3.10+ interpreter. On native Windows, use the installed Python executable instead of assuming a `python3` command exists. The interpreter running the manager becomes the registered interpreter; choose an OS-native binary, not a Windows shim from WSL or a WSL executable from Windows.
 
+On POSIX, Codex records the absolute invocation path without resolving symlinks. Invoke a trusted stable profile path directly when your package manager rotates its target. This binds the command to the profile path, not to a specific Python build; keep that profile under your control. Windows and Claude Code retain their existing executable handling.
+
 ```text
 python3 scripts/jev_hooks.py install|status|uninstall
   --host codex|claude-code
@@ -143,6 +145,7 @@ python3 scripts/jev_hooks.py install|status|uninstall
   [--dry-run]
   [--key-file PATH]  # install only
   [--advice-consent allow|revoke]  # install only
+  [--repair-interpreter]  # POSIX Codex install only
 ```
 
 | Operation   | Effect                                                                                                                       |
@@ -211,6 +214,8 @@ Native Windows uses its own user home and native paths. WSL and Windows configur
 Ownership records and configuration backups live under `jev-capability-advisor/hooks` in private user state: `XDG_STATE_HOME` or `~/.local/state` on POSIX; `LOCALAPPDATA` on native Windows. Keep this directory outside repositories. The sole exception is the default POSIX `~/.local/state/jev-capability-advisor/hooks` when the home itself is a Git worktree: an existing Git must confirm that exact root and that no state files are tracked. Nested repositories and other state overrides remain rejected. Before writing receipts or backups, the manager creates its own private `.gitignore` containing `*`; it never changes the home ignore file or Git index. A changed exclusion is preserved and blocks mutation; a missing exclusion is restored by explicit installation, including an otherwise unchanged install. Status and dry-run report exclusion readiness without writing. It records installation ownership and private configuration, not task history or key contents. Optional sanitized qualification records remain separate from raw host evidence. Do not delete it before uninstalling: loss of proof must not authorize removal of a similar-looking user entry.
 
 Repeated installation is idempotent. For an update, the manager checks the existing owned entry and current file content before an atomic replacement. Malformed JSON, symlinks or Windows junctions, detected concurrent changes or edited ownership targets stop the change instead of overwriting user work. Uninstall preserves later user changes and unrelated entries. An interrupted write retains a prepared ownership journal. A subsequent explicit install/uninstall finalizes it only when its before/after snapshot proves what happened; status and dry-run stay read-only. A process killed before releasing its private `.lock` leaves a lock containing its PID. Inspect that PID locally and remove only the confirmed stale lock before retrying; never remove an active lock. Resolve a reported conflict by reviewing the exact configuration and ownership record; never restore an old full-file backup over newer unrelated settings automatically.
+
+For `owned_hook_interpreter_changed`, review the live entry and receipt. If the only change is the interpreter, run `install --host codex --repair-interpreter --dry-run` with the trusted Python you want registered and the original scope. After reviewing the preview, repeat without `--dry-run`. Repair requires one provably owned entry; a changed interpreter must identify the running Python. It keeps the saved guidance, valid consent, keys, and unrelated hooks, and cannot be combined with consent or key changes. If interrupted, repeat the same explicit repair with the same Python. Review the changed command in Codex `/hooks`; registration status does not verify host trust or hook delivery.
 
 ## What the hook runs
 
