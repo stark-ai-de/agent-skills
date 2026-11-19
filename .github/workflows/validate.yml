@@ -65,6 +65,9 @@ jobs:
       - name: 🗂️ Test local Karakeep helpers
         run: pnpm run validate:karakeep
 
+      - name: 🧠 Test Hindsight memory helpers
+        run: python3 -B -m unittest discover -s skill-evals/hindsight-memory -p 'test_*.py' -v
+
       - name: ✅ Validate repository contracts
         run: pnpm run validate
 

@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.2.1"
+  version: "0.3.0"
   internal: true
 ---
 
@@ -69,6 +69,7 @@ metadata:
 
 - Run `python3 scripts/project_scope.py doctor --policy /absolute/private/project.json`.
 - For workspace scope, use `scripts/workspace_scope.py doctor --workspace-policy POLICY`.
+- To check one exact repository without registering a bank, use `python3 diagnostics/workspace_status.py --workspace-policy POLICY --repo /absolute/repository`.
 - It reads selected private files and Docker metadata; it does not start services, invoke models, retain content, migrate data or create receipts.
 - Report its scoped route/enablement result separately from retrieval quality and freshness.
 - Missing host access is unverified, not proof the service failed.
@@ -130,6 +131,8 @@ metadata:
 
 - `project_scope.py` previews enable/disable and diagnoses without writes; `--apply` performs the selected enablement change.
 - `workspace_scope.py` manages the accepted workspace grant and persistent exact-root bank registry.
+- `diagnostics/workspace_status.py` reports repository eligibility and workspace qualification without creating state; bank existence and retrieval freshness remain separate.
+- `diagnostics/bank_aliases.py` previews readable names for existing qualified workspace banks. Only use `--apply` for an explicitly requested naming change; see the [workspace guide](references/setup.md#optional-bank-display-names).
 - `mcp_launcher.py` checks the qualified workspace's exact bank before connecting;
   it creates a missing empty bank after a 404 without retaining facts. Keep its
   private state separate from other tools and requalify after helper changes.
