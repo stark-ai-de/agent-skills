@@ -12,6 +12,21 @@
 
 ### Removed
 
+## 0.35.0 (2026-11-19)
+
+## What's Changed
+* feat: add independent search and memory setup workflows by @servrox in https://github.com/stark-ai-de/agent-skills/pull/194
+* Allow delayed GrepAI fixture deletion propagation by @servrox in https://github.com/stark-ai-de/agent-skills/pull/196
+* feat(memory): add scoped Codex/pi intake and simplify knowledge reads by @servrox in https://github.com/stark-ai-de/agent-skills/pull/198
+* feat(lens-debug): add opt-in read-only Lens diagnosis skill by @servrox in https://github.com/stark-ai-de/agent-skills/pull/197
+* fix(hindsight): provision qualified workspace banks before MCP reads by @servrox in https://github.com/stark-ai-de/agent-skills/pull/199
+* fix(lens-debug): read complete trace evidence and clarify credentials by @servrox in https://github.com/stark-ai-de/agent-skills/pull/200
+* fix(jev): preserve stable Codex hook interpreter paths by @servrox in https://github.com/stark-ai-de/agent-skills/pull/201
+* feat(hindsight): add workspace status and safe bank display aliases by @servrox in https://github.com/stark-ai-de/agent-skills/pull/202
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.34.0...v0.35.0
+
 ## 0.34.0 (2026-11-07)
 
 ## What's Changed
