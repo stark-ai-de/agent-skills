@@ -1,0 +1,40 @@
+{
+  "$schema": "./stark-ai-ads.source.schema.json",
+  "schemaVersion": 1,
+  "name": "stark-ai-ads",
+  "version": "0.1.0",
+  "displayName": "Ads API by stark AI",
+  "shortDescription": "OpenAI Ads API integration",
+  "description": "Manage supported OpenAI Ads resources with a connected Advertiser API account. Inspect campaigns and reports, prepare requests, and perform authorized campaign, bulk, feed, audience and conversion-setup operations. Complements the official Ads Manager plugin where its available tools lack an operation or parameter, and supports API workflows without that plugin.\n\nRequires an Ads account and an account-scoped Advertiser API key from Ads Manager. A regular OpenAI Platform key is not a substitute. This independent integration is published by servrox solutions UG, not OpenAI. Its hosted MCP service receives the requested Ads data and stores the connected Ads key encrypted. API availability remains subject to OpenAI account access and feature enablement. Installation grants no advertising-spend authorization.",
+  "author": "servrox solutions UG",
+  "category": "Business & Operations",
+  "capabilities": [
+    "Inspect the connected ad account, campaigns and reports.",
+    "Prepare and apply authorized Advertiser API operations.",
+    "Manage supported bulk jobs, product feeds, audiences and conversion setup."
+  ],
+  "starterPrompts": [
+    "Check which Ads account is connected and summarize its campaigns.",
+    "Report campaign performance for last week in the account timezone.",
+    "Prepare the requested Ads changes and show their scope before applying them."
+  ],
+  "urls": {
+    "website": "https://github.com/stark-ai-de/agent-skills/blob/main/docs/listing/openai/stark-ai-ads.md",
+    "privacyPolicy": "https://github.com/stark-ai-de/agent-skills/blob/main/docs/listing/openai/stark-ai-ads.md#privacy",
+    "termsOfService": "https://github.com/stark-ai-de/agent-skills/blob/main/docs/listing/openai/stark-ai-ads.md#terms",
+    "support": "https://github.com/stark-ai-de/agent-skills/blob/main/docs/listing/openai/stark-ai-ads.md#support"
+  },
+  "assets": {
+    "logo": "plugins/assets/stark-ai-ads/logo.png",
+    "logoDark": "plugins/assets/stark-ai-ads/logo-dark.png",
+    "composerIcon": "plugins/assets/stark-ai-ads/composer-icon.png",
+    "composerIconDark": "plugins/assets/stark-ai-ads/composer-icon-dark.png"
+  },
+  "skill": {
+    "name": "openai-advertiser-api",
+    "source": "skills/engineering-workflows/openai-advertiser-api"
+  },
+  "oauthClientId": "stark-ai-ads-chatgpt",
+  "output": "dist/openai/stark-ai-ads-0.1.0.zip",
+  "contractVerifiedOn": "2026-11-23"
+}

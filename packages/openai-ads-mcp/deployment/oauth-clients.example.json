@@ -1,0 +1,6 @@
+[
+  {
+    "clientId": "stark-ai-ads-chatgpt",
+    "redirectUris": ["https://chatgpt.com/connector_platform_oauth_redirect"]
+  }
+]

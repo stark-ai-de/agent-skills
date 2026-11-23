@@ -1,0 +1,12 @@
+interface:
+  display_name: "OpenAI Advertiser API"
+  short_description: "Manage OpenAI Ads with API tools and guarded workflows"
+  default_prompt: >-
+    Use OpenAI Advertiser API to complete this OpenAI Ads task. Select the
+    available plugin or direct API route, verify the account, and distinguish
+    inspection, preparation, authorized changes, and pending results.
+policy:
+  products:
+    - CHAT
+    - CODEX
+  allow_implicit_invocation: true

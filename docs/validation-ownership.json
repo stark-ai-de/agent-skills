@@ -154,6 +154,20 @@
       "command": "pnpm run validate:visual-reports",
       "proof": "Version 1 recipes, version 2 models, bounded Markdown input, source-preserving exports, bundled offline generation and atomic managed revisions. Browser delivery and performance are separate recorded gates.",
       "cadence": "every aggregate run"
+    },
+    {
+      "id": "ads-mcp",
+      "command": "pnpm run validate:ads-mcp",
+      "owner": "packages/openai-ads-mcp/test/integration.test.mjs",
+      "proof": "Real PostgreSQL migrations, multi-pool token/credential atomicity, shared rate/lease limits, async OAuth-to-MCP account isolation, Vercel/native transport and bounded deadlines/results with synthetic Ads responses. Live Neon/PgBouncer, public Vercel deployment and ChatGPT installation remain separate.",
+      "cadence": "every aggregate run; hosted Validate owns the aggregate"
+    },
+    {
+      "id": "ads-plugin",
+      "command": "pnpm run validate:ads-plugin",
+      "owner": "scripts/plugin/validate-ads-plugin.mjs",
+      "proof": "Independent Ads plugin source, canonical ChatGPT skill metadata, scoped OAuth configuration, deterministic ZIP bytes, archive boundaries and refusal of unsafe inputs. Portal review and publication are separate.",
+      "cadence": "every aggregate run; hosted Validate owns the aggregate"
     }
   ]
 }

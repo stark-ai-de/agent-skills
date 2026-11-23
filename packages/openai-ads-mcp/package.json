@@ -1,0 +1,25 @@
+{
+  "name": "@stark-ai/openai-ads-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "start": "node src/server.mjs",
+    "db:migrate": "node scripts/migrate.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.4.0",
+    "@vercel/functions": "3.7.6",
+    "pg": "8.23.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@vercel/routing-utils": "6.4.0"
+  },
+  "engines": {
+    "node": ">=24.18.0"
+  }
+}

@@ -42,3 +42,13 @@ docs/specs/do-not-publish/*
 
 # Generated MCP landing page
 packages/skill-metadata-mcp/public/
+packages/openai-ads-mcp/public/
+
+# Ads credential state is runtime data, never a distribution input.
+/packages/openai-ads-mcp/data/
+/data/ads.sqlite
+/data/ads.sqlite-wal
+/data/ads.sqlite-shm
+
+# Public configuration template; all real environment files stay ignored.
+!/packages/openai-ads-mcp/.env.example

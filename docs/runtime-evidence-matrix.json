@@ -570,6 +570,68 @@
       "rationale": "Node 24.22.0 passes the portable renderer and managed-revision fixtures on Linux/WSL. Bun 1.4.2 with --test rejects node:test outside its runner. The consumer contract explicitly targets Node; repository artifact bundling uses Bun. Hosted Windows/macOS runs remain separate evidence.",
       "fallbackOrder": ["node"],
       "revisit": "Reassess when the consumer runtime or the Node test-runner invocation contract changes."
+    },
+    {
+      "id": "ads-mcp-node-contract",
+      "surfaces": ["package:root:ads-mcp-node"],
+      "candidates": [
+        {
+          "id": "node",
+          "signals": {
+            "localHttpMcpFixtures": "pass",
+            "localOAuthAndEncryptedVaultFixtures": "pass",
+            "localApiContractFixtures": "pass",
+            "localPostgreSqlMultiPoolFixtures": "pass",
+            "localVercelAdapterAndBuildFixtures": "pass",
+            "hostedVercel": "unknown",
+            "hostedNeonPooling": "unknown",
+            "hostedLinux": "unknown",
+            "crossPlatformHosted": "unknown",
+            "liveAdsIntegration": "unknown"
+          }
+        }
+      ],
+      "winner": "node",
+      "evidenceRefs": [
+        "pnpm run validate:ads-mcp",
+        "packages/openai-ads-mcp/package.json",
+        "packages/openai-ads-mcp/test/integration.test.mjs",
+        "packages/openai-ads-mcp/test/auth.test.mjs",
+        "packages/openai-ads-mcp/test/store.test.mjs",
+        "packages/openai-ads-mcp/test/vercel.test.mjs",
+        "packages/openai-ads-mcp/src/storage/postgres.mjs",
+        "packages/openai-ads-mcp/scripts/migrate.mjs"
+      ],
+      "rationale": "The Ads MCP service targets Node.js 24.18 or newer with external PostgreSQL. Node 24.22.3 and real PostgreSQL 18.7 passed all 108 local runtime cases on Linux on 2026-11-23: migrations, multi-pool races, encryption, shared limits, legacy/modern OAuth/MCP, compiled Vercel routing and authenticated cron origins, request-schema projection, write outcomes, directional pagination, full-operation deadlines, response bounds and the externally timed sanitizer regression. Ads responses are synthetic. The Node test runner qualifies the declared runtime; Bun remains the parent repository orchestrator. Hosted Vercel/Neon, other platforms and live Ads access have not been qualified.",
+      "fallbackOrder": ["node"],
+      "revisit": "Requalify after Node, PostgreSQL/pooling, MCP transport, OAuth or hosting-contract changes. Missing Node fails this boundary instead of silently substituting another runtime."
+    },
+    {
+      "id": "ads-plugin-node-packaging",
+      "surfaces": ["package:root:ads-plugin-node"],
+      "candidates": [
+        {
+          "id": "node",
+          "signals": {
+            "localSourceValidation": "pass",
+            "localDeterministicPackageFixtures": "pass",
+            "hostedLinux": "unknown",
+            "crossPlatformHosted": "unknown",
+            "portalPublication": "unknown"
+          }
+        }
+      ],
+      "winner": "node",
+      "evidenceRefs": [
+        "pnpm run validate:ads-plugin",
+        "pnpm run package:ads-plugin",
+        "scripts/plugin/validate-ads-plugin.mjs",
+        "scripts/plugin/package-ads-plugin.mjs",
+        "scripts/validation/test-ads-plugin.mjs"
+      ],
+      "rationale": "The independent Ads plugin packager and node:test fixtures run explicitly on Node.js 24.18 or newer. Local Linux source, OAuth configuration, canonical-byte projection and reproducible-archive fixtures ran on Node 24.22.3 on 2026-11-23. This is deterministic packaging evidence; no deployment, portal acceptance or publication is inferred. Hosted and cross-platform observations remain unknown.",
+      "fallbackOrder": ["node"],
+      "revisit": "Requalify when package inputs, archive rules, Node runtime or OpenAI submission contracts change."
     }
   ]
 }

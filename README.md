@@ -86,6 +86,16 @@ npx skills@latest update
 npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator codex-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless karakeep-knowledge jev-capability-advisor visual-reports -g -a codex -y
 ```
 
+Install the complete standalone catalog for Codex, including the OpenAI Advertiser API skill:
+
+```bash
+npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator codex-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams openai-advertiser-api telegram-serverless karakeep-knowledge jev-capability-advisor visual-reports -g -a codex -y
+```
+
+The [OpenAI Advertiser API skill](skills/engineering-workflows/openai-advertiser-api/SKILL.md) adds documented operations or parameters missing from available Ads Manager tools and supports API access without that plugin. Live use requires an Ads account and its Advertiser API key from Ads Manager Settings; an ordinary Platform OpenAI API key is not sufficient. See the [capability map](skills/engineering-workflows/openai-advertiser-api/references/capabilities-and-recipes.md).
+
+The independent [Ads API by stark AI plugin](docs/listing/openai/stark-ai-ads.md) combines that canonical skill with an authenticated [Advertiser API MCP service](packages/openai-ads-mcp/README.md). It provides typed API tools, account-scoped OAuth connections and protected credential downloads. Deployment and public listing qualification are separate from installing the standalone skill; no live service endpoint is selected in this repository change. The [service map](docs/services.md) describes the monorepo layout, dedicated Vercel project and PostgreSQL state boundary.
+
 Install the portable plugin with Codex CLI 0.147.0 or later:
 
 ```bash
@@ -101,7 +111,7 @@ See the [plugin documentation](plugins/README.md) for package and distribution d
 <summary><strong>Install the Cursor bundle</strong></summary>
 
 ```bash
-npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cursor-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless karakeep-knowledge jev-capability-advisor visual-reports -g -a cursor -y
+npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cursor-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams openai-advertiser-api telegram-serverless karakeep-knowledge jev-capability-advisor visual-reports -g -a cursor -y
 ```
 
 </details>
@@ -110,7 +120,7 @@ npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cur
 <summary><strong>Install the Claude Code bundle</strong></summary>
 
 ```bash
-npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless karakeep-knowledge jev-capability-advisor visual-reports -g -a claude-code -y
+npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams openai-advertiser-api telegram-serverless karakeep-knowledge jev-capability-advisor visual-reports -g -a claude-code -y
 ```
 
 </details>
