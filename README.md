@@ -92,6 +92,8 @@ Install the complete standalone catalog for Codex, including the OpenAI Advertis
 npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator codex-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams openai-advertiser-api telegram-serverless karakeep-knowledge jev-capability-advisor visual-reports -g -a codex -y
 ```
 
+The [OpenAI Advertiser API skill](skills/engineering-workflows/openai-advertiser-api/SKILL.md) adds documented operations or parameters missing from available Ads Manager tools and supports API access without that plugin. Live use requires an Ads account and its Advertiser API key from Ads Manager Settings; an ordinary Platform OpenAI API key is not sufficient. See the [capability map](skills/engineering-workflows/openai-advertiser-api/references/capabilities-and-recipes.md).
+
 Install the portable plugin with Codex CLI 0.147.0 or later:
 
 ```bash

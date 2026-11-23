@@ -33,3 +33,45 @@ The options-only response demonstrated the clearest workflow improvement. The ca
 Checked the full-refresh feed settings and conversion credential storage instructions against the official references. The revised runbook requires checking the feed setting and accounting for omitted products before upload, and confirming a server-side secret destination before requesting a new key. Runbook SHA-256: `5b98b8f1a1e6ef4a93e0f7717d805ff9ac490aefe6f037075486d92821c3a8a7`. Validation used documentation and synthetic checks.
 
 A later review added explicit account discovery and completed the ADR-0060 handoff. The documented shell example passed eight mocked tests, including missing expected IDs, discovery, and conflicting inputs. Revised SHA-256 digests are `3f3dddec38f58dd436cb529d029cd817288f707b7bf8dd3839a0b17a44e86b85` for `SKILL.md` and `d56ca1a990c36772b05bf8616f252e941d9b395074afedbe4db4ad0a55c7c207` for the runbook.
+
+## Goal review: plugin complement and standalone access
+
+The 2026-11-23 PR review checked the original purpose against the official Ads Manager tools available in that session and current OpenAI Ads documentation. At review head `e2796bbf1085e936d93190b0996654bd3fa5df69`, the account-check tests passed; the gaps concerned capability-based routing, credential-only onboarding, practical API extension workflows, and evaluation coverage. The changes retain standalone catalog scope and do not add the skill to a plugin bundle.
+
+The revised entrypoint covers absent plugins and missing tool parameters. The [capability map](../../skills/engineering-workflows/openai-advertiser-api/references/capabilities-and-recipes.md) distinguishes already-supported plugin operations from API opportunities, with a dated snapshot and mandatory runtime recheck. Access guidance distinguishes Advertiser, Platform, and Conversions API keys. The public APIs do not grant otherwise missing account permissions or feature access.
+
+### Behavioral observations
+
+One fresh agent context answered all 18 [synthetic cases](cases.md) using only the candidate entrypoint, its two local references, and the prompts. It had no reviewer diagnosis or expected-answer rubric. All outputs described proposed actions; no credentials, live documentation, Ads account, or network were accessed. The implementer manually assessed the answers. This checks prompted instruction use, not automatic activation or live API success.
+
+| Cases | Observed behavior                                                                                                                                                                                 |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1–8   | Retained account matching, options-only stopping, current-contract requirements, uncertain-write reconciliation, feature gates, and the unsupported Hosted URL scheduling boundary.               |
+| 9     | Selected standalone API preparation; produced canonical `campaign.*` fields and a GET `date_range` covering November 16–22 inclusively in Europe/Berlin.                                          |
+| 10    | Rejected using the ordinary Platform key for Ads and provided Ads account/Settings setup while retaining offline preparation.                                                                     |
+| 11–12 | Kept supported reports in the plugin, used the API only for the unsupported `desktop_web` parameter, and recognized that conversion-only attribution is already available in the plugin.          |
+| 13    | Prepared feed creation and Delta updates, separated initial SFTP ingestion, and preserved replacement/credential boundaries.                                                                      |
+| 14–15 | Withheld draft submission; required a changed execution body and new request key; recognized that partial failures do not roll back successes and that every operation page needs reconciliation. |
+| 16–17 | Stopped on disabled Delta access and honored plugin-only intent despite an available API key.                                                                                                     |
+| 18    | Used official measurement guides when the conversions companion was absent; distinguished source ID, Pixel ID, Advertiser key, and CAPI key.                                                      |
+
+Captured response excerpts:
+
+- Case 9: `time_ranges[]={"type":"date_range","since":"2026-11-16","until":"2026-11-22","timezone":"Europe/Berlin"}` with `fields[]=campaign.id`, `campaign.name`, `campaign.clicks`, and `campaign.spend`.
+- Case 11: `{"targeting":{"platforms":{"included":["desktop_web"]}}}`; the unresolved campaign ID remained a placeholder.
+- Case 12: “Do not require an Advertiser key for these plugin calls.”
+- Case 17: “Do not switch to the API because a key exists; do not substitute the broader `web` value.”
+
+The first forward pass noted that bulk request construction and exact cursor extraction still required the upstream guide. The recipe now includes a local pause payload and specifies the last returned `operation_id` as the `after` cursor. A second fresh context answered two focused bulk tasks from the revised local references: it prepared both requested campaign pauses without submission, selected a new execution key, and returned `GET /v1/bulk_mutation_jobs/{job_id}/operations?after=fixture-op-100` while preserving earlier successful mutations. All recipes continue to require current official contract verification. An independent review also caught and resolved a draft ambiguity that could require an Ads API key for plugin-routed calls.
+
+### Mechanical verification and limits
+
+- `python3 -B skill-evals/openai-advertiser-api/test_account_example.py`: all eight tests passed against the actual documented Bash example.
+- `node scripts/catalog/validate-skills.mjs` and `node scripts/validation/test-skill-invocation-token.mjs`: passed; 16 public skills and 31 incubator skills validated.
+- `pnpm dlx skills@1.5.23 add ./skills --list`: discovered all 16 public skills, including the revised activation description.
+- A temporary project-local Codex installation using Skills CLI 1.5.23 copied all three Advertiser skill files byte-for-byte. Repository clean-copy smoke installation also passed its 10 configured install cases; those cases are distinct from the focused Advertiser installation.
+- Feature release-intent validation against the PR base passed at skill version 0.1.0. Focused Oxfmt 0.71.0 and `git diff --check` passed.
+- The additional skill-creator `quick_validate.py` rejects `compatibility` on both the original PR and revised skill. Its allowed-field list is older than the [Agent Skills specification](https://agentskills.io/specification), which permits that field. The repository validator and Skills CLI accepted the unchanged field type; the generic helper was not modified or counted as passing.
+- No live Ads call, native automatic selection, scheduled execution, release publication, or installed cross-skill handoff was verified. The feature-only review used focused local checks; hosted Validate is a separate PR gate.
+
+Candidate SHA-256: `14e25d3e933af5dd8dced06a5bb07410749a9c609e7b754ce30655015141fbc6` (`SKILL.md`), `0a9b0cef7cc15e5ec69d5e618fb35a9cfe2dd7ed06b971bdee0a7d50d6779866` (`api-operations.md`), and `844692d1656d8e7609fa30b95b1d8b082546e3116f0e3fe1a3d008e6649c5616` (`capabilities-and-recipes.md`). The earlier comparison remains historical evidence; this follow-up does not establish a statistical improvement over it.
