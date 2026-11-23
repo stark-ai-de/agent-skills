@@ -183,7 +183,13 @@ export function buildAdsPluginEntries({ root = process.cwd(), serverUrl, oauthCl
       brandColor: "#0021C7",
       brandColorDark: "#7FA0FF",
     },
-    extensions: { "com.openai": { onboardingSkill: `./skills/${source.skill.name}/SKILL.md` } },
+    extensions: {
+      "com.openai": {
+        onboardingSkill: `./skills/${source.skill.name}/SKILL.md`,
+        review: source.review,
+        publication: source.publication,
+      },
+    },
   };
   const mcp = {
     mcpServers: {
@@ -198,6 +204,7 @@ export function buildAdsPluginEntries({ root = process.cwd(), serverUrl, oauthCl
                 clientId: deployment.clientId,
                 tokenEndpointAuthMethod: "none",
               },
+              authorizationServerBase: deployment.origin,
               authorizationUrl: `${deployment.origin}/oauth/authorize`,
               tokenUrl: `${deployment.origin}/oauth/token`,
               resource: deployment.serverUrl,

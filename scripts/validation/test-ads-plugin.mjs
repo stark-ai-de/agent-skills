@@ -73,7 +73,16 @@ test("package copies canonical skill bytes and uses scoped public OAuth without 
   const files = unzipSync(encodeZipStoreV1(entries));
   const manifest = JSON.parse(Buffer.from(files[".codex-plugin/plugin.json"]));
   assert.equal(manifest.name, "stark-ai-ads");
-  assert.equal(manifest.version, "0.1.0");
+  assert.equal(manifest.version, "0.1.1");
+  const source = JSON.parse(fs.readFileSync(path.join(root, ADS_PLUGIN_SOURCE), "utf8"));
+  const submission = manifest.extensions["com.openai"];
+  assert.deepEqual(submission.review, source.review);
+  assert.deepEqual(submission.publication, source.publication);
+  assert.equal(submission.review.test_cases.positive.length, 5);
+  assert.equal(submission.review.test_cases.negative.length, 3);
+  assert.equal(submission.review.test_credentials, undefined);
+  assert.equal(submission.review.reviewer_instructions, undefined);
+  assert.equal(submission.review.demo_recording_url, undefined);
   assert.equal(manifest.interface.displayName, "Ads API by stark AI");
   assert.equal(manifest.interface.shortDescription, "OpenAI Ads API integration");
   assert.equal(manifest.mcpServers, "./.mcp.json");
@@ -88,6 +97,7 @@ test("package copies canonical skill bytes and uses scoped public OAuth without 
   assert.deepEqual(server.extensions["com.openai"].auth, {
     type: "oauth",
     client: { mode: "provided", clientId: "review-client", tokenEndpointAuthMethod: "none" },
+    authorizationServerBase: "https://ads-fixture.stark-ai.de",
     authorizationUrl: "https://ads-fixture.stark-ai.de/oauth/authorize",
     tokenUrl: "https://ads-fixture.stark-ai.de/oauth/token",
     resource: serverUrl,
@@ -229,6 +239,20 @@ test("source rejects extra credentials and source path traversal", (t) => {
   source.skill.source = "../outside";
   fs.writeFileSync(sourcePath, JSON.stringify(source));
   assert.ok(validateAdsPluginSource(root).errors.length);
+});
+
+test("review metadata requires the exact cases and excludes private reviewer credentials", (t) => {
+  const root = fixture(t);
+  const file = path.join(root, ADS_PLUGIN_SOURCE);
+  const original = JSON.parse(fs.readFileSync(file, "utf8"));
+  const broken = structuredClone(original);
+  broken.review.test_cases.positive.pop();
+  fs.writeFileSync(file, JSON.stringify(broken));
+  assert.ok(validateAdsPluginSource(root).errors.length);
+  const withCredentials = structuredClone(original);
+  withCredentials.review.test_credentials = "synthetic-secret";
+  fs.writeFileSync(file, JSON.stringify(withCredentials));
+  assert.match(validateAdsPluginSource(root).errors.join("\n"), /additional properties/);
 });
 
 test("CLI source validation is offline and packaging refuses missing deployment input", (t) => {

@@ -1,5 +1,6 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import {
+  browserFormSecurityHeaders,
   escapeHtml,
   HttpError,
   readBoundedBody,
@@ -62,7 +63,7 @@ export function createCredentialService({ config, store, auth, now = Date.now })
       const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Secure credential download · Ads API by stark AI</title><style>body{font:16px/1.6 system-ui,sans-serif;background:#f5f7fb;color:#172132;margin:0}main{max-width:560px;margin:8vh auto;padding:32px;background:white;border-radius:16px;box-shadow:0 12px 48px #15213612}h1{font-size:28px;line-height:1.2}label{display:block;font-weight:600;margin-top:24px}input{display:block;box-sizing:border-box;width:100%;padding:12px;margin:8px 0 20px;border:1px solid #9aa6bb;border-radius:6px}button{padding:12px 20px;background:#174cce;color:white;border:0;border-radius:6px;font:inherit;cursor:pointer}small{color:#526077}code{overflow-wrap:anywhere}@media(max-width:640px){main{margin:16px;padding:24px}}</style></head><body><main><small>Ads API by stark AI</small><h1>Download your generated credential</h1><p>Created by <code>${escapeHtml(metadata.operation)}</code>. This download is available once and expires at ${escapeHtml(new Date(metadata.expiresAt).toISOString())}.</p><p>Store the file securely. The credential is not included in your ChatGPT conversation.</p><form method="post" action="${escapeHtml(url.pathname)}"><input type="hidden" name="csrf" value="${csrf}"><input type="hidden" name="action" value="download">${signedIn ? "<p>Your browser is connected to the account that created this credential.</p>" : '<label for="api-key">Confirm your Advertiser API key</label><input id="api-key" name="api_key" type="password" required autocomplete="off" maxlength="4096"><p><small>Use the same Ads Manager key you used to connect this account. The download link alone does not grant access.</small></p>'}<button type="submit">Download once</button></form></main></body></html>`;
       return new Response(html, {
         headers: {
-          ...securityHeaders,
+          ...browserFormSecurityHeaders,
           "content-type": "text/html; charset=utf-8",
           "set-cookie": cookie(id, csrf),
         },

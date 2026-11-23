@@ -14,6 +14,13 @@ export const securityHeaders = Object.freeze({
   "x-frame-options": "DENY",
 });
 
+// Browser form POSTs under no-referrer serialize Origin as null. Preserve the
+// same-origin POST Origin without exposing referrers to other origins.
+export const browserFormSecurityHeaders = Object.freeze({
+  ...securityHeaders,
+  "referrer-policy": "same-origin",
+});
+
 export function textResponse(message, status = 200, headers = {}) {
   return new Response(message, {
     status,

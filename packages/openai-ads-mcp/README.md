@@ -130,7 +130,7 @@ docker compose --env-file /YOUR_PRIVATE_DIRECTORY/config.env -f packages/openai-
 
 Terminate HTTPS at a trusted reverse proxy, forward the full path and public Host to the container's loopback-bound port, disable response buffering and set request/body/timeout limits consistent with the application. Native address limits use the socket peer; behind a proxy this is a shared backstop, so apply per-client limits at the proxy. Vercel uses its platform-owned address header and strips caller-supplied address overrides.
 
-Do not log authorization headers, OAuth queries, cookies, form bodies or Ads responses. Keep the native listener private. Schedule authenticated cleanup externally and monitor its result.
+Do not log authorization headers, OAuth queries, cookies, form bodies or Ads responses. The Vercel adapter emits `ads.oauth.request` diagnostics containing only fixed OAuth/discovery paths, method, HTTP status, origin category and a bounded OAuth error code. These records distinguish callback failures that never reach the token endpoint from rejected token requests. Keep the native listener private. Schedule authenticated cleanup externally and monitor its result.
 
 ## Durable state, lifecycle and recovery
 
