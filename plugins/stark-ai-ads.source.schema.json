@@ -63,10 +63,12 @@
     "assets": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["logo", "composerIcon"],
+      "required": ["logo", "logoDark", "composerIcon", "composerIconDark"],
       "properties": {
         "logo": { "type": "string", "minLength": 1 },
-        "composerIcon": { "type": "string", "minLength": 1 }
+        "logoDark": { "type": "string", "minLength": 1 },
+        "composerIcon": { "type": "string", "minLength": 1 },
+        "composerIconDark": { "type": "string", "minLength": 1 }
       }
     },
     "skill": {

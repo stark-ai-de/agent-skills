@@ -15,24 +15,27 @@ export class AdsClientError extends Error {
   }
 }
 
+function sanitizeString(value, secrets) {
+  let output = value;
+  for (const secret of secrets) if (secret) output = output.replaceAll(secret, "[REDACTED]");
+  output = output.replace(/\b(Bearer\s+)[A-Za-z0-9._~+/-]+=*/gi, "$1[REDACTED]");
+  // Start at the authority delimiter, not an unbounded scheme prefix. Each
+  // slash-delimited segment is scanned at most once even for large plain text.
+  // This also covers protocol-relative URLs and an empty username.
+  return output.replace(/(\/\/[^/@\s:]*:)[^/@\s]*@/g, "$1[REDACTED]@");
+}
+
 export function sanitize(value, secrets = [], depth = 0) {
   if (depth > 40) return "[depth limit]";
-  if (typeof value === "string") {
-    let output = value;
-    for (const secret of secrets) if (secret) output = output.replaceAll(secret, "[REDACTED]");
-    output = output.replace(/\b(Bearer\s+)[A-Za-z0-9._~+/-]+=*/gi, "$1[REDACTED]");
-    // Start at the authority delimiter, not an unbounded scheme prefix. Each
-    // slash-delimited segment is scanned at most once even for large plain text.
-    // This also covers protocol-relative URLs and an empty username.
-    output = output.replace(/(\/\/[^/@\s:]*:)[^/@\s]*@/g, "$1[REDACTED]@");
-    return output;
-  }
+  if (typeof value === "string") return sanitizeString(value, secrets);
   if (Array.isArray(value)) return value.map((item) => sanitize(item, secrets, depth + 1));
   if (value && typeof value === "object")
     return Object.fromEntries(
       Object.entries(value).map(([name, item]) => [
-        name,
-        secretField.test(name) ? "[REDACTED]" : sanitize(item, secrets, depth + 1),
+        sanitizeString(name, secrets),
+        secretField.test(name.replace(/([a-z0-9])([A-Z])/g, "$1_$2"))
+          ? "[REDACTED]"
+          : sanitize(item, secrets, depth + 1),
       ]),
     );
   return value;

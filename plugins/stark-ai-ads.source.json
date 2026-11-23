@@ -26,7 +26,9 @@
   },
   "assets": {
     "logo": "site/public/logo.png",
-    "composerIcon": "site/public/logo-dark.png"
+    "logoDark": "site/public/logo-dark.png",
+    "composerIcon": "site/public/logo.png",
+    "composerIconDark": "site/public/logo-dark.png"
   },
   "skill": {
     "name": "openai-advertiser-api",

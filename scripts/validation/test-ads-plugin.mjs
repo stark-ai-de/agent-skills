@@ -95,10 +95,18 @@ test("package copies canonical skill bytes and uses scoped public OAuth without 
       Buffer.from(files[`skills/openai-advertiser-api/${relative}`]),
       fs.readFileSync(path.join(root, skillSource, relative)),
     );
-  assert.deepEqual(
-    Buffer.from(files["assets/logo.png"]),
-    fs.readFileSync(path.join(root, "site/public/logo.png")),
-  );
+  for (const [field, asset, source] of [
+    ["logo", "logo.png", "logo.png"],
+    ["logoDark", "logo-dark.png", "logo-dark.png"],
+    ["composerIcon", "composer-icon.png", "logo.png"],
+    ["composerIconDark", "composer-icon-dark.png", "logo-dark.png"],
+  ]) {
+    assert.equal(manifest.interface[field], `./assets/${asset}`);
+    assert.deepEqual(
+      Buffer.from(files[`assets/${asset}`]),
+      fs.readFileSync(path.join(root, "site/public", source)),
+    );
+  }
   assert.equal(
     Object.keys(files).some((name) => /server|node_modules|\.env/.test(name)),
     false,
@@ -107,6 +115,14 @@ test("package copies canonical skill bytes and uses scoped public OAuth without 
   assert.equal(sourceManifest.deploymentVerified, false);
   assert.equal(sourceManifest.serverUrl, serverUrl);
   assert.equal(sourceManifest.archiveProfile, "zip-store-v1");
+});
+
+test("source validation rejects missing or invalid theme assets", (t) => {
+  const root = fixture(t);
+  fs.rmSync(path.join(root, "site/public/logo-dark.png"));
+  assert.ok(validateAdsPluginSource(root).errors.length);
+  fs.writeFileSync(path.join(root, "site/public/logo-dark.png"), "not a PNG");
+  assert.match(validateAdsPluginSource(root).errors.join("\n"), /PNG/);
 });
 
 test("archive is reproducible and tampering fails an independently rebuilt comparison", (t) => {

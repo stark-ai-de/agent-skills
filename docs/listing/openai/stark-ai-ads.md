@@ -42,6 +42,8 @@ node scripts/plugin/validate-ads-plugin.mjs \
 
 The ZIP uses the repository's reproducible `zip-store-v1` format. `SOURCE-MANIFEST.json` records the explicit endpoint and OAuth client ID plus file hashes. The archive validator rebuilds the expected bytes from the canonical source and supplied configuration; changed skill files, added entries, changed client IDs or tampered bytes fail validation. Untracked/ignored source files and symlinks are refused as distribution inputs. No service executable, database, environment file, Ads key or OAuth client secret belongs in the plugin ZIP.
 
+The package includes both light- and dark-theme listing logos and composer icons using the existing stark AI artwork. The portal should import all four manifest paths; check the actual rendering in both themes before submission.
+
 The default archive is `dist/openai/stark-ai-ads-0.1.0.zip`. Use `--output` for a different file in `dist/openai/` or an explicit external build directory. Changing package metadata or the skill requires a new package version and archive.
 
 ## Deployment and public submission
@@ -54,7 +56,7 @@ Before public submission, the publisher must verify the selected service's domai
 
 Upload an initial package that already contains its MCP connection. The current [OpenAI submission guide](https://developers.openai.com/plugins/deploy/submission) does not support adding MCP to an already published skills-only plugin. It also does not provide a fixed API-key connection flow; this package declares a registered OAuth public client rather than embedding a bearer token.
 
-Prepare the required demo recording and at least five positive and three negative review cases against the deployed service. Suitable cases cover account identification, scoped reporting, an offline proposal, an authorized write with readback, a completed bulk-job result, a mismatched account, missing write permission, and an unsupported operation. Use a dedicated reviewer account and keep its credentials out of public artifacts. No fabricated recording URL, test-account access or publication receipt is included in the package.
+Prepare the required demo recording and exactly five positive and three negative review cases against the deployed service. Suitable positive cases cover account identification, campaign listing, scoped reporting, an authorized write with readback, and completed bulk-job results. Negative cases cover a mismatched account, missing write permission, and an unsupported operation. Run each positive case using the dedicated reviewer account and record the expected tools and observable result; verify the negative cases do not perform an unauthorized operation. Use a dedicated reviewer account and keep its credentials out of public artifacts. No fabricated recording URL, test-account access or publication receipt is included in the package.
 
 The [package guide](https://developers.openai.com/plugins/build/plugins), [authentication guide](https://developers.openai.com/plugins/build/auth) and [submission guide](https://developers.openai.com/plugins/deploy/submission) are the live sources. This packaging contract was checked on 2026-11-23. A successful offline build does not replace portal checks, service operation or publication approval.
 

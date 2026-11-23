@@ -48,6 +48,22 @@ test("credential URL redaction preserves schemes/users and covers multiple or re
     assert.equal(sanitize(plain), plain);
 });
 
+test("sanitizer redacts known secrets in property names and camelCase credential fields", () => {
+  const value = {
+    [`echo-${key}`]: "detail",
+    accessToken: "access-secret",
+    nested: [{ apiKey: "api-secret", sftpPassword: "sftp-secret", status: "ready" }],
+    clientSecret: "client-secret",
+  };
+  const result = sanitize(value, [key]);
+  assert.deepEqual(result, {
+    "echo-[REDACTED]": "detail",
+    accessToken: "[REDACTED]",
+    nested: [{ apiKey: "[REDACTED]", sftpPassword: "[REDACTED]", status: "ready" }],
+    clientSecret: "[REDACTED]",
+  });
+});
+
 test("large sanitizer inputs finish within an externally enforced CPU regression budget", () => {
   const source = new URL("../src/ads-client.mjs", import.meta.url).href;
   const script = `
