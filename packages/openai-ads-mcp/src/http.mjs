@@ -342,16 +342,10 @@ export async function createApplication({
     const origin = request.headers.get("origin");
     if (origin && !config.allowedOrigins.includes(origin))
       return textResponse("Origin is not allowed.", 403);
-    if (
-      request.method === "OPTIONS" &&
-      ["/oauth/token", "/oauth/revoke"].includes(url.pathname)
-    ) {
+    if (request.method === "OPTIONS" && ["/oauth/token", "/oauth/revoke"].includes(url.pathname)) {
       // Only public, URL-encoded OAuth requests from the explicit origin allowlist.
       // Never enable credentialed CORS or allow a wildcard or opaque origin.
-      if (
-        !origin ||
-        request.headers.get("access-control-request-method") !== "POST"
-      )
+      if (!origin || request.headers.get("access-control-request-method") !== "POST")
         return textResponse("Unsupported OAuth preflight.", 400);
       return new Response(null, {
         status: 204,
