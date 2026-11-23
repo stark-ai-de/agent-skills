@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { isAbsolute, resolve } from "node:path";
+import { validateDatabaseUrl } from "./storage/postgres.mjs";
 
 const loopback = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
@@ -42,7 +42,24 @@ function checkedUrl(value, label, allowHttpLocalhost, originOnly = false) {
 }
 
 export function loadConfig(env = process.env) {
+  const isVercel = env.VERCEL === "1";
+  const deploymentEnvironment = env.ADS_DEPLOYMENT_ENVIRONMENT || (isVercel ? "" : "development");
+  if (!["production", "preview", "development"].includes(deploymentEnvironment))
+    throw new Error("ADS_DEPLOYMENT_ENVIRONMENT must be production, preview or development.");
+  if (isVercel) {
+    if (deploymentEnvironment !== env.VERCEL_ENV)
+      throw new Error("ADS_DEPLOYMENT_ENVIRONMENT must match VERCEL_ENV.");
+    if (deploymentEnvironment !== "production" && env.ADS_ENABLE_NON_PRODUCTION !== "1")
+      throw new Error(
+        "Non-production Vercel execution requires ADS_ENABLE_NON_PRODUCTION=1 and isolated credentials/database.",
+      );
+    for (const name of ["DATABASE_URL", "ADS_ENCRYPTION_KEY", "ADS_OAUTH_CLIENTS", "CRON_SECRET"])
+      if (env[`${name}_FILE`])
+        throw new Error(`${name}_FILE is unavailable on Vercel; configure its environment value.`);
+  }
   const allowHttpLocalhost = env.ADS_ALLOW_HTTP_LOCALHOST === "1";
+  if (isVercel && allowHttpLocalhost)
+    throw new Error("ADS_ALLOW_HTTP_LOCALHOST is unavailable on Vercel.");
   if (!env.ADS_PUBLIC_ORIGIN) throw new Error("ADS_PUBLIC_ORIGIN is required.");
   const publicOrigin = checkedUrl(
     env.ADS_PUBLIC_ORIGIN,
@@ -50,6 +67,14 @@ export function loadConfig(env = process.env) {
     allowHttpLocalhost,
     true,
   ).origin;
+  if (
+    isVercel &&
+    deploymentEnvironment !== "production" &&
+    env.VERCEL_PROJECT_PRODUCTION_URL &&
+    new URL(publicOrigin).host === env.VERCEL_PROJECT_PRODUCTION_URL
+  )
+    throw new Error("Non-production deployments require their own ADS_PUBLIC_ORIGIN.");
+  const databaseUrl = validateDatabaseUrl(valueOrFile(env, "DATABASE_URL"));
   const key = valueOrFile(env, "ADS_ENCRYPTION_KEY");
   const encryptionKey = Buffer.from(key, "base64");
   if (
@@ -109,12 +134,17 @@ export function loadConfig(env = process.env) {
   const host = env.ADS_HOST || "127.0.0.1";
   if (!["127.0.0.1", "::1", "0.0.0.0", "::"].includes(host))
     throw new Error("ADS_HOST must be a literal local bind address.");
-  const databasePath = env.ADS_DATABASE_PATH || resolve("data/ads.sqlite");
-  if (!isAbsolute(databasePath)) throw new Error("ADS_DATABASE_PATH must be absolute.");
+  const cronSecret =
+    isVercel || env.CRON_SECRET || env.CRON_SECRET_FILE ? valueOrFile(env, "CRON_SECRET") : "";
+  if (cronSecret && !/^[A-Za-z0-9._~+/-]{32,256}={0,2}$/.test(cronSecret))
+    throw new Error("CRON_SECRET must be a 32–256 character random bearer token.");
   return Object.freeze({
     publicOrigin,
     encryptionKey,
-    databasePath,
+    databaseUrl,
+    deploymentEnvironment,
+    isVercel,
+    cronSecret,
     oauthClients: Object.freeze(oauthClients),
     allowedOrigins: Object.freeze([...new Set(allowedOrigins)]),
     allowHttpLocalhost,

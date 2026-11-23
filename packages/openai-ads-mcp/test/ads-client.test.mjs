@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { createAdsClient, AdsClientError } from "../src/ads-client.mjs";
+import { spawnSync } from "node:child_process";
+import { createAdsClient, AdsClientError, sanitize } from "../src/ads-client.mjs";
 import { OPERATION_BY_NAME } from "../src/operations.mjs";
 
 const account = {
@@ -27,6 +28,47 @@ function mockClient(responses, options = {}) {
 }
 const execute = (client, name, args, extra) =>
   client.execute(OPERATION_BY_NAME.get(name), { expected_account_id: account.id, ...args }, extra);
+
+test("credential URL redaction preserves schemes/users and covers multiple or relative URLs", () => {
+  assert.equal(
+    sanitize(
+      "SFTP://user:first-secret@files.example/path https://other:second:secret@web.example/?a=1 //:empty-user-secret@relative.example",
+    ),
+    "SFTP://user:[REDACTED]@files.example/path https://other:[REDACTED]@web.example/?a=1 //:[REDACTED]@relative.example",
+  );
+  assert.equal(
+    sanitize("custom+scheme://user:percent%2Fencoded@host"),
+    "custom+scheme://user:[REDACTED]@host",
+  );
+  for (const plain of [
+    "https://host.example/path:value@example",
+    "https://host.example/path",
+    "//name:value without an at-sign",
+  ])
+    assert.equal(sanitize(plain), plain);
+});
+
+test("large sanitizer inputs finish within an externally enforced CPU regression budget", () => {
+  const source = new URL("../src/ads-client.mjs", import.meta.url).href;
+  const script = `
+    import assert from 'node:assert/strict';
+    import { sanitize } from ${JSON.stringify(source)};
+    const plain = 'x'.repeat(1024 * 1024);
+    assert.equal(sanitize(plain), plain);
+    assert.equal(sanitize('//' + plain), '//' + plain);
+    assert.equal(sanitize('sftp://user:' + plain + '@host'), 'sftp://user:[REDACTED]@host');
+    assert.equal(sanitize('/'.repeat(1024 * 1024)), '/'.repeat(1024 * 1024));
+  `;
+  // A node:test timer cannot interrupt a synchronous regex loop. The parent
+  // process must kill a regressed child instead of hanging the whole test suite.
+  const result = spawnSync(process.execPath, ["--input-type=module", "-e", script], {
+    timeout: 5000,
+    encoding: "utf8",
+    maxBuffer: 4096,
+  });
+  assert.equal(result.error, undefined, "Sanitizer subprocess exceeded its external time budget.");
+  assert.equal(result.status, 0, result.stderr);
+});
 
 test("report serializes canonical fields, inclusive range, attribution and account timezone", async () => {
   const { client, calls } = mockClient([

@@ -4,7 +4,7 @@
 
 [`stark-ai-ads.source.json`](stark-ai-ads.source.json) defines the independent Ads product. It packages the canonical `openai-advertiser-api` skill with a configured remote OAuth MCP connection. The runtime is maintained under [`packages/openai-ads-mcp`](../packages/openai-ads-mcp/README.md); the [Ads listing guide](../docs/listing/openai/stark-ai-ads.md) describes deployment, reproducible packaging and public qualification.
 
-Run `pnpm run validate:ads-mcp` and `pnpm run validate:ads-plugin` for offline qualification. `pnpm run package:ads-plugin -- --server-url "$ADS_PLUGIN_MCP_URL"` requires the actual selected HTTPS endpoint. The Ads package has its own identity and source manifest; the existing Developer release profiles continue to use their current membership and release artifacts.
+See the [service map](../docs/services.md) for the single-repository structure and separate deployments. Run `pnpm run validate:ads-mcp` with a disposable `ADS_TEST_DATABASE_URL` and `pnpm run validate:ads-plugin` for qualification with synthetic Ads data. `pnpm run package:ads-plugin -- --server-url "$ADS_PLUGIN_MCP_URL"` requires the actual selected HTTPS endpoint. The Ads package has its own identity and source manifest; the existing Developer release profiles continue to use their current membership and release artifacts.
 
 ## stark AI Developer
 

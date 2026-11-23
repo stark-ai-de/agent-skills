@@ -22,18 +22,16 @@ services:
       ADS_PUBLIC_ORIGIN: ${ADS_PUBLIC_ORIGIN:?Set the real public HTTPS origin}
       ADS_HOST: "0.0.0.0"
       ADS_PORT: "8789"
-      ADS_DATABASE_PATH: /var/lib/stark-ai-ads/ads.sqlite
+      DATABASE_URL: ${DATABASE_URL:?Set the external PostgreSQL URL with verified TLS}
+      DATABASE_URL_UNPOOLED: ${DATABASE_URL_UNPOOLED:-}
+      ADS_DEPLOYMENT_ENVIRONMENT: ${ADS_DEPLOYMENT_ENVIRONMENT:-production}
+      CRON_SECRET: ${CRON_SECRET:?Set the separate maintenance bearer token}
       ADS_ENCRYPTION_KEY_FILE: /run/secrets/ads-encryption-key
       ADS_OAUTH_CLIENTS_FILE: /run/secrets/ads-oauth-clients
       ADS_ALLOW_HTTP_LOCALHOST: "0"
       ADS_ALLOWED_ORIGINS: ${ADS_ALLOWED_ORIGINS:-}
       OPENAI_APPS_CHALLENGE: ${OPENAI_APPS_CHALLENGE:-}
     volumes:
-      - type: bind
-        source: ${ADS_DATA_DIR:?Set the private local persistent data directory}
-        target: /var/lib/stark-ai-ads
-        bind:
-          create_host_path: false
       - type: bind
         source: ${ADS_ENCRYPTION_KEY_PATH:?Set the encryption key file path}
         target: /run/secrets/ads-encryption-key

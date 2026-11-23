@@ -79,7 +79,7 @@ async function readForm(request) {
 }
 
 /** Fixed public-client OAuth with PKCE and explicit Ads-key/account consent. */
-export function createAuth({ config, store, verifyAdsKey, now = Date.now }) {
+export function createAuth({ config, store, verifyAdsKey }) {
   const origin = new URL(config.publicOrigin).origin;
   const resource = `${origin}/mcp`;
   const secure = origin.startsWith("https://");
@@ -129,8 +129,8 @@ export function createAuth({ config, store, verifyAdsKey, now = Date.now }) {
   };
   const address = (request) =>
     (request.headers.get("x-ads-client-address") ?? "local-test").slice(0, 128);
-  const allow = (request, category, limit, extra = "", window = 60_000) =>
-    store.allowRate(`${category}:${address(request)}:${extra}`, limit, window);
+  const allow = async (request, category, limit, extra = "", window = 60_000) =>
+    await store.allowRate(`${category}:${address(request)}:${extra}`, limit, window);
   const pageOptions = (extra = {}) => ({ origin, ...extra });
   const blocked = (
     message = "This connection has expired or could not be verified.",
@@ -215,7 +215,7 @@ export function createAuth({ config, store, verifyAdsKey, now = Date.now }) {
       codeChallenge: params.code_challenge,
     };
   };
-  const checkedFlow = (request, parameters, session) => {
+  const checkedFlow = async (request, parameters, session) => {
     if (
       request.headers.get("origin") !== origin ||
       !session ||
@@ -223,26 +223,29 @@ export function createAuth({ config, store, verifyAdsKey, now = Date.now }) {
       !TOKEN_PATTERN.test(parameters.csrf ?? "")
     )
       return null;
-    const flow = store.getFlow(parameters.flow);
+    const flow = await store.getFlow(parameters.flow);
     if (!flow || !same(flow.sessionHash, tokenDigest(session)) || !same(flow.csrf, parameters.csrf))
       return null;
     return flow;
   };
-  const managementPage = (session, message, status = 200) => {
-    const flow = store.createFlow({
+  const managementPage = async (session, message, status = 200) => {
+    const flow = await store.createFlow({
       step: "manage",
       sessionHash: tokenDigest(session),
       csrf: randomToken(),
     });
     return connectionsPage(
       flow,
-      store.listBrowserGrants(session),
+      await store.listBrowserGrants(session),
       pageOptions({ message, status, cookie: cookie(session) }),
     );
   };
   async function authorization(request, url) {
     if (request.method === "GET") {
-      if (!allow(request, "authorize", 120) || !store.allowRate("authorize:global", 1000, 60_000))
+      if (
+        !(await allow(request, "authorize", 120)) ||
+        !(await store.allowRate("authorize:global", 1000, 60_000))
+      )
         return tooMany();
       const input = authorizationInput(url);
       if (!input)
@@ -251,7 +254,7 @@ export function createAuth({ config, store, verifyAdsKey, now = Date.now }) {
           400,
         );
       const session = sessionFrom(request) ?? randomToken();
-      const flow = store.createFlow({
+      const flow = await store.createFlow({
         ...input,
         step: "key",
         sessionHash: tokenDigest(session),
@@ -263,13 +266,13 @@ export function createAuth({ config, store, verifyAdsKey, now = Date.now }) {
     const { parameters, response } = await readForm(request);
     if (response) return response;
     const session = sessionFrom(request);
-    const flow = checkedFlow(request, parameters, session);
+    const flow = await checkedFlow(request, parameters, session);
     if (!flow) return blocked();
     if (parameters.stage === "key" && flow.step === "key") {
       if (
-        !allow(request, "key", 30) ||
-        !store.allowRate(`key:flow:${flow.id}`, 5, AUTH_TTL.flow) ||
-        !store.allowRate("key:global", 300, 60_000)
+        !(await allow(request, "key", 30)) ||
+        !(await store.allowRate(`key:flow:${flow.id}`, 5, AUTH_TTL.flow)) ||
+        !(await store.allowRate("key:global", 300, 60_000))
       )
         return tooMany();
       const candidate = parameters.api_key?.trim();
@@ -282,7 +285,10 @@ export function createAuth({ config, store, verifyAdsKey, now = Date.now }) {
           }),
         );
       // Reserve the transaction before network verification, so concurrent posts cannot bind different keys.
-      const verifying = store.updateFlow(flow.id, flow.revision, { ...flow, step: "verifying" });
+      const verifying = await store.updateFlow(flow.id, flow.revision, {
+        ...flow,
+        step: "verifying",
+      });
       if (!verifying) return blocked();
       let account;
       try {
@@ -295,7 +301,10 @@ export function createAuth({ config, store, verifyAdsKey, now = Date.now }) {
         if (typeof found.currency_code === "string")
           account.currency = found.currency_code.slice(0, 16);
       } catch {
-        const reset = store.updateFlow(verifying.id, verifying.revision, { ...flow, step: "key" });
+        const reset = await store.updateFlow(verifying.id, verifying.revision, {
+          ...flow,
+          step: "key",
+        });
         return reset
           ? keyPage(
               reset,
@@ -307,7 +316,7 @@ export function createAuth({ config, store, verifyAdsKey, now = Date.now }) {
             )
           : blocked();
       }
-      const next = store.updateFlow(verifying.id, verifying.revision, {
+      const next = await store.updateFlow(verifying.id, verifying.revision, {
         ...flow,
         step: "consent",
         csrf: randomToken(),
@@ -321,18 +330,22 @@ export function createAuth({ config, store, verifyAdsKey, now = Date.now }) {
       flow.step === "consent" &&
       ["approve", "deny"].includes(parameters.decision)
     ) {
-      const consumed = store.consumeFlow(flow.id, flow.revision);
+      const consumed = await store.consumeFlow(flow.id, flow.revision);
       if (!consumed) return blocked();
       if (parameters.decision === "deny")
-        return redirect(flow, {
+        return redirect(consumed, {
           error: "access_denied",
           error_description: "The account owner declined this connection.",
         });
-      const scopes = flow.scopes.filter(
+      const scopes = consumed.scopes.filter(
         (scope) => scope !== "ads:write" || parameters.allow_write === "yes",
       );
-      const code = store.createAuthorizationCode({ ...flow, scopes, browserSession: session });
-      const result = redirect(flow, { code });
+      const code = await store.createAuthorizationCode({
+        ...consumed,
+        scopes,
+        browserSession: session,
+      });
+      const result = redirect(consumed, { code });
       result.headers.set("set-cookie", cookie(session));
       return result;
     }
@@ -340,7 +353,10 @@ export function createAuth({ config, store, verifyAdsKey, now = Date.now }) {
   }
   async function token(request) {
     if (request.method !== "POST") return methodError("POST");
-    if (!allow(request, "token", 240) || !store.allowRate("token:global", 2000, 60_000))
+    if (
+      !(await allow(request, "token", 240)) ||
+      !(await store.allowRate("token:global", 2000, 60_000))
+    )
       return tooMany();
     const { parameters: input, response } = await readForm(request);
     if (response) return response;
@@ -350,7 +366,7 @@ export function createAuth({ config, store, verifyAdsKey, now = Date.now }) {
       request.headers.has("authorization")
     )
       return oauthError("invalid_client", "Use a registered public client and PKCE.", 401);
-    if (!allow(request, "token-client", 120, input.client_id)) return tooMany();
+    if (!(await allow(request, "token-client", 120, input.client_id))) return tooMany();
     if (input.resource !== resource)
       return oauthError("invalid_target", "The requested resource is not this MCP server.");
     let result;
@@ -361,7 +377,7 @@ export function createAuth({ config, store, verifyAdsKey, now = Date.now }) {
         !input.code_verifier
       )
         return oauthError("invalid_grant", "The authorization code or PKCE proof is invalid.");
-      result = store.exchangeCode({
+      result = await store.exchangeCode({
         code: input.code,
         clientId: input.client_id,
         redirectUri: input.redirect_uri,
@@ -372,7 +388,7 @@ export function createAuth({ config, store, verifyAdsKey, now = Date.now }) {
       const scopes = input.scope === undefined ? undefined : parseScopes(input.scope);
       if (!TOKEN_PATTERN.test(input.refresh_token ?? "") || scopes === null)
         return oauthError("invalid_grant", "The refresh token or requested scope is invalid.");
-      result = store.refresh({
+      result = await store.refresh({
         refreshToken: input.refresh_token,
         clientId: input.client_id,
         resource,
@@ -392,7 +408,7 @@ export function createAuth({ config, store, verifyAdsKey, now = Date.now }) {
   }
   async function revoke(request) {
     if (request.method !== "POST") return methodError("POST");
-    if (!allow(request, "revoke", 120)) return tooMany();
+    if (!(await allow(request, "revoke", 120))) return tooMany();
     const { parameters: input, response } = await readForm(request);
     if (response) return response;
     if (
@@ -402,33 +418,36 @@ export function createAuth({ config, store, verifyAdsKey, now = Date.now }) {
     )
       return oauthError("invalid_client", "Use a registered public client.", 401);
     if (TOKEN_PATTERN.test(input.token ?? ""))
-      store.revoke({ token: input.token, clientId: input.client_id });
+      await store.revoke({ token: input.token, clientId: input.client_id });
     return new Response(null, { status: 200, headers: responseHeaders });
   }
   async function connections(request) {
     if (request.method === "GET") {
-      if (!allow(request, "connections", 60)) return tooMany();
-      return managementPage(sessionFrom(request) ?? randomToken());
+      if (!(await allow(request, "connections", 60))) return tooMany();
+      return await managementPage(sessionFrom(request) ?? randomToken());
     }
     if (request.method !== "POST") return methodError("GET, POST");
     const { parameters: input, response } = await readForm(request);
     if (response) return response;
     const session = sessionFrom(request);
-    const flow = checkedFlow(request, input, session);
+    const flow = await checkedFlow(request, input, session);
     if (!flow || flow.step !== "manage") return blocked();
     if (input.stage === "unlock") {
-      if (!allow(request, "unlock", 5) || !store.allowRate("unlock:global", 120, 60_000))
+      if (
+        !(await allow(request, "unlock", 5)) ||
+        !(await store.allowRate("unlock:global", 120, 60_000))
+      )
         return tooMany();
       const candidate = input.api_key?.trim();
       if (!KEY_PATTERN.test(candidate ?? ""))
-        return managementPage(
+        return await managementPage(
           session,
           "No active connection could be unlocked with this key.",
           401,
         );
-      if (!store.consumeFlow(flow.id, flow.revision)) return blocked();
-      const count = store.bindBrowserByKey(session, candidate);
-      return managementPage(
+      if (!(await store.consumeFlow(flow.id, flow.revision))) return blocked();
+      const count = await store.bindBrowserByKey(session, candidate);
+      return await managementPage(
         session,
         count
           ? "Your matching connections are unlocked."
@@ -437,9 +456,9 @@ export function createAuth({ config, store, verifyAdsKey, now = Date.now }) {
       );
     }
     if (input.stage === "revoke" && TOKEN_PATTERN.test(input.grant_id ?? "")) {
-      if (!store.consumeFlow(flow.id, flow.revision)) return blocked();
-      if (!store.revokeBrowserGrant(session, input.grant_id)) return blocked();
-      return managementPage(
+      if (!(await store.consumeFlow(flow.id, flow.revision))) return blocked();
+      if (!(await store.revokeBrowserGrant(session, input.grant_id))) return blocked();
+      return await managementPage(
         session,
         "The connection was disconnected and its stored Ads key was removed.",
       );
@@ -455,28 +474,23 @@ export function createAuth({ config, store, verifyAdsKey, now = Date.now }) {
     "/.well-known/oauth-protected-resource",
     "/.well-known/oauth-protected-resource/mcp",
   ]);
-  let lastPrune = now();
   return {
     authorizationServerMetadata,
     protectedResourceMetadata,
-    hasBrowserGrant(request, grantId) {
+    async hasBrowserGrant(request, grantId) {
       const session = sessionFrom(request);
-      return Boolean(session && store.hasBrowserGrant(session, grantId));
+      return Boolean(session && (await store.hasBrowserGrant(session, grantId)));
     },
     async authenticate(request) {
       const authorization = request.headers.get("authorization") ?? "";
       const match = /^Bearer ([A-Za-z0-9_-]{43})$/i.exec(authorization);
-      return match ? store.authenticate({ token: match[1], resource }) : null;
+      return match ? await store.authenticate({ token: match[1], resource }) : null;
     },
     async handle(request) {
       const url = new URL(request.url);
       if (!paths.has(url.pathname)) return null;
       if (url.origin !== origin)
         return blocked("The request origin does not match this connection service.", 400);
-      if (now() - lastPrune >= 60_000) {
-        store.prune();
-        lastPrune = now();
-      }
       if (url.pathname === "/oauth/authorize") return authorization(request, url);
       if (url.pathname === "/oauth/token") return token(request);
       if (url.pathname === "/oauth/revoke") return revoke(request);

@@ -21,8 +21,10 @@ export function sanitize(value, secrets = [], depth = 0) {
     let output = value;
     for (const secret of secrets) if (secret) output = output.replaceAll(secret, "[REDACTED]");
     output = output.replace(/\b(Bearer\s+)[A-Za-z0-9._~+/-]+=*/gi, "$1[REDACTED]");
-    // SFTP URIs may include a username; never return a URI-embedded password.
-    output = output.replace(/([a-z][a-z0-9+.-]*:\/\/[^/@\s:]+:)[^/@\s]*@/gi, "$1[REDACTED]@");
+    // Start at the authority delimiter, not an unbounded scheme prefix. Each
+    // slash-delimited segment is scanned at most once even for large plain text.
+    // This also covers protocol-relative URLs and an empty username.
+    output = output.replace(/(\/\/[^/@\s:]*:)[^/@\s]*@/g, "$1[REDACTED]@");
     return output;
   }
   if (Array.isArray(value)) return value.map((item) => sanitize(item, secrets, depth + 1));

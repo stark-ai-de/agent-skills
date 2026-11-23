@@ -108,3 +108,23 @@ All owned checks in `pnpm run validate` passed across the aggregate run and targ
 The documented container dependency-install stage was reproduced in a clean temporary directory with the pinned pnpm version; the resulting runtime imported all 66 tools. Docker was unavailable, so an actual image build and Compose startup were not verified. Chromium could not launch in this environment; the callback-CSP regression is checked at the emitted policy and redirect boundary, not through a real browser session.
 
 No live Ads mutation, hosted service, real ChatGPT OAuth connection, domain verification or public plugin submission was performed. Account feature gates still apply. A real HTTPS deployment, its registered callback/client configuration and the publication checks in the [Ads plugin guide](../../docs/listing/openai/stark-ai-ads.md) remain necessary before users can install the public plugin.
+
+## Serverless PostgreSQL implementation follow-up
+
+The maintainer approved one repository with the deployable service under `packages/openai-ads-mcp`, a dedicated Vercel project rooted at that package, external PostgreSQL (Neon recommended), and linked operations/publication documentation. The [service map](../../docs/services.md) records those boundaries. This supersedes the initial SQLite/single-instance deployment design described by the historical proof above; the canonical skill and independent plugin identity remain the same.
+
+On 2026-11-23, the current source passed **98/98 runtime tests**, with **zero skips**, on Node.js 24.22.3 and real PostgreSQL 18.7 on Linux. Each fixture creates its own schema in a disposable database; separate pools exercise concurrent workers. Ads API responses and keys are synthetic. The suite covers atomic OAuth code and refresh consumption/replay, revocation races, encrypted persistence, one-time credential downloads, explicit migration concurrency/checksums/rollback, environment isolation, shared rate counters and leases, combined operation deadlines, Vercel pool/header/cookie/stream behavior, protected cleanup and runtime staging without secrets/database access.
+
+Review and boundary tests found and corrected:
+
+- Database URL query parameters could override the effective host/TLS mode; the shared parser now rejects routing overrides and duplicate parameters, and requires verified TLS remotely.
+- Session startup timeout parameters were unsuitable for transaction pooling. Database work now uses one checked-out client per transaction and `SET LOCAL` limits, with bounded client connection/query deadlines.
+- The original credential-URL sanitizer scanned long scheme-like text quadratically. Delimiter-first redaction preserves credential protection and handles megabyte-sized strings linearly; the regression runs in a child process with an external five-second limit so an event-loop stall cannot hang the runner.
+- Native startup diagnostics could expose driver identities or private certificate paths. Startup now emits a fixed diagnostic; a subprocess regression checks that raw driver values stay out of logs.
+- A stream cancellation hook could delay a response deadline. Cancellation no longer waits for an unresponsive hook, while the independent upstream lease remains held until actual Ads work settles. Late lease acquisition and release are also covered.
+
+An independent review rechecked the TLS bypasses and sanitizer regression and reported no remaining confirmed P1/P2 findings in the reviewed source. A separate read-only documentation audit found all 24 checked relative links valid and configuration/CLI/Compose instructions consistent with the implementation.
+
+Additional current checks passed: all **8 packaging tests**, ADR triplets, runtime selection, validation ownership, supply-chain verification, Actionlint 1.7.12, repository formatting, repository script lint and Ads-package lint, native Vercel staging/import, and installation from the frozen lockfile with pinned pnpm 11.24.0. These are targeted checks for the changed runtime/deployment contracts; the earlier full-aggregate receipt is historical and was not counted as a new full-aggregate run. CI's existing Validate job now supplies PostgreSQL and remains the single owner of the complete runtime suite.
+
+No live Vercel deployment, hosted Neon/PgBouncer connection, real cron invocation, container build, ChatGPT/browser installation, Ads operation or public listing was performed. Direct PostgreSQL transaction tests do not qualify a particular provider's pooler or hosted environment. Operators must verify the selected deployment, callback, production/preview isolation and cleanup before public use.

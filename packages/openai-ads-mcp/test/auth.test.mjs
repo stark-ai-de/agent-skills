@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHash, randomBytes } from "node:crypto";
 import { test } from "node:test";
 import { createAuth } from "../src/auth.mjs";
-import { createStore } from "../src/store.mjs";
+import { createTestStore } from "./helpers/database.mjs";
 
 const origin = "https://ads.example";
 const resource = `${origin}/mcp`;
@@ -20,14 +20,14 @@ const authParams = {
   state: "client-state",
   scope: "ads:read ads:write offline_access",
 };
-function fixture(t, options = {}) {
+async function fixture(t, options = {}) {
   let clock = 1_800_000_000_000;
-  const store = createStore({
-    databasePath: ":memory:",
+  const { store: databaseStore } = await createTestStore(t, {
     encryptionKey: randomBytes(32),
     now: () => clock,
   });
-  t.after(() => store.close());
+  const { storeOverrides = {}, ...authOptions } = options;
+  const store = { ...databaseStore, ...storeOverrides };
   let calls = 0;
   const config = {
     publicOrigin: origin,
@@ -37,7 +37,6 @@ function fixture(t, options = {}) {
   const auth = createAuth({
     config,
     store,
-    now: () => clock,
     verifyAdsKey: async (candidate) => {
       calls++;
       if (candidate !== key) throw new Error(`sensitive upstream response ${candidate}`);
@@ -48,7 +47,7 @@ function fixture(t, options = {}) {
         timezone: "Europe/Berlin",
       };
     },
-    ...options,
+    ...authOptions,
   });
   return {
     auth,
@@ -136,7 +135,7 @@ async function exchange(auth, code, overrides = {}) {
 }
 
 test("complete authorization requires explicit account consent and returns only opaque credentials", async (t) => {
-  const { auth } = fixture(t);
+  const { auth } = await fixture(t);
   const first = await start(auth);
   assert.equal(first.response.status, 200);
   assert.match(first.response.headers.get("set-cookie"), /HttpOnly; Secure; SameSite=Lax/);
@@ -167,7 +166,7 @@ test("complete authorization requires explicit account consent and returns only 
   assert.equal(principal.accountId, "adacct_test");
   assert.equal(principal.apiKey, key);
   assert.equal(
-    auth.hasBrowserGrant(
+    await auth.hasBrowserGrant(
       new Request(`${origin}/credentials/x`, { headers: { cookie: step.cookie } }),
       principal.grantId,
     ),
@@ -184,7 +183,7 @@ test("complete authorization requires explicit account consent and returns only 
 });
 
 test("approval and denial permit only the validated callback origin through form-action CSP", async (t) => {
-  const { auth } = fixture(t);
+  const { auth } = await fixture(t);
   for (const decision of ["approve", "deny"]) {
     const step = await consent(auth, await start(auth));
     assert.deepEqual(formActionSources(step.response), ["'self'", "https://chatgpt.com"]);
@@ -204,7 +203,7 @@ test("approval and denial permit only the validated callback origin through form
 
 test("consent CSP isolates the current flow from other registered callback origins", async (t) => {
   const secondCallback = "https://another-client.example:8443/oauth/callback";
-  const { auth } = fixture(t, {
+  const { auth } = await fixture(t, {
     config: {
       publicOrigin: origin,
       oauthClients: [
@@ -229,7 +228,7 @@ test("consent CSP isolates the current flow from other registered callback origi
 });
 
 test("key entry, key failure, management and rejected callbacks keep self-only form actions", async (t) => {
-  const { auth } = fixture(t);
+  const { auth } = await fixture(t);
   const first = await start(auth);
   assert.deepEqual(formActionSources(first.response), ["'self'"]);
   const failed = await consent(auth, first, { api_key: "invalid-advertiser-key" });
@@ -241,12 +240,12 @@ test("key entry, key failure, management and rejected callbacks keep self-only f
   assert.deepEqual(formActionSources(rejected.response), ["'self'"]);
 });
 
-test("registered callbacks cannot introduce wildcard or injected CSP sources", (t) => {
+test("registered callbacks cannot introduce wildcard or injected CSP sources", async (t) => {
   for (const callback of [
     "https://*.example/callback",
     "https://callback.example;unsafe/callback",
   ]) {
-    assert.throws(
+    await assert.rejects(
       () =>
         fixture(t, {
           config: {
@@ -261,7 +260,7 @@ test("registered callbacks cannot introduce wildcard or injected CSP sources", (
 });
 
 test("client, redirect, resource, PKCE and duplicate parameters are rejected before key entry", async (t) => {
-  const f = fixture(t);
+  const f = await fixture(t);
   for (const patch of [
     { client_id: "unknown" },
     { redirect_uri: "https://evil.example" },
@@ -284,7 +283,7 @@ test("client, redirect, resource, PKCE and duplicate parameters are rejected bef
 });
 
 test("cross-site posts, missing cookie and stale CSRF cannot verify or connect an account", async (t) => {
-  const f = fixture(t);
+  const f = await fixture(t);
   const first = await start(f.auth);
   const body = { flow: first.flow, csrf: first.csrf, stage: "key", api_key: key };
   for (const headers of [
@@ -304,7 +303,7 @@ test("cross-site posts, missing cookie and stale CSRF cannot verify or connect a
 });
 
 test("key verification failures never echo secrets; repeated failures are limited", async (t) => {
-  const f = fixture(t);
+  const f = await fixture(t);
   const first = await start(f.auth);
   for (let i = 0; i < 5; i++) {
     const failed = await consent(f.auth, first, { api_key: "invalid-secret-in-input" });
@@ -318,7 +317,7 @@ test("key verification failures never echo secrets; repeated failures are limite
 });
 
 test("consent can decline writes or deny all access", async (t) => {
-  const { auth } = fixture(t);
+  const { auth } = await fixture(t);
   const first = await start(auth);
   const step = await consent(auth, first);
   const response = await approve(auth, step, { allow_write: "" });
@@ -335,7 +334,7 @@ test("consent can decline writes or deny all access", async (t) => {
 });
 
 test("metadata declares fixed clients, S256 and resource-specific OAuth; unknown methods fail", async (t) => {
-  const { auth } = fixture(t);
+  const { auth } = await fixture(t);
   const authorization = await (
     await auth.handle(new Request(`${origin}/.well-known/oauth-authorization-server`))
   ).json();
@@ -354,7 +353,7 @@ test("metadata declares fixed clients, S256 and resource-specific OAuth; unknown
 });
 
 test("token endpoints enforce resource/client binding and revocation invalidates access", async (t) => {
-  const { auth } = fixture(t);
+  const { auth } = await fixture(t);
   const approved = await approve(auth, await consent(auth, await start(auth)));
   const code = new URL(approved.headers.get("location")).searchParams.get("code");
   assert.equal(
@@ -389,7 +388,7 @@ test("token endpoints enforce resource/client binding and revocation invalidates
 });
 
 test("expired authorization transactions and oversized form bodies are rejected", async (t) => {
-  const f = fixture(t);
+  const f = await fixture(t);
   const first = await start(f.auth);
   f.advance(11 * 60_000);
   assert.equal((await consent(f.auth, first)).response.status, 403);
@@ -398,7 +397,7 @@ test("expired authorization transactions and oversized form bodies are rejected"
 });
 
 test("connection management requires cookie and CSRF; the same Ads key can unlock and disconnect later", async (t) => {
-  const f = fixture(t);
+  const f = await fixture(t);
   const step = await consent(f.auth, await start(f.auth));
   const approved = await approve(f.auth, step);
   const { data } = await exchange(
@@ -442,7 +441,7 @@ test("connection management requires cookie and CSRF; the same Ads key can unloc
     ),
   );
   assert.equal(revoked.status, 200);
-  assert.equal(f.store.matchesGrantKey(principal.grantId, key), false);
+  assert.equal(await f.store.matchesGrantKey(principal.grantId, key), false);
   const refresh = await f.auth.handle(
     request("/oauth/token", {
       grant_type: "refresh_token",
@@ -455,7 +454,7 @@ test("connection management requires cookie and CSRF; the same Ads key can unloc
 });
 
 test("two browser sessions cannot approve or manage each other's grant", async (t) => {
-  const { auth } = fixture(t);
+  const { auth } = await fixture(t);
   const one = await start(auth);
   const two = await start(auth);
   assert.notEqual(one.cookie, two.cookie);
@@ -471,7 +470,7 @@ test("two browser sessions cannot approve or manage each other's grant", async (
     new Request(resource, { headers: { authorization: `Bearer ${data.access_token}` } }),
   );
   assert.equal(
-    auth.hasBrowserGrant(
+    await auth.hasBrowserGrant(
       new Request(`${origin}/connections`, { headers: { cookie: two.cookie } }),
       principal.grantId,
     ),
@@ -494,4 +493,71 @@ test("two browser sessions cannot approve or manage each other's grant", async (
       new Request(resource, { headers: { authorization: `Bearer ${data.access_token}` } }),
     ),
   );
+});
+
+test("a promised false browser grant never authorizes a session", async (t) => {
+  let checks = 0;
+  const { auth } = await fixture(t, {
+    storeOverrides: {
+      hasBrowserGrant: async () => {
+        checks++;
+        return false;
+      },
+    },
+  });
+  assert.equal(
+    await auth.hasBrowserGrant(
+      new Request(`${origin}/connections`, {
+        headers: { cookie: `__Host-stark_ads_oauth=${"a".repeat(43)}` },
+      }),
+      "unrelated-grant",
+    ),
+    false,
+  );
+  assert.equal(checks, 1);
+});
+
+test("a promised rate limit denial prevents creation of an authorization transaction", async (t) => {
+  let created = 0;
+  const { auth } = await fixture(t, {
+    storeOverrides: {
+      allowRate: async () => false,
+      createFlow: async () => {
+        created++;
+        throw new Error("A denied request must not create a flow.");
+      },
+    },
+  });
+  assert.equal((await start(auth)).response.status, 429);
+  assert.equal(created, 0);
+});
+
+test("a consent flow must be consumed successfully before a grant can be created", async (t) => {
+  let created = 0;
+  const { auth } = await fixture(t, {
+    storeOverrides: {
+      consumeFlow: async () => null,
+      createAuthorizationCode: async () => {
+        created++;
+        throw new Error("An unconsumed flow must not authorize a grant.");
+      },
+    },
+  });
+  const step = await consent(auth, await start(auth));
+  assert.equal(step.response.status, 200);
+  assert.equal((await approve(auth, step)).status, 403);
+  assert.equal(created, 0);
+});
+
+test("concurrent approval consumes a consent transaction once", async (t) => {
+  const { auth } = await fixture(t);
+  const step = await consent(auth, await start(auth));
+  const responses = await Promise.all([approve(auth, step), approve(auth, step)]);
+  assert.deepEqual(responses.map((response) => response.status).sort(), [303, 403]);
+  const callback = new URL(
+    responses.find((response) => response.status === 303).headers.get("location"),
+  );
+  const result = await exchange(auth, callback.searchParams.get("code"));
+  assert.equal(result.response.status, 200);
+  assert.equal((await exchange(auth, callback.searchParams.get("code"))).response.status, 400);
 });

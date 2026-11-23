@@ -25,11 +25,13 @@ This guide is non-normative. [Long](0079-package-ads-tools-as-an-independent-aut
 
 Maintain the skill under skills/engineering-workflows/openai-advertiser-api. The independent source manifest is plugins/stark-ai-ads.source.json and its Node runtime is packages/openai-ads-mcp. Build the native archive using the selected deployed HTTPS /mcp URL and registered public OAuth client ID. Never put the Ads key or OAuth tokens into a package.
 
+Use the [service map](../services.md) to locate package and deployment owners. Create the separate Vercel project with Root Directory packages/openai-ads-mcp and external PostgreSQL. Apply migrations explicitly before rollout; isolate preview databases and secrets, and verify the authenticated scheduled cleanup.
+
 Follow the [runtime guide](../../packages/openai-ads-mcp/README.md) for configuration and the [listing guide](../listing/openai/stark-ai-ads.md) for package and public-submission work. Existing Developer release profiles retain their existing selected membership.
 
 ## Verification
 
-Run pnpm run validate:ads-mcp and pnpm run validate:ads-plugin. The first owns mocked protocol/account/authentication behavior; the second owns source identity, canonical skill projection and reproducible archive fixtures. Qualify the actual deployment and installed ChatGPT flow separately before publication.
+Run pnpm run validate:ads-mcp and pnpm run validate:ads-plugin. Supply a disposable ADS_TEST_DATABASE_URL for the runtime suite. The first owns real PostgreSQL migration/concurrency behavior and synthetic protocol/account/authentication behavior; the second owns source identity, canonical skill projection and reproducible archive fixtures. Qualify the actual deployment and installed ChatGPT flow separately before publication.
 
 ## Current references
 

@@ -1,183 +1,153 @@
 # stark AI Ads MCP
 
-An authenticated MCP adapter for the public OpenAI Advertiser API. It supplies the API tools used by the separate **stark AI Ads** plugin and the canonical [`openai-advertiser-api` skill](../../skills/engineering-workflows/openai-advertiser-api/). The skill remains usable separately in an environment with authorized direct HTTP execution.
+An authenticated MCP adapter for the public OpenAI Advertiser API, maintained in this repository as one deployable pnpm package. It supplies the tools used by the independent **stark AI Ads** plugin and the canonical [`openai-advertiser-api` skill](../../skills/engineering-workflows/openai-advertiser-api/).
 
-This package contains the server implementation, deployment example and offline tests. It has not been deployed or submitted to the OpenAI plugin directory by this change. The example domain is a placeholder, not a running service.
+**Selected hosting: native Node.js Vercel Functions with external PostgreSQL.** Neon is the recommended managed PostgreSQL provider; another compatible PostgreSQL service can be used. Docker is optional for self-hosting and local database development. The [service map](../../docs/services.md) explains repository ownership; the [listing guide](../../docs/listing/openai/stark-ai-ads.md) owns packaging and publication.
 
-## What it provides
+The code and deployment configuration are supplied here. They do not establish that a live endpoint, database, ChatGPT connection or public listing has been provisioned.
 
-- Account identification, campaign/ad-group/ad operations, reporting, product feeds, audiences, conversion setup, and explicitly documented bulk jobs through a pinned allowlist of API methods and fields. [`src/operations.mjs`](src/operations.mjs) and the [reviewed contract snapshot](references/advertiser-contract.json) define the exact supported surface.
-- Per-connection account binding. Each resource operation requires the expected account ID and verifies the account returned by OpenAI before proceeding.
-- Separate read and write scopes. Server-side validation and uploads require write access. The account owner explicitly chooses whether to grant write access; the host and skill still govern authorization for each requested operation.
-- OAuth authorization-code flow with S256 PKCE, fixed registered public clients, exact redirects and resource binding. No client secret, dynamic client registration or arbitrary URL discovery is used.
-- An encrypted local credential vault, token rotation/revocation, account connection management and protected one-time downloads for generated CAPI/SFTP credentials.
+## Capability and credential boundary
 
-Account enablement still controls API availability, including limited-preview features. A regular OpenAI Platform API key cannot replace the **account-scoped Advertiser API key created in Ads Manager Settings**. CAPI keys are separate event-delivery credentials. The MCP server does not implement website Pixel instrumentation, continuous CAPI event forwarding, ad-account onboarding or automatic campaign optimization.
+- Typed account, campaign, ad-group, ad, reporting, feed, audience, conversion and bulk-job operations follow the [pinned API contract](references/advertiser-contract.json) and [`src/operations.mjs`](src/operations.mjs).
+- Every resource operation checks the expected Ads account. Read and write scopes are enforced independently; connection consent does not authorize every later campaign change.
+- OAuth uses registered public clients, exact redirects, S256 PKCE and resource binding. Dynamic registration and arbitrary upstream URLs are not accepted.
+- The owner enters an **Advertiser API key from Ads Manager Settings** on the service's HTTPS connection form. The server verifies the account and encrypts the key in PostgreSQL. ChatGPT receives opaque OAuth tokens; the skill and tool arguments receive no Ads key.
+- An ordinary OpenAI Platform API key cannot provide Advertiser API access. Account enablement and preview-feature eligibility still apply. Pixel instrumentation, continuous CAPI event forwarding and account onboarding are outside this adapter.
+- Generated CAPI keys and SFTP passwords use an authenticated, one-time browser download; they are not returned to the model.
 
-## Runtime and configuration
+## Package layout
 
-Use Node.js **24.18.0 or later** and the repository's pinned **pnpm 11.24.0**. The container pins Node.js `24.18.0-bookworm-slim`. Runtime dependencies are installed from the workspace lockfile; the application runs as UID/GID `1000:1000` (`node`).
+| Path                                             | Responsibility                                                                    |
+| ------------------------------------------------ | --------------------------------------------------------------------------------- |
+| `src/`                                           | Shared HTTP application, OAuth, credentials, Ads client and tools                 |
+| `src/storage/`, `src/store.mjs`                  | PostgreSQL transactions, encryption and distributed state                         |
+| `api/index.mjs`, `src/vercel.mjs`, `vercel.json` | Thin Vercel adapter and deployment routing                                        |
+| `src/server.mjs`                                 | Optional native HTTP listener for local/self-hosted operation                     |
+| `migrations/`, `scripts/migrate.mjs`             | Append-only, checksummed SQL migrations; explicit operator command                |
+| `test/`                                          | Real PostgreSQL tests, synthetic Ads responses, transport/authentication fixtures |
+| `deployment/`                                    | Optional Compose and protected configuration examples                             |
 
-| Setting                                           | Required value or default                                                                                                                                 |
-| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ADS_PUBLIC_ORIGIN`                               | Public HTTPS origin, without path or query; for example your chosen service domain. The resource is this origin plus `/mcp`.                              |
-| `ADS_ENCRYPTION_KEY` or `ADS_ENCRYPTION_KEY_FILE` | Exactly 32 random bytes encoded as canonical base64. Configure one form only; the mounted-file form is recommended.                                       |
-| `ADS_OAUTH_CLIENTS` or `ADS_OAUTH_CLIENTS_FILE`   | JSON array of `{ "clientId": "…", "redirectUris": ["https://…"] }`. Configure one form only. One to twenty explicitly registered clients are accepted.    |
-| `ADS_DATABASE_PATH`                               | Absolute local path. Direct startup defaults to `data/ads.sqlite` resolved from the working directory; the image uses `/var/lib/stark-ai-ads/ads.sqlite`. |
-| `ADS_HOST`                                        | Direct startup defaults to `127.0.0.1`. The container binds `0.0.0.0` internally and Compose exposes it only on host loopback.                            |
-| `ADS_PORT`                                        | Direct/container listener port; default `8789`. Compose keeps the container port fixed and uses `ADS_BIND_PORT` for the host mapping.                     |
-| `ADS_ALLOWED_ORIGINS`                             | Optional comma-separated exact additional origins. The service origin, `https://chatgpt.com` and `https://platform.openai.com` are already permitted.     |
-| `ADS_ALLOW_HTTP_LOCALHOST`                        | Set to `1` only for explicit loopback development. It permits HTTP only for loopback origins and callbacks. Production Compose keeps this disabled.       |
-| `OPENAI_APPS_CHALLENGE`                           | Optional public domain-verification value supplied by the OpenAI submission portal.                                                                       |
+## Configuration
 
-Never configure a shared Advertiser key in the service environment or image. Each account owner supplies their own key through the protected connection form. The encryption key is a different service secret and must remain available across restarts.
+Use Node.js **24.18.0 or later**, Vercel's **24.x** runtime and the pnpm version pinned in the repository `package.json`. Start from [`.env.example`](.env.example). Never commit real environment files or use an Advertiser key as a service-wide environment variable.
 
-### Local development
+| Variable                     | Meaning                                                                                                                                              |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`               | Runtime PostgreSQL URL. Use Neon's pooled hostname for Functions. Remote URLs require `sslmode=verify-full`; never disable certificate verification. |
+| `DATABASE_URL_UNPOOLED`      | Optional direct PostgreSQL URL for the migration command only. It overrides `DATABASE_URL` for migrations, not requests.                             |
+| `ADS_DEPLOYMENT_ENVIRONMENT` | `production`, `preview` or `development`; must match the database's migration-time marker. Vercel requires an explicit value matching `VERCEL_ENV`.  |
+| `ADS_PUBLIC_ORIGIN`          | Exact public HTTPS origin without path/query; OAuth, `/mcp` and credential downloads share it.                                                       |
+| `ADS_ENCRYPTION_KEY`         | Exactly 32 random bytes in canonical base64; stable across instances and restarts. Store separately from the database.                               |
+| `ADS_OAUTH_CLIENTS`          | JSON array of registered `{ "clientId": "…", "redirectUris": ["https://…"] }`; one to twenty clients, exact callback URLs.                           |
+| `CRON_SECRET`                | Random bearer token of at least 32 characters for `/internal/prune`; required on Vercel.                                                             |
+| `ADS_ENABLE_NON_PRODUCTION`  | Set to `1` only to enable a Vercel Preview/Development deployment with isolated state and secrets. Otherwise those deployments fail closed.          |
+| `ADS_ALLOWED_ORIGINS`        | Optional comma-separated extra exact origins; service origin, ChatGPT and OpenAI Platform are included.                                              |
+| `OPENAI_APPS_CHALLENGE`      | Optional public domain-verification text from the OpenAI portal.                                                                                     |
+| `ADS_HOST`, `ADS_PORT`       | Native listener only; default `127.0.0.1:8789`.                                                                                                      |
+| `ADS_ALLOW_HTTP_LOCALHOST`   | Native development only: `1` permits HTTP on loopback origins/callbacks. Rejected on Vercel.                                                         |
 
-From the repository root:
+The native runtime also accepts protected `*_FILE` alternatives for `DATABASE_URL`, `ADS_ENCRYPTION_KEY`, `ADS_OAUTH_CLIENTS` and `CRON_SECRET`. Set either the value or its file, never both. Vercel uses environment values, not mounted secret files. The migration CLI uses `DATABASE_URL_UNPOOLED` or `DATABASE_URL`; it does not need the Ads encryption key.
+
+Generate independent encryption and cron secrets in a secrets manager or directly into protected files; never print or paste them into chat. A protected native encryption-key file can be created without displaying its contents:
 
 ```bash
+node --input-type=module -e 'import {randomBytes} from "node:crypto"; import {writeFileSync} from "node:fs"; writeFileSync("/YOUR_PRIVATE_DIRECTORY/encryption.key", randomBytes(32).toString("base64")+"\n", {flag:"wx",mode:0o600});'
+```
+
+## Vercel and Neon deployment
+
+1. Create the dedicated Vercel project **`stark-ai-ads-mcp`**, connected to `stark-ai-de/agent-skills`. Set **Root Directory `packages/openai-ads-mcp`**, framework **Other**, Node **24.x**, Fluid Compute enabled, and the repository's pnpm workspace install. Keep source files outside the Root Directory available so the root workspace manifest/lockfile participate. Use the package's `vercel.json`; no Next.js application or container is required. Select the same region as the database and enable skipping unaffected workspace projects.
+2. Provision a dedicated PostgreSQL database through the Vercel Marketplace Neon integration or your PostgreSQL operator. Scope production connection strings to **Production only**. Use the pooled URL for runtime; use the direct URL for migrations. Configure verified TLS, database backups/retention and an appropriate connection budget. The application has at most four connections per warm instance, not four connections for the entire deployment.
+3. Configure the production variables above and choose the stable public HTTPS origin. Register the **exact callback displayed for the actual OpenAI connection**. The [client example](deployment/oauth-clients.example.json) uses OpenAI's documented callback and `stark-ai-ads-chatgpt`; verify it against the intended connection. Keep that client ID aligned with the plugin package.
+4. Before rollout, run the migration command from a trusted operator environment with the selected database secrets and `ADS_DEPLOYMENT_ENVIRONMENT=production`:
+
+   ```bash
+   pnpm install --frozen-lockfile
+   pnpm --filter @stark-ai/openai-ads-mcp run db:migrate
+   ```
+
+   This command **changes the selected database**. It takes a transaction-scoped advisory lock, validates existing migration checksums, applies pending SQL and records the environment. Re-running it is safe. Startup only verifies schema/key/environment; it never creates tables. Do not add migration execution to a Vercel build, cold start or PR preview.
+
+5. Deploy the reviewed commit. Keep Vercel Deployment Protection on previews. Public production OAuth/discovery endpoints must be reachable by ChatGPT without a separate Vercel login; the service's own OAuth authenticates MCP requests. Configure edge request limits, sanitize logs and restrict administrative access to project/database secrets.
+6. Verify metadata, authenticated connection, read-only behavior, authorized writes, revocation, credential downloads and the scheduled cleanup before publication. Then use the [publication guide](../../docs/listing/openai/stark-ai-ads.md) to build the plugin for that real endpoint.
+
+The daily schedule in `vercel.json` calls `GET /internal/prune`. Vercel sends `Authorization: Bearer <CRON_SECRET>` automatically. The route checks this value in constant time and never accepts a token in the URL. No maintenance timer runs inside a Function. Monitor cron failures; expired records are rejected immediately even when pruning has not yet run. A native host must schedule the same authenticated route itself.
+
+### Preview and production isolation
+
+Do not attach production database URLs, encryption keys, OAuth clients or cron secrets to Preview/Development. Do not use Neon's default data-copying production branch as a credential-bearing preview database. Create an empty database, a schema-only branch or a branch from a dedicated synthetic-data parent; migrate it with `ADS_DEPLOYMENT_ENVIRONMENT=preview`.
+
+Enabling a preview requires both `ADS_ENABLE_NON_PRODUCTION=1` and the matching environment marker. Give it its own exact HTTPS origin and registered callback/client. Keep Vercel Deployment Protection enabled and test only synthetic or specifically authorized reviewer accounts. A production database mistakenly supplied to a preview fails the marker check. A copied production database is still sensitive even if its encryption key is absent; do not copy it.
+
+### Endpoint and limit verification
+
+| Endpoint                                                               | Purpose                                                                  |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `GET /health`                                                          | Process/version check; not an Ads-access or publication receipt          |
+| `GET /.well-known/oauth-authorization-server`                          | Issuer, OAuth endpoints, scopes and S256 metadata                        |
+| `GET /.well-known/oauth-protected-resource/mcp`                        | Protected-resource discovery; the root well-known variant is also served |
+| `GET/POST /oauth/authorize`, `POST /oauth/token`, `POST /oauth/revoke` | Consent, exchange/rotation and revocation                                |
+| `GET/POST /connections`                                                | Browser account-connection management                                    |
+| `POST /mcp`                                                            | Authenticated Streamable HTTP MCP                                        |
+| `GET/POST /credentials/{id}`                                           | Protected one-time credential download                                   |
+| `GET /internal/prune`                                                  | Authenticated maintenance; no public state or counts                     |
+
+Confirm issuer equals `ADS_PUBLIC_ORIGIN`, resource equals `ADS_PUBLIC_ORIGIN/mcp`, and an unauthenticated `/mcp` request returns `401` with resource discovery. Request bodies are capped at **3 MiB** and audience uploads at **2 MiB decoded**. The Vercel path bounds upstream responses and serialized tool results before the MCP SDK duplicates content. Use pagination and narrower report windows for oversized results; do not automatically retry an uncertain write.
+
+Functions have a **120-second** hosting limit, with shorter application/operation deadlines. PostgreSQL leases outlive those deadlines and enforce per-grant and global concurrency across instances. Streaming cancellation does not immediately release a still-running upstream operation. A crashed instance's leases expire. The native listener uses the same bounds. Bulk jobs run at OpenAI; submit/poll them in separate calls rather than keeping a Function alive indefinitely.
+
+## Local development and tests
+
+Tests require a **disposable PostgreSQL database** supplied as `ADS_TEST_DATABASE_URL`. Every fixture creates and drops an isolated random schema. The test user therefore needs schema creation/drop privileges. Never point this variable at a production database; the tests intentionally modify and remove test state. Missing PostgreSQL causes failure, not skipped security tests.
+
+For example, if Docker is available, start a loopback-only test database with synthetic credentials:
+
+```bash
+docker run --detach --rm --name stark-ai-ads-test \
+  -e POSTGRES_USER=ads_test -e POSTGRES_PASSWORD=ads_test_only \
+  -e POSTGRES_DB=ads_test -p 127.0.0.1:55432:5432 postgres:18
+export ADS_TEST_DATABASE_URL='postgresql://ads_test:ads_test_only@127.0.0.1:55432/ads_test'
 pnpm install --frozen-lockfile
-pnpm --filter @stark-ai/openai-ads-mcp test
+pnpm run validate:ads-mcp
 ```
 
-Set the configuration above using protected files. For a loopback-only session, use `ADS_PUBLIC_ORIGIN=http://127.0.0.1:8789`, `ADS_HOST=127.0.0.1`, `ADS_ALLOW_HTTP_LOCALHOST=1` and explicitly registered loopback callback URLs for your test client. Then start:
+Wait for PostgreSQL to report ready before running tests; stop the disposable database with `docker stop stark-ai-ads-test`. An existing local PostgreSQL installation works equally well. CI supplies PostgreSQL in the existing Validate job.
+
+To run the native service, configure a separate development database and protected service secrets. Set `ADS_DEPLOYMENT_ENVIRONMENT=development`, `ADS_PUBLIC_ORIGIN=http://127.0.0.1:8789`, `ADS_ALLOW_HTTP_LOCALHOST=1`, and registered loopback client callbacks. Run `db:migrate`, then `pnpm --filter @stark-ai/openai-ads-mcp start`. Local HTTP is not a public ChatGPT deployment.
+
+## Optional Docker Compose self-hosting
+
+Docker packages the Node runtime and dependencies. Compose runs that container with its ports, read-only secret mounts and environment configuration. Neither is required on Vercel. The Compose example uses the same external PostgreSQL backend; no SQLite file or application data volume remains.
+
+Build from the repository root. Copy [deployment/config.env.example](deployment/config.env.example) to a protected path outside the checkout, replace all placeholders, and prepare encryption/OAuth files readable only by container UID/GID `1000:1000`. Keep the environment file private: it contains the database URL and cron secret.
 
 ```bash
-pnpm --filter @stark-ai/openai-ads-mcp start
+docker compose --env-file /YOUR_PRIVATE_DIRECTORY/config.env -f packages/openai-ads-mcp/deployment/compose.yaml config --quiet
+docker compose --env-file /YOUR_PRIVATE_DIRECTORY/config.env -f packages/openai-ads-mcp/deployment/compose.yaml build
+docker compose --env-file /YOUR_PRIVATE_DIRECTORY/config.env -f packages/openai-ads-mcp/deployment/compose.yaml run --rm ads-mcp node packages/openai-ads-mcp/scripts/migrate.mjs
+docker compose --env-file /YOUR_PRIVATE_DIRECTORY/config.env -f packages/openai-ads-mcp/deployment/compose.yaml up -d
 ```
 
-Local HTTP is for development; it is not a publicly connectable ChatGPT deployment. The automated tests use synthetic keys and mocked OpenAI responses, including the real OAuth-to-MCP transport path. They never require an Ads account or change live advertisements.
+Terminate HTTPS at a trusted reverse proxy, forward the full path and public Host to the container's loopback-bound port, disable response buffering and set request/body/timeout limits consistent with the application. Native address limits use the socket peer; behind a proxy this is a shared backstop, so apply per-client limits at the proxy. Vercel uses its platform-owned address header and strips caller-supplied address overrides.
 
-## Deploy one instance behind HTTPS
+Do not log authorization headers, OAuth queries, cookies, form bodies or Ads responses. Keep the native listener private. Schedule authenticated cleanup externally and monitor its result.
 
-The supplied Compose file targets a Linux host with Docker Compose and a host-managed HTTPS reverse proxy. Run **one instance** with a private directory on **local persistent disk**. SQLite/WAL state is not designed here for replicas or a shared NFS volume. The service rejects symlinks in its database path and rejects a database parent directory writable by group or other users.
+## Durable state, lifecycle and recovery
 
-The following are operator-run setup commands, not actions performed by this PR. All paths below are examples outside the checkout. For rootless Docker, adapt the host ownership to its UID mapping rather than making secret files broadly readable.
+PostgreSQL stores encrypted Advertiser keys, encrypted pending OAuth forms and credential handoffs, account/client/scope metadata, hashed access/refresh tokens, browser bindings, rate counters and expiring concurrency leases. It stores no campaign/report archive for later analytics. Standard PostgreSQL transactions and locks coordinate all instances; no Redis dependency or server-memory session store is required.
 
-### 1. Prepare private storage and service secrets
+Access tokens last **15 minutes**, authorization transactions **10 minutes**, codes **5 minutes**, browser sessions **1 hour** and generated-credential downloads at most **10 minutes**. Offline grants last at most **30 days** from consent. Refresh rotates tokens without extending that lifetime; reuse revokes the grant. Without offline access the grant lasts 15 minutes. Expiry is enforced on access independently of cleanup. Replay records survive until the grant expiry so cleanup cannot re-enable a spent token.
 
-```bash
-sudo install -d -m 0700 -o 1000 -g 1000 /srv/stark-ai-ads/data
-sudo install -d -m 0700 -o root -g root /etc/stark-ai-ads
-```
+Disconnect through `/connections` to revoke a grant, remove its encrypted Ads key and invalidate its pending credential downloads. A valid browser session shows only its own grants; after it expires, the same Ads key can unlock matching connections. Revoking the upstream key in Ads Manager independently blocks further API access. In-flight upstream writes may already have reached OpenAI when a connection is revoked; reconcile their outcome before retrying.
 
-Generate the vault encryption key directly into a protected file. This command refuses to overwrite an existing key and never prints it:
+Back up PostgreSQL using your provider's snapshots/PITR or consistent database backup tools. Back up the encryption key separately. Restore a matching database/key pair into the intended environment; wrong keys, schema history or environment markers fail closed. Restoring old database state can resurrect previously revoked grants, so revoke affected upstream keys if needed. Define backup retention/deletion, including old encrypted data, with the operator.
 
-```bash
-sudo python3 - <<'PY'
-import base64
-import os
-import secrets
+There is no in-place re-encryption or SQLite importer. For vault-key rotation or migration from an earlier experimental SQLite deployment, schedule a reconnect window: retain old backups according to policy, initialize a new isolated PostgreSQL database with a new key, run explicit migrations, cut over the service and have users reconnect. Never overwrite the key while retaining its old ciphertext. This PR does not migrate live customer state.
 
-with open("/etc/stark-ai-ads/encryption.key", "x", encoding="ascii") as stream:
-    os.fchmod(stream.fileno(), 0o400)
-    os.fchown(stream.fileno(), 1000, 1000)
-    stream.write(base64.b64encode(secrets.token_bytes(32)).decode("ascii") + "\n")
-PY
-```
+## Validation and evidence
 
-Prepare the configuration examples:
+`pnpm run validate:ads-mcp` owns transport, OAuth, account/scopes, SQL migration and multi-pool concurrency checks. The suite uses real PostgreSQL with synthetic keys and mocked Ads endpoints; it never requires or changes a live Ads account. `pnpm run validate:ads-plugin` separately owns reproducible packaging. Current validation receipts belong in [the skill evaluation record](../../skill-evals/openai-advertiser-api/README.md).
 
-```bash
-sudo install -m 0600 packages/openai-ads-mcp/deployment/config.env.example /etc/stark-ai-ads/config.env
-sudo install -m 0400 -o 1000 -g 1000 packages/openai-ads-mcp/deployment/oauth-clients.example.json /etc/stark-ai-ads/oauth-clients.json
-sudoedit /etc/stark-ai-ads/config.env /etc/stark-ai-ads/oauth-clients.json
-```
+A successful local suite is not evidence of a real Vercel deployment, Neon provisioning, container build, browser/ChatGPT installation or publication. Qualify those selected environments before making the service public.
 
-Set the real HTTPS origin and host paths in `config.env`. Keep the client ID aligned with the plugin package, default `stark-ai-ads-chatgpt`. Copy the **exact production redirect URI shown in the OpenAI MCP connection management page** into `redirectUris`. The sample uses OpenAI's documented stable callback; confirm the value for the actual connection. Do not allow wildcards or arbitrary caller-supplied redirects.
-
-The files are bind-mounted read-only. Their contents must be readable by container UID `1000`; Compose cannot repair permissions on a host bind mount. After editing, verify/reapply `1000:1000` ownership and `0400` permissions for both mounted files. Keep the containing host directory restricted. The environment file contains paths and public configuration, not the encryption key or an Advertiser key.
-
-### 2. Configure the HTTPS reverse proxy
-
-Use the same public origin for OAuth, credential downloads, metadata and `/mcp`. Forward the full path to `http://127.0.0.1:8789` and preserve the original public **Host** header. A different Host is rejected, except for loopback `/health` checks.
-
-For example, the relevant NGINX location inside an existing TLS server block is:
-
-```nginx
-location / {
-    proxy_pass http://127.0.0.1:8789;
-    proxy_set_header Host $http_host;
-    proxy_http_version 1.1;
-    proxy_buffering off;
-    client_max_body_size 3m;
-    proxy_read_timeout 120s;
-}
-```
-
-Provide a valid certificate, permit required request headers, and apply IP-based connection/request limits at the edge. The application deliberately ignores caller-supplied forwarding headers and bases its address limits on the socket peer. Behind a reverse proxy, that peer is the proxy, so application address limits are a shared backstop rather than per-user rate limiting. Do not expose the internal HTTP listener to the public internet.
-
-Avoid logging request/response bodies, cookies, authorization headers or OAuth query strings at the proxy. OAuth callbacks carry short-lived codes, and connection forms contain secrets. Configure access-log formats accordingly.
-
-MCP request bodies are limited to **3 MiB**. Audience uploads are additionally limited to **2 MiB decoded**, leaving room for Base64 and JSON overhead. OAuth/credential forms have smaller independent limits. The server never follows Ads API redirects and sends management requests only to `https://api.ads.openai.com/v1`.
-
-### 3. Build and start
-
-Run from the repository root:
-
-```bash
-sudo docker compose --env-file /etc/stark-ai-ads/config.env -f packages/openai-ads-mcp/deployment/compose.yaml config --quiet
-sudo docker compose --env-file /etc/stark-ai-ads/config.env -f packages/openai-ads-mcp/deployment/compose.yaml build
-sudo docker compose --env-file /etc/stark-ai-ads/config.env -f packages/openai-ads-mcp/deployment/compose.yaml up -d
-```
-
-Only explicitly selected manifests, dependencies, runtime source and public contract references enter the image. Secret files and the SQLite database remain separate host mounts. The service uses a read-only root filesystem, drops Linux capabilities, and enables no-new-privileges.
-
-### 4. Verify the deployed service and package
-
-Check the local health endpoint and the public metadata using your actual domain:
-
-```bash
-curl --fail http://127.0.0.1:8789/health
-curl --fail https://YOUR_SERVICE_DOMAIN/.well-known/oauth-authorization-server
-curl --fail https://YOUR_SERVICE_DOMAIN/.well-known/oauth-protected-resource/mcp
-```
-
-Confirm the issuer matches `ADS_PUBLIC_ORIGIN`, resource matches `ADS_PUBLIC_ORIGIN/mcp`, S256 is advertised, and the registered public-client method is `none`. An unauthenticated `/mcp` request must return `401` with its resource-metadata challenge. `/health` establishes process availability; it does not establish Ads access, a successful OAuth connection or publication eligibility.
-
-Build the installable plugin with the same real MCP endpoint:
-
-```bash
-node scripts/plugin/package-ads-plugin.mjs --server-url https://YOUR_SERVICE_DOMAIN/mcp --oauth-client-id stark-ai-ads-chatgpt
-```
-
-Use the [plugin publication guide](../../docs/listing/openai/stark-ai-ads.md) for the exact package/client options, artifact validation, required listing material and portal flow. Include the MCP connection in the initial public package. Deployment, authenticated ChatGPT testing and directory publication are separate operator actions; none are implied by building a ZIP.
-
-## Connection lifecycle and operations
-
-| Endpoint                                        | Purpose                                                                                              |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `GET /health`                                   | Process/version check without credentials.                                                           |
-| `GET /.well-known/oauth-authorization-server`   | OAuth endpoints, scopes, issuer and PKCE metadata.                                                   |
-| `GET /.well-known/oauth-protected-resource/mcp` | Resource-specific discovery; the root well-known path is also served.                                |
-| `GET/POST /oauth/authorize`                     | Verify the Ads key, then review the account and grant scopes.                                        |
-| `POST /oauth/token`                             | Exchange a code or rotate a refresh token.                                                           |
-| `POST /oauth/revoke`                            | Revoke the grant represented by a client-bound token.                                                |
-| `GET/POST /connections`                         | Unlock and disconnect account connections in a browser.                                              |
-| `POST /mcp`                                     | Authenticated MCP tools over Streamable HTTP.                                                        |
-| `GET/POST /credentials/{id}`                    | Protected, one-time generated-credential download. A link or MCP bearer token alone is insufficient. |
-
-The owner enters the Advertiser key in the service's HTTPS form, verifies the account ID/currency/timezone, and explicitly enables write access when wanted. ChatGPT receives opaque connection tokens; it never receives the upstream Ads key. The connection supports one Ads account. To use a different account, establish the intended connection and verify its account ID before calling resource tools.
-
-Access tokens last **15 minutes**. Authorization transactions last **10 minutes**, codes **5 minutes**, browser sessions **1 hour**, and generated-credential downloads at most **10 minutes** with one successful download. Grants with `offline_access` last at most **30 days** from consent; refreshing rotates the token but does not extend that absolute lifetime. Without offline access, the grant lasts 15 minutes. Reconnect after expiration or when changing requested permissions.
-
-Use `/connections` to disconnect an individual grant. An active browser session can manage its grants; after that session expires, entering the same Advertiser key unlocks matching active grants. Disconnecting immediately invalidates tokens, removes the stored encrypted Ads key, and deletes pending credential downloads. Revoking the upstream Advertiser key in Ads Manager independently prevents further API access. A fresh key requires a fresh connection.
-
-Rate limits and expired-data cleanup are enforced locally. All instances of a horizontally scaled service would need a different reviewed shared-state design; do not scale this SQLite deployment by adding replicas. Back up and monitor the local state volume. Do not infer that a successful API write is already serving: inspect the returned verification/pending state and poll asynchronous operation results as appropriate.
-
-## Persistence, backup and key rotation
-
-The vault contains encrypted Ads keys, encrypted pending authorization state and encrypted credential-download payloads. Account IDs, client IDs, scopes and expiry metadata are stored for operating the connections. Access/refresh tokens are stored only as hashes; a keyed fingerprint permits the account owner to unlock matching grants without exposing the stored key. Tokens are never written to the application log.
-
-Expired state is rejected on access and removed by cleanup. Revocation removes live credential ciphertext immediately; replay-detection records remain only until the grant expires. Database pages, snapshots and backups can retain historical **encrypted** data until the operator's retention policy removes them. Define backup retention and deletion procedures for your deployment.
-
-For a consistent backup, stop the service briefly and back up the **entire SQLite state directory** (including any WAL/SHM files). Store the encryption key in a separate protected backup system. Restore the database and its matching key together, with the required ownership and permissions. A missing or incorrect key causes startup to fail closed. Neither the database nor the key alone is a complete recovery backup.
-
-There is no in-place vault re-encryption command in this version. To rotate the vault encryption key, schedule a reconnect window: stop the service, retain or securely remove the old database and key under the backup policy, create a fresh empty private state directory and a new protected key file, then restart and have users reconnect. Do not overwrite the key while retaining the old database. Restoring an older backup can resurrect local grant state; revoke upstream Ads keys when a restored credential must remain unusable.
-
-## Validation and deployment evidence
-
-The repository test suite exercises API serialization, schemas, account/scope isolation, OAuth, CSRF, token replay/expiry, encrypted storage/restart, credential downloads, HTTP boundaries and concurrent MCP principals with synthetic inputs. The deployment examples are configuration, not evidence of a running service. The implementation environment does not provide Docker; the image build and Compose startup therefore require an operator/CI check before production use. Public HTTPS, real account feature enablement and installation in ChatGPT must also be verified on the intended deployment.
-
-Primary contracts: [OpenAI Advertiser authentication](https://developers.openai.com/ads/api-reference/authentication), [MCP authentication in OpenAI](https://developers.openai.com/plugins/build/auth), [OpenAI plugin submission](https://developers.openai.com/plugins/deploy/submission).
+Primary contracts: [Vercel Node Functions](https://vercel.com/docs/functions/runtimes/node-js), [pool lifecycle](https://vercel.com/kb/guide/connection-pooling-with-functions), [cron authentication](https://vercel.com/docs/cron-jobs/manage-cron-jobs), [Neon pooling](https://neon.com/docs/connect/connection-pooling), [node-postgres transactions](https://node-postgres.com/features/transactions), [OpenAI Advertiser authentication](https://developers.openai.com/ads/api-reference/authentication), [MCP authentication](https://developers.openai.com/plugins/build/auth).

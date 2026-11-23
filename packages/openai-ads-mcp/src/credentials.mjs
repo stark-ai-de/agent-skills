@@ -22,24 +22,18 @@ function equalTokens(left, right) {
 }
 
 export function createCredentialService({ config, store, auth, now = Date.now }) {
-  const attempts = new Map();
   const secure = new URL(config.publicOrigin).protocol === "https:";
   const cookieName = (id) =>
     `${secure ? "__Host-" : ""}stark_ads_download_${createHash("sha256").update(id).digest("hex").slice(0, 16)}`;
   const cookie = (id, value, age = 600) =>
     `${cookieName(id)}=${value}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${age}${secure ? "; Secure" : ""}`;
 
-  function limited(request, id) {
-    const time = now();
-    for (const [key, record] of attempts) if (record.until <= time) attempts.delete(key);
+  async function limited(request, id) {
+    if (!(await store.allowRate("credential-download:global", 10_000, 600000))) return true;
     const key = createHash("sha256")
       .update(`${request.headers.get("x-ads-client-address") || "local"}:${id}`)
       .digest("hex");
-    const record = attempts.get(key) || { count: 0, until: time + 600000 };
-    if (record.count >= 10 || (!attempts.has(key) && attempts.size >= 5000)) return true;
-    record.count += 1;
-    attempts.set(key, record);
-    return false;
+    return !(await store.allowRate(`credential-download:${key}`, 10, 600000));
   }
 
   async function createHandoff({ principal, operation, value }) {
@@ -86,7 +80,7 @@ export function createCredentialService({ config, store, auth, now = Date.now })
       "application/x-www-form-urlencoded"
     )
       return textResponse("Submit the download form.", 415);
-    if (limited(request, id))
+    if (await limited(request, id))
       return textResponse("Too many attempts. Try again later.", 429, { "retry-after": "600" });
     try {
       const fields = new URLSearchParams(await readBoundedBody(request, 16384));

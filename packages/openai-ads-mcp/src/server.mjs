@@ -42,6 +42,8 @@ export function createNodeServer({ config, application }) {
             "x-forwarded-for",
             "x-forwarded-host",
             "x-forwarded-proto",
+            "x-vercel-forwarded-for",
+            "x-real-ip",
           ].includes(key)
         )
           headers.set(key, Array.isArray(value) ? value.join(", ") : value);
@@ -79,7 +81,7 @@ export function createNodeServer({ config, application }) {
 }
 
 export async function startServer(config = loadConfig()) {
-  const application = createApplication({ config });
+  const application = await createApplication({ config });
   const server = createNodeServer({ config, application });
   try {
     await new Promise((resolve, reject) => {
@@ -119,9 +121,11 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     };
     process.on("SIGTERM", stop);
     process.on("SIGINT", stop);
-  } catch (error) {
-    // Configuration errors contain field names, never values or upstream responses.
-    console.error(`stark AI Ads failed to start: ${error.message}`);
+  } catch {
+    // Driver and filesystem diagnostics can contain database identities or secret paths.
+    console.error(
+      "stark AI Ads failed to start. Check configuration, database connectivity and migration history.",
+    );
     process.exitCode = 1;
   }
 }

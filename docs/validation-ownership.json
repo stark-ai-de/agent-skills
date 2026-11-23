@@ -159,7 +159,7 @@
       "id": "ads-mcp",
       "command": "pnpm run validate:ads-mcp",
       "owner": "packages/openai-ads-mcp/test/integration.test.mjs",
-      "proof": "Mocked OAuth-to-MCP account isolation, encrypted grant and credential lifecycle, scope enforcement, typed Advertiser API serialization, bounded transport, write uncertainty and real SDK discovery. Live Ads integration and public service deployment remain separate.",
+      "proof": "Real PostgreSQL migrations, multi-pool token/credential atomicity, shared rate/lease limits, async OAuth-to-MCP account isolation, Vercel/native transport and bounded deadlines/results with synthetic Ads responses. Live Neon/PgBouncer, public Vercel deployment and ChatGPT installation remain separate.",
       "cadence": "every aggregate run; hosted Validate owns the aggregate"
     },
     {

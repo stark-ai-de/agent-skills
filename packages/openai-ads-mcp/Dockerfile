@@ -15,8 +15,7 @@ LABEL org.opencontainers.image.title="stark AI Ads MCP" \
 
 ENV NODE_ENV=production \
     ADS_HOST=0.0.0.0 \
-    ADS_PORT=8789 \
-    ADS_DATABASE_PATH=/var/lib/stark-ai-ads/ads.sqlite
+    ADS_PORT=8789
 WORKDIR /app
 
 COPY --from=dependencies --chown=node:node /build/node_modules ./node_modules
@@ -24,8 +23,9 @@ COPY --from=dependencies --chown=node:node /build/packages/openai-ads-mcp/node_m
 COPY --chown=node:node packages/openai-ads-mcp/package.json ./packages/openai-ads-mcp/package.json
 COPY --chown=node:node packages/openai-ads-mcp/src ./packages/openai-ads-mcp/src
 COPY --chown=node:node packages/openai-ads-mcp/references ./packages/openai-ads-mcp/references
+COPY --chown=node:node packages/openai-ads-mcp/migrations ./packages/openai-ads-mcp/migrations
+COPY --chown=node:node packages/openai-ads-mcp/scripts ./packages/openai-ads-mcp/scripts
 
-RUN mkdir -p /var/lib/stark-ai-ads && chown node:node /var/lib/stark-ai-ads && chmod 0700 /var/lib/stark-ai-ads
 USER node
 EXPOSE 8789
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
