@@ -185,17 +185,25 @@ test("complete authorization requires explicit account consent and returns only 
   );
 });
 
-test("approval and denial permit only the validated callback origin through form-action CSP", async (t) => {
+test("approval and denial permit the exact OpenAI callback and Platform relay through form-action CSP", async (t) => {
   const { auth } = await fixture(t);
   for (const decision of ["approve", "deny"]) {
     const step = await consent(auth, await start(auth));
-    assert.deepEqual(formActionSources(step.response), ["'self'", "https://chatgpt.com"]);
+    assert.deepEqual(formActionSources(step.response), [
+      "'self'",
+      "https://chatgpt.com",
+      "https://platform.openai.com",
+    ]);
     const redirected = await approve(auth, step, {
       decision,
       redirect_uri: "https://unregistered.example/steal",
     });
     assert.equal(redirected.status, 303);
-    assert.deepEqual(formActionSources(redirected), ["'self'", "https://chatgpt.com"]);
+    assert.deepEqual(formActionSources(redirected), [
+      "'self'",
+      "https://chatgpt.com",
+      "https://platform.openai.com",
+    ]);
     const callback = new URL(redirected.headers.get("location"));
     assert.equal(callback.origin, "https://chatgpt.com");
     assert.equal(callback.searchParams.get("iss"), origin);
@@ -224,7 +232,11 @@ test("consent CSP isolates the current flow from other registered callback origi
       auth,
       await start(auth, { client_id: clientId, redirect_uri: callback }),
     );
-    const expected = ["'self'", new URL(callback).origin];
+    const expected = [
+      "'self'",
+      new URL(callback).origin,
+      ...(callback === redirectUri ? ["https://platform.openai.com"] : []),
+    ];
     assert.deepEqual(formActionSources(step.response), expected);
     assert.deepEqual(formActionSources(await approve(auth, step)), expected);
   }
