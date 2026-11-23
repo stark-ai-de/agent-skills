@@ -138,11 +138,13 @@ test("complete authorization requires explicit account consent and returns only 
   const { auth } = await fixture(t);
   const first = await start(auth);
   assert.equal(first.response.status, 200);
+  assert.equal(first.response.headers.get("referrer-policy"), "same-origin");
   assert.match(first.response.headers.get("set-cookie"), /HttpOnly; Secure; SameSite=Lax/);
   assert.match(first.response.headers.get("content-security-policy"), /frame-ancestors 'none'/);
   assert.ok(first.flow && first.csrf);
   const step = await consent(auth, first);
   assert.equal(step.response.status, 200);
+  assert.equal(step.response.headers.get("referrer-policy"), "same-origin");
   assert.equal(step.html.includes(key), false);
   assert.ok(step.html.includes("adacct_test"));
   assert.match(step.html, /<dt>Currency<\/dt><dd>EUR<\/dd>/);
@@ -152,6 +154,7 @@ test("complete authorization requires explicit account consent and returns only 
   assert.notEqual(step.csrf, first.csrf);
   const approved = await approve(auth, step);
   assert.equal(approved.status, 303);
+  assert.equal(approved.headers.get("referrer-policy"), "no-referrer");
   const callback = new URL(approved.headers.get("location"));
   assert.equal(callback.origin, "https://chatgpt.com");
   assert.equal(callback.searchParams.get("state"), "client-state");
@@ -288,6 +291,8 @@ test("cross-site posts, missing cookie and stale CSRF cannot verify or connect a
   const body = { flow: first.flow, csrf: first.csrf, stage: "key", api_key: key };
   for (const headers of [
     { origin: "https://evil.example", cookie: first.cookie },
+    { origin: "null", cookie: first.cookie },
+    { cookie: first.cookie },
     { origin },
     { origin, cookie: first.cookie },
   ]) {
@@ -409,6 +414,7 @@ test("connection management requires cookie and CSRF; the same Ads key can unloc
   );
   f.advance(61 * 60_000);
   const management = await f.auth.handle(new Request(`${origin}/connections`));
+  assert.equal(management.headers.get("referrer-policy"), "same-origin");
   const cookie = management.headers.get("set-cookie").split(";")[0];
   const html = await management.text();
   assert.equal(html.includes("adacct_test"), false);

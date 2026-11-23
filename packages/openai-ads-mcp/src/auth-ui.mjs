@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { browserFormSecurityHeaders } from "./http-utils.mjs";
 
 const escape = (value) =>
   String(value ?? "").replace(
@@ -37,12 +38,9 @@ export function oauthFormAction(redirectUri) {
 function page(title, body, { status = 200, cookie, origin } = {}, formAction = "'self'") {
   const nonce = randomBytes(16).toString("base64url");
   const headers = {
+    ...browserFormSecurityHeaders,
     "content-type": "text/html; charset=utf-8",
-    "cache-control": "no-store",
     pragma: "no-cache",
-    "referrer-policy": "no-referrer",
-    "x-content-type-options": "nosniff",
-    "x-frame-options": "DENY",
     "content-security-policy": `default-src 'none'; style-src 'nonce-${nonce}'; form-action ${formAction}; base-uri 'none'; frame-ancestors 'none'`,
   };
   if (cookie) headers["set-cookie"] = cookie;

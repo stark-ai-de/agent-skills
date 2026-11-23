@@ -53,6 +53,7 @@ async function form(service, id, extra = {}) {
   assert.equal(page.status, 200);
   assert.ok(!html.includes("new-conversion-secret"));
   assert.equal(page.headers.get("cache-control"), "no-store");
+  assert.equal(page.headers.get("referrer-policy"), "same-origin");
   return {
     html,
     csrf: html.match(/name="csrf" value="([^"]+)"/)[1],
@@ -112,6 +113,11 @@ test("key reauthentication permits retrieval but CSRF and cross-origin downloads
         download(id, fields, { origin: "https://evil.example" }, "test-advertiser-secret"),
       )
     ).status,
+    403,
+  );
+  assert.equal(
+    (await service.handle(download(id, fields, { origin: "null" }, "test-advertiser-secret")))
+      .status,
     403,
   );
   assert.equal((await service.handle(download(id, fields, {}, "wrong-key"))).status, 401);

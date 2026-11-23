@@ -130,6 +130,7 @@ async function connect(app, key, write = true) {
   });
   const first = await app.handle(new Request(`${origin}/oauth/authorize?${query}`));
   assert.equal(first.status, 200, await first.clone().text());
+  assert.equal(first.headers.get("referrer-policy"), "same-origin");
   const cookie = first.headers.getSetCookie()[0].split(";")[0];
   const keyStep = await postForm(
     app,
@@ -138,6 +139,7 @@ async function connect(app, key, write = true) {
     cookie,
   );
   assert.equal(keyStep.status, 200, await keyStep.clone().text());
+  assert.equal(keyStep.headers.get("referrer-policy"), "same-origin");
   const approved = await postForm(
     app,
     "/oauth/authorize",
