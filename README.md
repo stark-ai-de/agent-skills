@@ -86,6 +86,12 @@ npx skills@latest update
 npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator codex-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless karakeep-knowledge jev-capability-advisor visual-reports -g -a codex -y
 ```
 
+Install the complete standalone catalog for Codex, including the OpenAI Advertiser API skill:
+
+```bash
+npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator codex-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams openai-advertiser-api telegram-serverless karakeep-knowledge jev-capability-advisor visual-reports -g -a codex -y
+```
+
 Install the portable plugin with Codex CLI 0.147.0 or later:
 
 ```bash
@@ -101,7 +107,7 @@ See the [plugin documentation](plugins/README.md) for package and distribution d
 <summary><strong>Install the Cursor bundle</strong></summary>
 
 ```bash
-npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cursor-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless karakeep-knowledge jev-capability-advisor visual-reports -g -a cursor -y
+npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cursor-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams openai-advertiser-api telegram-serverless karakeep-knowledge jev-capability-advisor visual-reports -g -a cursor -y
 ```
 
 </details>
@@ -110,7 +116,7 @@ npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cur
 <summary><strong>Install the Claude Code bundle</strong></summary>
 
 ```bash
-npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless karakeep-knowledge jev-capability-advisor visual-reports -g -a claude-code -y
+npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams openai-advertiser-api telegram-serverless karakeep-knowledge jev-capability-advisor visual-reports -g -a claude-code -y
 ```
 
 </details>

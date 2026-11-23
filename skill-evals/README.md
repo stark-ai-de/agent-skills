@@ -28,6 +28,7 @@ Use this folder for:
 - [`jev-capability-advisor`](jev-capability-advisor/README.md)
 - [`greppy-workspace`](greppy-workspace/README.md)
 - [`karakeep-knowledge`](karakeep-knowledge/README.md)
+- [`openai-advertiser-api`](openai-advertiser-api/README.md)
 - [`telegram-serverless`](telegram-serverless/README.md)
 
 Do not put secrets, customer data, private repository paths, or internal hostnames in eval files.
