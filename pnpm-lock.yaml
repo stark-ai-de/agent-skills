@@ -56,6 +56,15 @@ importers:
         specifier: 11.0.5
         version: 11.0.5
 
+  packages/openai-ads-mcp:
+    dependencies:
+      '@modelcontextprotocol/server':
+        specifier: 2.4.0
+        version: 2.4.0
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
+
   packages/skill-metadata-mcp:
     dependencies:
       '@modelcontextprotocol/server':

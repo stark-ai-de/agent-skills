@@ -1,0 +1,50 @@
+name: stark-ai-ads
+
+services:
+  ads-mcp:
+    image: stark-ai-ads-mcp:0.1.0
+    build:
+      context: ../../..
+      dockerfile: packages/openai-ads-mcp/Dockerfile
+    user: "1000:1000"
+    init: true
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 512m
+    ports:
+      - "127.0.0.1:${ADS_BIND_PORT:-8789}:8789"
+    environment:
+      ADS_PUBLIC_ORIGIN: ${ADS_PUBLIC_ORIGIN:?Set the real public HTTPS origin}
+      ADS_HOST: "0.0.0.0"
+      ADS_PORT: "8789"
+      ADS_DATABASE_PATH: /var/lib/stark-ai-ads/ads.sqlite
+      ADS_ENCRYPTION_KEY_FILE: /run/secrets/ads-encryption-key
+      ADS_OAUTH_CLIENTS_FILE: /run/secrets/ads-oauth-clients
+      ADS_ALLOW_HTTP_LOCALHOST: "0"
+      ADS_ALLOWED_ORIGINS: ${ADS_ALLOWED_ORIGINS:-}
+      OPENAI_APPS_CHALLENGE: ${OPENAI_APPS_CHALLENGE:-}
+    volumes:
+      - type: bind
+        source: ${ADS_DATA_DIR:?Set the private local persistent data directory}
+        target: /var/lib/stark-ai-ads
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${ADS_ENCRYPTION_KEY_PATH:?Set the encryption key file path}
+        target: /run/secrets/ads-encryption-key
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${ADS_OAUTH_CLIENTS_PATH:?Set the registered OAuth clients file path}
+        target: /run/secrets/ads-oauth-clients
+        read_only: true
+        bind:
+          create_host_path: false
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m

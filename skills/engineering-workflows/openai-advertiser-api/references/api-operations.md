@@ -17,6 +17,8 @@ Use `https://api.ads.openai.com/v1` as the request base URL. Resolve the current
 
 ## Access and credentials
 
+When connected `ads_*` MCP tools cover the requested operation, follow [MCP workflows](mcp-workflows.md). They use the authorized server-side Ads key; do not require `OPENAI_ADS_API_KEY` locally or put a key into tool arguments. The remainder of this section describes direct HTTPS access.
+
 The [documented setup](https://developers.openai.com/ads/api-overview#getting-started) requires an Ads account and an Advertiser API key created in [Ads Manager Settings](https://ads.openai.com/settings). An installed ChatGPT Ads Manager plugin is optional. Its connected session does not supply an API key.
 
 | Credential                                             | Use                                                                                                   |

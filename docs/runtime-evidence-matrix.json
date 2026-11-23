@@ -570,6 +570,61 @@
       "rationale": "Node 24.22.0 passes the portable renderer and managed-revision fixtures on Linux/WSL. Bun 1.4.2 with --test rejects node:test outside its runner. The consumer contract explicitly targets Node; repository artifact bundling uses Bun. Hosted Windows/macOS runs remain separate evidence.",
       "fallbackOrder": ["node"],
       "revisit": "Reassess when the consumer runtime or the Node test-runner invocation contract changes."
+    },
+    {
+      "id": "ads-mcp-node-contract",
+      "surfaces": ["package:root:ads-mcp-node"],
+      "candidates": [
+        {
+          "id": "node",
+          "signals": {
+            "localHttpMcpFixtures": "pass",
+            "localOAuthAndEncryptedVaultFixtures": "pass",
+            "localApiContractFixtures": "pass",
+            "hostedLinux": "unknown",
+            "crossPlatformHosted": "unknown",
+            "liveAdsIntegration": "unknown"
+          }
+        }
+      ],
+      "winner": "node",
+      "evidenceRefs": [
+        "pnpm run validate:ads-mcp",
+        "packages/openai-ads-mcp/package.json",
+        "packages/openai-ads-mcp/test/integration.test.mjs",
+        "packages/openai-ads-mcp/test/auth.test.mjs",
+        "packages/openai-ads-mcp/test/store.test.mjs"
+      ],
+      "rationale": "The Ads MCP service targets Node.js 24.18 or newer, including its native SQLite credential store. Node 24.22.3 passed the current local HTTP/OAuth, encrypted-vault, account-isolation and mocked Ads API fixtures on Linux on 2026-11-23. The Node test runner qualifies the declared service runtime; Bun remains the parent repository orchestrator. Hosted checks, other platforms and live Ads access have not been qualified.",
+      "fallbackOrder": ["node"],
+      "revisit": "Requalify after Node, SQLite, MCP transport, OAuth or hosting-contract changes. Missing Node fails this boundary instead of silently substituting another runtime."
+    },
+    {
+      "id": "ads-plugin-node-packaging",
+      "surfaces": ["package:root:ads-plugin-node"],
+      "candidates": [
+        {
+          "id": "node",
+          "signals": {
+            "localSourceValidation": "pass",
+            "localDeterministicPackageFixtures": "pass",
+            "hostedLinux": "unknown",
+            "crossPlatformHosted": "unknown",
+            "portalPublication": "unknown"
+          }
+        }
+      ],
+      "winner": "node",
+      "evidenceRefs": [
+        "pnpm run validate:ads-plugin",
+        "pnpm run package:ads-plugin",
+        "scripts/plugin/validate-ads-plugin.mjs",
+        "scripts/plugin/package-ads-plugin.mjs",
+        "scripts/validation/test-ads-plugin.mjs"
+      ],
+      "rationale": "The independent Ads plugin packager and node:test fixtures run explicitly on Node.js 24.18 or newer. Local Linux source, OAuth configuration, canonical-byte projection and reproducible-archive fixtures ran on Node 24.22.3 on 2026-11-23. This is deterministic packaging evidence; no deployment, portal acceptance or publication is inferred. Hosted and cross-platform observations remain unknown.",
+      "fallbackOrder": ["node"],
+      "revisit": "Requalify when package inputs, archive rules, Node runtime or OpenAI submission contracts change."
     }
   ]
 }

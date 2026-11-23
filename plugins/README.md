@@ -1,5 +1,13 @@
 # Plugins
 
+## stark AI Ads
+
+[`stark-ai-ads.source.json`](stark-ai-ads.source.json) defines the independent Ads product. It packages the canonical `openai-advertiser-api` skill with a configured remote OAuth MCP connection. The runtime is maintained under [`packages/openai-ads-mcp`](../packages/openai-ads-mcp/README.md); the [Ads listing guide](../docs/listing/openai/stark-ai-ads.md) describes deployment, reproducible packaging and public qualification.
+
+Run `pnpm run validate:ads-mcp` and `pnpm run validate:ads-plugin` for offline qualification. `pnpm run package:ads-plugin -- --server-url "$ADS_PLUGIN_MCP_URL"` requires the actual selected HTTPS endpoint. The Ads package has its own identity and source manifest; the existing Developer release profiles continue to use their current membership and release artifacts.
+
+## stark AI Developer
+
 `plugins/stark-ai-developer/` is the generated Agent Plugins package that Codex
 loads through `.agents/plugins/marketplace.json`. Do not hand-edit it, including
 copies under `plugins/stark-ai-developer/skills/`.
@@ -46,7 +54,7 @@ from canonical skill files and, when selected, the verified artifact.
 Outputs are the portable projection under `plugins/stark-ai-developer/`, the
 OpenAI-native archive under `dist/openai/`, the Claude-native archive under
 `dist/claude/`, and optional standalone skill archives under `dist/skills/`.
-The public OpenAI archive always stays skills-only. `pnpm run build:ssh` verifies
+The existing OpenAI skills-only profile contains no MCP connection; its independently identified remote profile uses the metadata service configured in the source manifest. [ADR-0076](../docs/adrs/0076-publish-selected-openai-profiles-in-parallel.short.md) ([Long, canonical](../docs/adrs/0076-publish-selected-openai-profiles-in-parallel.long.md) · [Guide](../docs/adrs/0076-publish-selected-openai-profiles-in-parallel.guide.md)) governs those profiles. `pnpm run build:ssh` verifies
 and materializes the imported runtime under `dist/ssh-runtime/`; it does not
 compile producer sources. `pnpm run sync:agent-plugin` regenerates the portable
 projection. `pnpm run package:claude-plugin` uses disposable native staging and

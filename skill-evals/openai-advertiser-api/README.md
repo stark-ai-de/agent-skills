@@ -2,7 +2,7 @@
 
 ## Maintainer admission decision
 
-On November 23, 2026, the maintainer selected standalone promotion and approved implementation of the reviewed specification. The decision admits the skill to the public standalone Skills CLI catalog. Plugin inclusion, merge, and publication require separate authorization. Behavioral evidence and its limits are recorded below.
+On November 23, 2026, the maintainer selected standalone promotion and approved implementation of the reviewed specification. The decision admitted the skill to the public standalone Skills CLI catalog. Later in the same review, the maintainer explicitly requested the complete independent Ads plugin and MCP implementation in PR #203. That implementation authorization covers the canonical skill, server and package; merge, live deployment and public publication remain separate outcomes. Earlier behavioral evidence and its limits are preserved below.
 
 ## Method and results
 
@@ -36,7 +36,7 @@ A later review added explicit account discovery and completed the ADR-0060 hando
 
 ## Goal review: plugin complement and standalone access
 
-The 2026-11-23 PR review checked the original purpose against the official Ads Manager tools available in that session and current OpenAI Ads documentation. At review head `e2796bbf1085e936d93190b0996654bd3fa5df69`, the account-check tests passed; the gaps concerned capability-based routing, credential-only onboarding, practical API extension workflows, and evaluation coverage. The changes retain standalone catalog scope and do not add the skill to a plugin bundle.
+The 2026-11-23 PR review checked the original purpose against the official Ads Manager tools available in that session and current OpenAI Ads documentation. At review head `e2796bbf1085e936d93190b0996654bd3fa5df69`, the account-check tests passed; the gaps concerned capability-based routing, credential-only onboarding, practical API extension workflows, and evaluation coverage. That first follow-up retained standalone catalog scope without adding a plugin bundle; the subsequent, explicitly authorized plugin implementation is recorded below.
 
 The revised entrypoint covers absent plugins and missing tool parameters. The [capability map](../../skills/engineering-workflows/openai-advertiser-api/references/capabilities-and-recipes.md) distinguishes already-supported plugin operations from API opportunities, with a dated snapshot and mandatory runtime recheck. Access guidance distinguishes Advertiser, Platform, and Conversions API keys. The public APIs do not grant otherwise missing account permissions or feature access.
 
@@ -75,3 +75,34 @@ The first forward pass noted that bulk request construction and exact cursor ext
 - No live Ads call, native automatic selection, scheduled execution, release publication, or installed cross-skill handoff was verified. The feature-only review used focused local checks; hosted Validate is a separate PR gate.
 
 Candidate SHA-256: `14e25d3e933af5dd8dced06a5bb07410749a9c609e7b754ce30655015141fbc6` (`SKILL.md`), `0a9b0cef7cc15e5ec69d5e618fb35a9cfe2dd7ed06b971bdee0a7d50d6779866` (`api-operations.md`), and `844692d1656d8e7609fa30b95b1d8b082546e3116f0e3fe1a3d008e6649c5616` (`capabilities-and-recipes.md`). The earlier comparison remains historical evidence; this follow-up does not establish a statistical improvement over it.
+
+## Independent Ads plugin and MCP implementation
+
+The maintainer then requested the complete implementation and PR update. The resulting `stark-ai-ads` package contains this canonical skill, ChatGPT/Codex metadata and a configurable OAuth MCP connection. The service in [packages/openai-ads-mcp](../../packages/openai-ads-mcp/README.md) exposes 66 typed Advertiser API operations. It verifies each account owner through an Ads-specific key, stores the key encrypted, and gives the client separate scoped OAuth tokens. This preserves both the official-plugin complement and API-only workflows without requiring a local shell or a local Advertiser key when the MCP connection is available.
+
+### Fresh instruction-use check
+
+A new agent context read the updated skill and answered cases 19–24 without the implementation diagnosis or expected-answer rubric. The implementer manually assessed the proposed actions. No live Ads account, key or network was used.
+
+- Case 19 used the connected OAuth MCP tools for an API-only request despite the absence of a local Ads key.
+- Case 20 treated missing write scope as an authorization boundary and required reconnection instead of switching transports to evade it.
+- Case 21 returned the protected credential-download link to the user without fetching or displaying the credential.
+- Case 22 prepared the requested options without calling tools or submitting a write.
+- Case 23 kept an incomplete bulk result pending, retained the known results and did not invent a pagination cursor or resubmit the job.
+- Case 24 treated an expired SFTP-credential handoff as a potentially disruptive rotation, required scoped authorization and did not retry automatically. An explicit request for that same rotation can already provide the authorization.
+
+These are checks of prompted instruction use, not evidence of automatic skill selection or a completed ChatGPT installation.
+
+### Implementation verification
+
+All 61 automated runtime tests passed. The suites exercise the real MCP SDK transport with synthetic upstream responses, including complete OAuth code exchange, read-only enforcement, concurrent account isolation, write readback and one-time credential download. They also cover malformed requests, PKCE and resource binding, refresh replay and revocation, encrypted persistence, callback CSP restrictions, filesystem symlink rejection, typed API contracts, targeting merges, uncertain writes, secret-response containment and the maximum supported audience upload.
+
+Independent review found and corrected three integration/security defects: unsafe SQLite path handling, concurrency slots released before a streaming request finished, and a consent-page CSP that would block the registered cross-origin OAuth callback. Regression checks cover each boundary. The streaming check also cancels response bodies while upstream work is pending and confirms that the six-operation account limit remains enforced.
+
+All eight plugin-packaging tests passed, validating canonical source bytes, metadata, explicit HTTPS endpoints, scoped public OAuth, reproducibility, tamper detection, containment and rejection of untracked inputs. Packaging verification uses test configuration and does not attest that an endpoint is deployed. The eight mocked Bash-example tests also passed as a separate check of the direct-API fallback. Repository validation includes the new runtime and packaging suites in its existing owned aggregate.
+
+A fresh temporary project-local Codex installation using `npx --offline --yes skills@1.5.23 add <canonical-skill-directory> --skill openai-advertiser-api --agent codex --copy --yes` succeeded. The CLI listed the installed skill with project scope. A recursive comparison verified exactly five regular files, identical relative paths and identical bytes, including `agents/openai.yaml` and `references/mcp-workflows.md`; source hashes were unchanged after installation. This establishes local Skills CLI distribution, not public ChatGPT plugin installation.
+
+The documented container dependency-install stage was reproduced in a clean temporary directory with the pinned pnpm version; the resulting runtime imported all 66 tools. Docker was unavailable, so an actual image build and Compose startup were not verified. Chromium could not launch in this environment; the callback-CSP regression is checked at the emitted policy and redirect boundary, not through a real browser session.
+
+No live Ads mutation, hosted service, real ChatGPT OAuth connection, domain verification or public plugin submission was performed. Account feature gates still apply. A real HTTPS deployment, its registered callback/client configuration and the publication checks in the [Ads plugin guide](../../docs/listing/openai/stark-ai-ads.md) remain necessary before users can install the public plugin.

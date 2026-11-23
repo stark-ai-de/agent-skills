@@ -15,6 +15,8 @@ const ids = plan.gates.map((gate) => gate.id);
 assert.equal(new Set(ids).size, ids.length, "validation gate ids must be unique");
 const requiredIds = new Set([
   "metadata-mcp",
+  "ads-mcp",
+  "ads-plugin",
   "visual-reports",
   "ssh-management",
   "repository-aggregate",
@@ -87,6 +89,28 @@ assert.equal(
   plan.gates.find((gate) => gate.id === "manual-directory").owner,
   "scripts/plugin/verify-openai-directory.mjs",
   "manual directory observation must retain its executable owner",
+);
+
+for (const command of ["validate:ads-mcp", "validate:ads-plugin"]) {
+  assert.equal(
+    packageJson.scripts.validate.split(`pnpm run ${command}`).length - 1,
+    1,
+    `${command} must run exactly once through the repository aggregate`,
+  );
+  assert.ok(
+    !validateWorkflow.includes(`pnpm run ${command}`),
+    `${command} must not be duplicated as an independent hosted Validate step`,
+  );
+}
+assert.equal(
+  packageJson.scripts["validate:ads-mcp"],
+  "node --test packages/openai-ads-mcp/test/*.test.mjs",
+  "Ads service qualification must execute the complete native Node suite",
+);
+assert.equal(
+  packageJson.scripts["validate:ads-plugin"],
+  "node scripts/plugin/validate-ads-plugin.mjs && node --test scripts/validation/test-ads-plugin.mjs",
+  "Ads packaging qualification must validate the real source and its isolation fixtures",
 );
 
 console.log("Validation ownership plan passed.");

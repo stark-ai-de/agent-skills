@@ -2,7 +2,7 @@
 name: openai-advertiser-api
 description: Use when OpenAI Ads work needs an API operation or parameter missing from the Ads Manager plugin, when that plugin is unavailable, or when the user requests direct API access. Covers campaigns, reporting, bulk jobs, product feeds, audiences, and conversion setup with an Ads Manager Advertiser API key.
 license: Apache-2.0
-compatibility: No ChatGPT plugin required. Live calls need HTTPS access to api.ads.openai.com, current OpenAI Ads documentation, and an account-scoped Advertiser API key from Ads Manager. A Platform OpenAI API key is not a substitute. The account check uses Bash, curl, and jq.
+compatibility: Use connected Ads MCP tools when available, or direct HTTPS with an account-scoped Advertiser API key from Ads Manager. No plugin is required for direct API use. A Platform OpenAI API key is not a substitute. The direct account-check example uses Bash, curl, and jq.
 metadata:
   author: stark-ai-de
   category: engineering-workflows
@@ -27,7 +27,7 @@ Website Pixel instrumentation and event delivery are separate from Advertiser AP
 
 ## Inputs to inspect
 
-Resolve the requested outcome, surface preference, available tools, target account, resource IDs, and fields. For live API calls, use `OPENAI_ADS_API_KEY` from the environment or authorized secret injection. Follow the runbook's [access setup](references/api-operations.md#access-and-credentials) when API credentials or account access are missing. Never substitute a Platform `OPENAI_API_KEY` or a Conversions API key. Plugin calls use the plugin's own account/authentication workflow; do not require an Advertiser key for them. Offline preparation needs neither a key nor a connected plugin.
+Resolve the requested outcome, surface preference, available tools, target account, resource IDs, and fields. Connected `ads_*` MCP tools execute the public API through their own OAuth connection; use their actual schemas and do not request a local key. For direct HTTPS, use `OPENAI_ADS_API_KEY` from the environment or authorized secret injection. Follow [MCP workflows](references/mcp-workflows.md) or the runbook's [access setup](references/api-operations.md#access-and-credentials) for the selected transport. Never substitute a Platform `OPENAI_API_KEY` or a Conversions API key. Official Ads Manager calls use that plugin's own authentication. Offline preparation needs neither a key nor a connected plugin.
 
 ## Workflow
 
@@ -39,8 +39,8 @@ Resolve the requested outcome, surface preference, available tools, target accou
 
 For clear intent, announce the route (plugin or API), selected workflow, and reason, then proceed within scope. For a bare or materially ambiguous invocation, show all three workflows with relevant capability examples and ask for the choice and missing scope. For options-only requests, show the menu and stop without calls. Draft requests authorize preparation only; a local draft does not authorize server-side validation or uploads.
 
-1. Select the route by actual tool/field availability and user intent. For the plugin route, follow its available owning workflow. For the API route, verify methods, fields, and access requirements against current official documentation. If credentials or execution are unavailable, prepare the request and state the missing prerequisite; if the contract is unverified, leave that part unresolved.
-2. Before API resource calls, use the runbook's verification mode to match the expected account ID with `GET /v1/ad_account`. Use the verified currency and timezone. For an API account-identification request, use discovery mode, return the account summary, and stop there.
+1. Select the route by actual tool/field availability and user intent. For the official plugin route, follow its owning workflow. For the public API route, prefer a connected Ads MCP tool that supports the requested operation and fields; otherwise verify the direct request against current official documentation. An API-only request can use the Ads MCP because it calls the public API. Do not route around denied scopes. If credentials or execution are unavailable, prepare the request and state the missing prerequisite; if the contract is unverified, leave that part unresolved.
+2. Before API resource calls, match the expected account with `ads_get_account` or the runbook's `GET /v1/ad_account` verification mode. Pass the matched ID as `expected_account_id` to MCP resource tools. Use the verified currency and timezone. For an account-identification request, return the account summary and stop there.
 3. Before applying, verify the user authorized the operation, target, and affected fields. Inspect the resource and parent chain. Check for matching resources before creating one. Change only the authorized fields.
 4. After applying, re-read the resource or operation status. Distinguish accepted, processed, and serving.
 
@@ -51,6 +51,8 @@ Keep the key and sensitive responses out of chat, logs, and the repository. Use 
 ## References
 
 Use [API operations](references/api-operations.md) for access setup, account verification, feeds, and conversion credentials. Use [capabilities and recipes](references/capabilities-and-recipes.md) for plugin comparison, standalone reporting, field gaps, bulk jobs, and audience changes.
+
+Use [MCP workflows](references/mcp-workflows.md) for connected tools, permission changes, pagination, and protected credential delivery. A download link is for the account owner; never fetch generated secrets into the conversation.
 
 ## Scripts
 

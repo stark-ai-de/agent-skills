@@ -7,6 +7,30 @@ import { packageCommandRuntimes, runtimeAlignmentErrors } from "../lib/runtime-s
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const errors = [];
 const nativeRootScripts = new Set(["format", "format:check", "lint", "lint:fix"]);
+const adsRootCommands = new Map([
+  [
+    "validate:ads-mcp",
+    {
+      command: "node --test packages/openai-ads-mcp/test/*.test.mjs",
+      surface: "package:root:ads-mcp-node",
+    },
+  ],
+  [
+    "validate:ads-plugin",
+    {
+      command:
+        "node scripts/plugin/validate-ads-plugin.mjs && node --test scripts/validation/test-ads-plugin.mjs",
+      surface: "package:root:ads-plugin-node",
+    },
+  ],
+  [
+    "package:ads-plugin",
+    {
+      command: "node scripts/plugin/package-ads-plugin.mjs",
+      surface: "package:root:ads-plugin-node",
+    },
+  ],
+]);
 const internalNodeOwners = new Map([
   [
     "scripts/validation/architecture-compass/portless-guide.test.mjs",
@@ -116,6 +140,12 @@ function discoverPackageScriptSurfaces(rootScripts, siteScripts) {
   const findings = [];
   const occurrences = [];
 
+  for (const [name, owner] of adsRootCommands) {
+    if (rootScripts[name] !== owner.command) {
+      findings.push(`${name}: Ads tooling must preserve its declared Node.js command`);
+    }
+  }
+
   for (const name of nativeRootScripts) {
     if (typeof rootScripts[name] !== "string" || !/^(?:oxfmt|oxlint)\b/.test(rootScripts[name])) {
       findings.push(`${name}: native Oxc command drifted`);
@@ -138,6 +168,8 @@ function discoverPackageScriptSurfaces(rootScripts, siteScripts) {
     let surface;
     if (/^(?:oxfmt|oxlint)\b/.test(command)) {
       surface = "package:root:native-oxc";
+    } else if (adsRootCommands.get(name)?.command === command) {
+      surface = adsRootCommands.get(name).surface;
     } else if (name === "validate:memory-curators" && /^node\b/.test(command)) {
       surface = "package:root:validate-memory-curators";
     } else if (name === "validate:karakeep:python" && /^python3 -B -m unittest\b/.test(command)) {
@@ -321,6 +353,15 @@ function winnerContradictionErrors(boundary) {
 
 function negativeFixtureErrors() {
   const findings = [];
+  for (const name of adsRootCommands.keys()) {
+    const changed = discoverPackageScriptSurfaces(
+      { ...packageJson.scripts, [name]: "bun --bun scripts/catalog/validate-skills.mjs" },
+      sitePackageJson.scripts,
+    );
+    if (!changed.errors.some((error) => error.startsWith(`${name}:`))) {
+      findings.push(`${name}: changing the Ads runtime or dropping its owning command must fail`);
+    }
+  }
   const allFailBoundary = {
     id: "all-fail-fixture",
     winner: "bun",
@@ -617,8 +658,8 @@ requireCondition(
   "Draw.io explicit Node.js ownership must be discovered exactly once",
 );
 requireCondition(
-  requiredSurfaces.size === 22,
-  `current runtime-selection inventory must discover 22 surfaces, found ${requiredSurfaces.size}`,
+  requiredSurfaces.size === 24,
+  `current runtime-selection inventory must discover 24 surfaces, found ${requiredSurfaces.size}`,
 );
 requireCondition(
   seenSurfaces.size === requiredSurfaces.size &&
@@ -626,8 +667,8 @@ requireCondition(
   "matrix surfaces must equal the complete current runtime-selection inventory",
 );
 requireCondition(
-  matrix.boundaries?.length === 21,
-  `current runtime evidence matrix must define 21 boundaries, found ${matrix.boundaries?.length ?? 0}`,
+  matrix.boundaries?.length === 23,
+  `current runtime evidence matrix must define 23 boundaries, found ${matrix.boundaries?.length ?? 0}`,
 );
 errors.push(...runtimeAlignmentErrors(matrix.boundaries ?? [], surfaceOccurrences));
 errors.push(...negativeFixtureErrors());

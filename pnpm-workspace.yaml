@@ -2,6 +2,7 @@ packages:
   - "."
   - "site"
   - "packages/skill-metadata-mcp"
+  - "packages/openai-ads-mcp"
   - "scripts/release/forward-release-tool"
 overrides:
   vite: 8.3.6

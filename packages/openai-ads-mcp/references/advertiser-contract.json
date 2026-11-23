@@ -1,0 +1,3160 @@
+{
+  "source": "https://developers.openai.com/ads/openapi.json",
+  "retrieved": "2026-11-23",
+  "sourceSha256": "bab924cd2904e622f9c96685e2e77960fe53ee3b5c2ee708e0d0238d1ffb3f57",
+  "operations": [
+    {
+      "name": "ads_get_account",
+      "method": "GET",
+      "path": "/ad_account",
+      "parameters": []
+    },
+    {
+      "name": "ads_list_campaigns",
+      "method": "GET",
+      "path": "/campaigns",
+      "parameters": [
+        {
+          "name": "include",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CampaignListIncludeParam"
+            }
+          }
+        },
+        {
+          "name": "name",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 1000,
+            "pattern": "^.*\\S.*$"
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500
+          }
+        },
+        {
+          "name": "after",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "before",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "order",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "$ref": "#/components/schemas/ListOrderParam"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_create_campaign",
+      "method": "POST",
+      "path": "/campaigns",
+      "parameters": [
+        {
+          "name": "Idempotency-Key",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "pattern": ".*\\S.*"
+          }
+        }
+      ],
+      "body": {
+        "$ref": "#/components/schemas/CreateCampaignBody"
+      }
+    },
+    {
+      "name": "ads_get_campaign",
+      "method": "GET",
+      "path": "/campaigns/{campaign_id}",
+      "parameters": [
+        {
+          "name": "campaign_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "include",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CampaignGetItemIncludeParam"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_update_campaign",
+      "method": "POST",
+      "path": "/campaigns/{campaign_id}",
+      "parameters": [
+        {
+          "name": "campaign_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "body": {
+        "$ref": "#/components/schemas/UpdateCampaignBody"
+      }
+    },
+    {
+      "name": "ads_activate_campaign",
+      "method": "POST",
+      "path": "/campaigns/{campaign_id}/activate",
+      "parameters": [
+        {
+          "name": "campaign_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_pause_campaign",
+      "method": "POST",
+      "path": "/campaigns/{campaign_id}/pause",
+      "parameters": [
+        {
+          "name": "campaign_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_archive_campaign",
+      "method": "POST",
+      "path": "/campaigns/{campaign_id}/archive",
+      "parameters": [
+        {
+          "name": "campaign_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_get_campaign_insights",
+      "method": "GET",
+      "path": "/campaigns/{campaign_id}/insights",
+      "parameters": [
+        {
+          "name": "campaign_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "attribution_window_days",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 7,
+            "maximum": 30,
+            "enum": [7, 14, 30]
+          }
+        },
+        {
+          "name": "view_through_attribution_window_days",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1,
+            "enum": [0, 1]
+          }
+        },
+        {
+          "name": "attribution_time_basis",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "$ref": "#/components/schemas/AttributionTimeBasisParam"
+          }
+        },
+        {
+          "name": "time_granularity",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "aggregation_level",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2000
+          }
+        },
+        {
+          "name": "before",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "after",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "time_ranges",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "filters",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "fields",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "sort",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "segments",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "override_segment_group_order",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "includes",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_list_ad_groups",
+      "method": "GET",
+      "path": "/ad_groups",
+      "parameters": [
+        {
+          "name": "include",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdGroupsListIncludeParam"
+            }
+          }
+        },
+        {
+          "name": "campaign_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "name",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 1000,
+            "pattern": "^.*\\S.*$"
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500
+          }
+        },
+        {
+          "name": "after",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "before",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "order",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "$ref": "#/components/schemas/ListOrderParam"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_create_ad_group",
+      "method": "POST",
+      "path": "/ad_groups",
+      "parameters": [
+        {
+          "name": "Idempotency-Key",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "pattern": ".*\\S.*"
+          }
+        }
+      ],
+      "body": {
+        "$ref": "#/components/schemas/CreateAdGroupBody"
+      }
+    },
+    {
+      "name": "ads_get_ad_group",
+      "method": "GET",
+      "path": "/ad_groups/{ad_group_id}",
+      "parameters": [
+        {
+          "name": "ad_group_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "include",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdGroupItemIncludeParam"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_update_ad_group",
+      "method": "POST",
+      "path": "/ad_groups/{ad_group_id}",
+      "parameters": [
+        {
+          "name": "ad_group_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "body": {
+        "$ref": "#/components/schemas/UpdateAdGroupBody"
+      }
+    },
+    {
+      "name": "ads_activate_ad_group",
+      "method": "POST",
+      "path": "/ad_groups/{ad_group_id}/activate",
+      "parameters": [
+        {
+          "name": "ad_group_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_pause_ad_group",
+      "method": "POST",
+      "path": "/ad_groups/{ad_group_id}/pause",
+      "parameters": [
+        {
+          "name": "ad_group_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_archive_ad_group",
+      "method": "POST",
+      "path": "/ad_groups/{ad_group_id}/archive",
+      "parameters": [
+        {
+          "name": "ad_group_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_get_ad_group_insights",
+      "method": "GET",
+      "path": "/ad_groups/{ad_group_id}/insights",
+      "parameters": [
+        {
+          "name": "ad_group_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "attribution_window_days",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 7,
+            "maximum": 30,
+            "enum": [7, 14, 30]
+          }
+        },
+        {
+          "name": "view_through_attribution_window_days",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1,
+            "enum": [0, 1]
+          }
+        },
+        {
+          "name": "attribution_time_basis",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "$ref": "#/components/schemas/AttributionTimeBasisParam"
+          }
+        },
+        {
+          "name": "time_granularity",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "aggregation_level",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2000
+          }
+        },
+        {
+          "name": "before",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "after",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "time_ranges",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "filters",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "fields",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "sort",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "segments",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "override_segment_group_order",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "includes",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_list_ads",
+      "method": "GET",
+      "path": "/ads",
+      "parameters": [
+        {
+          "name": "include",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdsListIncludeParam"
+            }
+          }
+        },
+        {
+          "name": "ad_group_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "name",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 1000,
+            "pattern": "^.*\\S.*$"
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500
+          }
+        },
+        {
+          "name": "after",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "before",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "order",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "$ref": "#/components/schemas/ListOrderParam"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_create_ad",
+      "method": "POST",
+      "path": "/ads",
+      "parameters": [
+        {
+          "name": "Idempotency-Key",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "pattern": ".*\\S.*"
+          }
+        }
+      ],
+      "body": {
+        "$ref": "#/components/schemas/CreateAdBody"
+      }
+    },
+    {
+      "name": "ads_get_ad",
+      "method": "GET",
+      "path": "/ads/{ad_id}",
+      "parameters": [
+        {
+          "name": "ad_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "include",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdItemIncludeParam"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_update_ad",
+      "method": "POST",
+      "path": "/ads/{ad_id}",
+      "parameters": [
+        {
+          "name": "ad_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "body": {
+        "$ref": "#/components/schemas/UpdateAdBody"
+      }
+    },
+    {
+      "name": "ads_activate_ad",
+      "method": "POST",
+      "path": "/ads/{ad_id}/activate",
+      "parameters": [
+        {
+          "name": "ad_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_pause_ad",
+      "method": "POST",
+      "path": "/ads/{ad_id}/pause",
+      "parameters": [
+        {
+          "name": "ad_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_archive_ad",
+      "method": "POST",
+      "path": "/ads/{ad_id}/archive",
+      "parameters": [
+        {
+          "name": "ad_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_get_ad_insights",
+      "method": "GET",
+      "path": "/ads/{ad_id}/insights",
+      "parameters": [
+        {
+          "name": "ad_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "attribution_window_days",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 7,
+            "maximum": 30,
+            "enum": [7, 14, 30]
+          }
+        },
+        {
+          "name": "view_through_attribution_window_days",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1,
+            "enum": [0, 1]
+          }
+        },
+        {
+          "name": "attribution_time_basis",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "$ref": "#/components/schemas/AttributionTimeBasisParam"
+          }
+        },
+        {
+          "name": "time_granularity",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "aggregation_level",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2000
+          }
+        },
+        {
+          "name": "before",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "after",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "time_ranges",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "filters",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "fields",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "sort",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "segments",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "override_segment_group_order",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "includes",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_get_account_insights",
+      "method": "GET",
+      "path": "/ad_account/insights",
+      "parameters": [
+        {
+          "name": "attribution_window_days",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 7,
+            "maximum": 30,
+            "enum": [7, 14, 30]
+          }
+        },
+        {
+          "name": "view_through_attribution_window_days",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1,
+            "enum": [0, 1]
+          }
+        },
+        {
+          "name": "attribution_time_basis",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "$ref": "#/components/schemas/AttributionTimeBasisParam"
+          }
+        },
+        {
+          "name": "time_granularity",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "aggregation_level",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2000
+          }
+        },
+        {
+          "name": "before",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "after",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "time_ranges",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "filters",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "fields",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "sort",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "segments",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "override_segment_group_order",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "includes",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_list_audit_logs",
+      "method": "GET",
+      "path": "/audit_logs",
+      "parameters": [
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        },
+        {
+          "name": "after",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "before",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "order",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "$ref": "#/components/schemas/ListOrderParam"
+          }
+        },
+        {
+          "name": "campaign_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "ad_group_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "ad_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "actor_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "start_time",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 946684800,
+            "maximum": 4102444800
+          }
+        },
+        {
+          "name": "end_time",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 946684800,
+            "maximum": 4102444800
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_search_locations",
+      "method": "GET",
+      "path": "/geo_lookup/search",
+      "parameters": [
+        {
+          "name": "q",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_get_landing_page_crawl",
+      "method": "GET",
+      "path": "/ads/{ad_id}/landing_page_crawl",
+      "parameters": [
+        {
+          "name": "ad_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_create_ad_preview",
+      "method": "POST",
+      "path": "/ads/{ad_id}/preview",
+      "parameters": [
+        {
+          "name": "ad_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_list_audiences",
+      "method": "GET",
+      "path": "/custom_audiences",
+      "parameters": [
+        {
+          "name": "intended_use",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "$ref": "#/components/schemas/CustomAudienceIntendedUseParam"
+          }
+        },
+        {
+          "name": "custom_audience_ids",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 500
+          }
+        },
+        {
+          "name": "policy_revision",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "minLength": 64,
+            "maxLength": 64
+          }
+        },
+        {
+          "name": "matched_count_granularity",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "$ref": "#/components/schemas/CustomAudienceMatchedCountGranularityParam"
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500
+          }
+        },
+        {
+          "name": "after",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "before",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "order",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "$ref": "#/components/schemas/ListOrderParam"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_create_audience",
+      "method": "POST",
+      "path": "/custom_audiences",
+      "parameters": [],
+      "body": {
+        "$ref": "#/components/schemas/CreateCustomAudienceBody"
+      }
+    },
+    {
+      "name": "ads_get_audience",
+      "method": "GET",
+      "path": "/custom_audiences/{custom_audience_id}",
+      "parameters": [
+        {
+          "name": "custom_audience_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "matched_count_granularity",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "$ref": "#/components/schemas/CustomAudienceMatchedCountGranularityParam"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_archive_audience",
+      "method": "POST",
+      "path": "/custom_audiences/{custom_audience_id}/archive",
+      "parameters": [
+        {
+          "name": "custom_audience_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_add_audience_members",
+      "method": "POST",
+      "path": "/custom_audiences/{custom_audience_id}/add",
+      "parameters": [
+        {
+          "name": "custom_audience_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "Idempotency-Key",
+          "in": "header",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "pattern": ".*\\S.*"
+          }
+        }
+      ],
+      "body": {
+        "$ref": "#/components/schemas/CustomAudienceMembershipMutationBody"
+      }
+    },
+    {
+      "name": "ads_remove_audience_members",
+      "method": "POST",
+      "path": "/custom_audiences/{custom_audience_id}/remove",
+      "parameters": [
+        {
+          "name": "custom_audience_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "Idempotency-Key",
+          "in": "header",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "pattern": ".*\\S.*"
+          }
+        }
+      ],
+      "body": {
+        "$ref": "#/components/schemas/CustomAudienceMembershipMutationBody"
+      }
+    },
+    {
+      "name": "ads_replace_audience_members",
+      "method": "POST",
+      "path": "/custom_audiences/{custom_audience_id}/replace",
+      "parameters": [
+        {
+          "name": "custom_audience_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "Idempotency-Key",
+          "in": "header",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "pattern": ".*\\S.*"
+          }
+        }
+      ],
+      "body": {
+        "$ref": "#/components/schemas/ReplaceCustomAudienceMembersBody"
+      }
+    },
+    {
+      "name": "ads_merge_audiences",
+      "method": "POST",
+      "path": "/custom_audiences/merge",
+      "parameters": [
+        {
+          "name": "Idempotency-Key",
+          "in": "header",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "pattern": ".*\\S.*"
+          }
+        }
+      ],
+      "body": {
+        "$ref": "#/components/schemas/MergeCustomAudiencesBody"
+      }
+    },
+    {
+      "name": "ads_get_audience_operation",
+      "method": "GET",
+      "path": "/custom_audiences/{custom_audience_id}/operations/{operation_id}",
+      "parameters": [
+        {
+          "name": "custom_audience_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "operation_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_list_audience_operations",
+      "method": "GET",
+      "path": "/custom_audiences/{custom_audience_id}/operations",
+      "parameters": [
+        {
+          "name": "custom_audience_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        },
+        {
+          "name": "cursor",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_cancel_audience_operation",
+      "method": "POST",
+      "path": "/custom_audiences/{custom_audience_id}/operations/{operation_id}/cancel",
+      "parameters": [
+        {
+          "name": "custom_audience_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "operation_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_resume_audience_operation",
+      "method": "POST",
+      "path": "/custom_audiences/{custom_audience_id}/operations/{operation_id}/resume",
+      "parameters": [
+        {
+          "name": "custom_audience_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "operation_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_get_feed_settings",
+      "method": "GET",
+      "path": "/feeds/{feed_id}/settings",
+      "parameters": [
+        {
+          "name": "feed_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_update_feed_settings",
+      "method": "PATCH",
+      "path": "/feeds/{feed_id}/settings",
+      "parameters": [
+        {
+          "name": "feed_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "body": {
+        "$ref": "#/components/schemas/PatchProductFeedSettingsBody"
+      }
+    },
+    {
+      "name": "ads_archive_feed",
+      "method": "POST",
+      "path": "/feeds/{feed_id}/archive",
+      "parameters": [
+        {
+          "name": "feed_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_create_feed",
+      "method": "POST",
+      "path": "/feeds",
+      "parameters": [],
+      "body": {
+        "$ref": "#/components/schemas/CreateProductFeedBody"
+      }
+    },
+    {
+      "name": "ads_list_feeds",
+      "method": "GET",
+      "path": "/feeds",
+      "parameters": [
+        {
+          "name": "include",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductFeedsListIncludeParam"
+            }
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500
+          }
+        },
+        {
+          "name": "after",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "before",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_list_feed_uploads",
+      "method": "GET",
+      "path": "/feeds/uploads",
+      "parameters": [
+        {
+          "name": "paginate",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "boolean"
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        },
+        {
+          "name": "after",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "before",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_query_feed_products",
+      "method": "POST",
+      "path": "/feeds/{feed_id}/products/query",
+      "parameters": [
+        {
+          "name": "feed_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "body": {
+        "$ref": "#/components/schemas/QueryProductFeedProductsBody"
+      }
+    },
+    {
+      "name": "ads_update_feed_products",
+      "method": "PATCH",
+      "path": "/feeds/{feed_id}/products",
+      "parameters": [
+        {
+          "name": "feed_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "body": {
+        "$ref": "#/components/schemas/PatchProductFeedProductsBody"
+      }
+    },
+    {
+      "name": "ads_get_feed_sftp_access",
+      "method": "GET",
+      "path": "/feeds/{feed_id}/sftp_access",
+      "parameters": [
+        {
+          "name": "feed_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_configure_feed_sftp_access",
+      "method": "POST",
+      "path": "/feeds/{feed_id}/sftp_access",
+      "parameters": [
+        {
+          "name": "feed_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "body": {
+        "$ref": "#/components/schemas/PostProductFeedSftpAccessBody"
+      }
+    },
+    {
+      "name": "ads_activate_feed_sftp_access",
+      "method": "POST",
+      "path": "/feeds/{feed_id}/sftp_access/activate",
+      "parameters": [
+        {
+          "name": "feed_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_pause_feed_sftp_access",
+      "method": "POST",
+      "path": "/feeds/{feed_id}/sftp_access/pause",
+      "parameters": [
+        {
+          "name": "feed_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_create_conversion_key",
+      "method": "POST",
+      "path": "/conversions/api_keys",
+      "parameters": [],
+      "body": {
+        "$ref": "#/components/schemas/CreateConversionApiKeyBody"
+      }
+    },
+    {
+      "name": "ads_create_conversion_event_setting",
+      "method": "POST",
+      "path": "/conversions/event_settings",
+      "parameters": [],
+      "body": {
+        "$ref": "#/components/schemas/CreateConversionEventSettingBody"
+      }
+    },
+    {
+      "name": "ads_list_conversion_event_settings",
+      "method": "GET",
+      "path": "/conversions/event_settings",
+      "parameters": [
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500
+          }
+        },
+        {
+          "name": "after",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "before",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "order",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "$ref": "#/components/schemas/ListOrderParam"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_create_pixel",
+      "method": "POST",
+      "path": "/conversions/pixels",
+      "parameters": [],
+      "body": {
+        "$ref": "#/components/schemas/CreateConversionSourceBody"
+      }
+    },
+    {
+      "name": "ads_list_pixels",
+      "method": "GET",
+      "path": "/conversions/pixels",
+      "parameters": [
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500
+          }
+        },
+        {
+          "name": "after",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "before",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "order",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "$ref": "#/components/schemas/ListOrderParam"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_list_conversion_events",
+      "method": "GET",
+      "path": "/conversions/events",
+      "parameters": [
+        {
+          "name": "pid",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          }
+        }
+      ]
+    },
+    {
+      "name": "ads_get_conversion_insights",
+      "method": "POST",
+      "path": "/conversions/insights",
+      "parameters": [],
+      "body": {
+        "$ref": "#/components/schemas/PostConversionInsightsBody"
+      }
+    },
+    {
+      "name": "ads_upload_image_url",
+      "method": "POST",
+      "path": "/upload",
+      "parameters": [],
+      "body": {
+        "$ref": "#/components/schemas/UploadImageBody"
+      }
+    }
+  ],
+  "schemas": {
+    "ActivePausedArchivedStatusParam": {
+      "type": "string",
+      "enum": ["active", "paused", "archived"]
+    },
+    "ActivePausedStatusParam": {
+      "type": "string",
+      "enum": ["active", "paused"]
+    },
+    "AdCreativeTypeParam": {
+      "type": "string",
+      "enum": ["chat_card", "product_ad_template"]
+    },
+    "AdGroupItemIncludeParam": {
+      "type": "string",
+      "enum": ["serving_issues"]
+    },
+    "AdGroupsListIncludeParam": {
+      "type": "string",
+      "enum": ["serving_issues"]
+    },
+    "AdImageCropParams": {
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        }
+      },
+      "type": "object",
+      "required": ["x", "y", "width", "height"]
+    },
+    "AdItemIncludeParam": {
+      "type": "string",
+      "enum": ["serving_issues"]
+    },
+    "AdsListIncludeParam": {
+      "type": "string",
+      "enum": ["serving_issues"]
+    },
+    "AttributionTimeBasisParam": {
+      "type": "string",
+      "enum": ["conversion_time", "ad_event_time"]
+    },
+    "BiddingConfigParams": {
+      "properties": {
+        "billing_event_type": {
+          "$ref": "#/components/schemas/BillingEventTypeParam"
+        },
+        "strategy": {
+          "$ref": "#/components/schemas/BiddingStrategyTypeParam"
+        },
+        "max_bid_micros": {
+          "type": "integer",
+          "maximum": 30400000000000,
+          "minimum": 1
+        },
+        "custom_audience_bid_multipliers": {
+          "items": {
+            "$ref": "#/components/schemas/CustomAudienceBidMultiplierParams"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object",
+      "required": ["billing_event_type"]
+    },
+    "BiddingStrategyTypeParam": {
+      "type": "string",
+      "enum": ["fixed_bid", "maximize_clicks", "maximize_conversions"]
+    },
+    "BillingEventTypeParam": {
+      "type": "string",
+      "enum": ["impression", "click"]
+    },
+    "BudgetParams": {
+      "properties": {
+        "lifetime_spend_limit_micros": {
+          "type": "integer",
+          "minimum": 1000000
+        },
+        "daily_spend_limit_micros": {
+          "type": "integer",
+          "minimum": 1000000
+        }
+      },
+      "type": "object",
+      "required": []
+    },
+    "CampaignBiddingTypeParam": {
+      "type": "string",
+      "enum": ["impressions", "clicks", "conversions"]
+    },
+    "CampaignBillingEventTypeParam": {
+      "type": "string",
+      "enum": ["impression", "click"]
+    },
+    "CampaignGetItemIncludeParam": {
+      "type": "string",
+      "enum": ["serving_issues"]
+    },
+    "CampaignListIncludeParam": {
+      "type": "string",
+      "enum": ["serving_issues"]
+    },
+    "CampaignModeParam": {
+      "type": "string",
+      "enum": ["product_feed", "business_agent"]
+    },
+    "CampaignObjectiveParam": {
+      "type": "string",
+      "enum": ["reach", "clicks", "conversions"]
+    },
+    "CampaignPlatformParam": {
+      "type": "string",
+      "enum": ["ios_app", "android_app", "web", "desktop_web", "ios_web", "android_web"]
+    },
+    "ClientDataSourceTypeParam": {
+      "type": "string",
+      "enum": ["web"]
+    },
+    "ConversionBreakdownParam": {
+      "type": "string",
+      "enum": ["device", "country"]
+    },
+    "ConversionInsightsIncludeParam": {
+      "type": "string",
+      "enum": ["attributed_events"]
+    },
+    "ConversionTimeGranularityParam": {
+      "type": "string",
+      "enum": ["none", "daily"]
+    },
+    "CreateAdBody": {
+      "properties": {
+        "ad_group_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 1000,
+          "minLength": 3,
+          "pattern": "^.*\\S.*$"
+        },
+        "creative": {
+          "$ref": "#/components/schemas/CreateAdCreativeParams"
+        },
+        "status": {
+          "$ref": "#/components/schemas/ActivePausedStatusParam"
+        },
+        "landing_page_configuration": {
+          "$ref": "#/components/schemas/LandingPageConfigurationParams"
+        }
+      },
+      "type": "object",
+      "required": ["ad_group_id", "name", "creative", "status"]
+    },
+    "CreateAdCreativeParams": {
+      "properties": {
+        "file_ids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "maxItems": 6,
+          "minItems": 4
+        },
+        "type": {
+          "$ref": "#/components/schemas/AdCreativeTypeParam"
+        },
+        "body": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "price": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "target_url": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "file_id": {
+          "type": "string"
+        },
+        "image_crop": {
+          "$ref": "#/components/schemas/AdImageCropParams"
+        }
+      },
+      "type": "object",
+      "required": ["type", "title", "body"]
+    },
+    "CreateAdGroupBody": {
+      "properties": {
+        "campaign_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 1000,
+          "minLength": 3,
+          "pattern": "^.*\\S.*$"
+        },
+        "context_hints": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "maxItems": 2000
+        },
+        "status": {
+          "$ref": "#/components/schemas/ActivePausedStatusParam"
+        },
+        "bidding_config": {
+          "$ref": "#/components/schemas/BiddingConfigParams"
+        },
+        "product_set": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/ProductSetParams"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "landing_page_configuration": {
+          "$ref": "#/components/schemas/LandingPageConfigurationParams"
+        }
+      },
+      "type": "object",
+      "required": ["campaign_id", "name", "status", "bidding_config"]
+    },
+    "CreateCampaignBody": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 1000,
+          "minLength": 3,
+          "pattern": "^.*\\S.*$"
+        },
+        "start_time": {
+          "type": "integer",
+          "maximum": 4102444800,
+          "minimum": 946684800
+        },
+        "end_time": {
+          "type": "integer",
+          "maximum": 4102444800,
+          "minimum": 946684800
+        },
+        "status": {
+          "$ref": "#/components/schemas/ActivePausedStatusParam"
+        },
+        "budget": {
+          "$ref": "#/components/schemas/BudgetParams"
+        },
+        "bidding_type": {
+          "$ref": "#/components/schemas/CampaignBiddingTypeParam"
+        },
+        "objective": {
+          "$ref": "#/components/schemas/CampaignObjectiveParam"
+        },
+        "billing_event_type": {
+          "$ref": "#/components/schemas/CampaignBillingEventTypeParam"
+        },
+        "mode": {
+          "$ref": "#/components/schemas/CampaignModeParam"
+        },
+        "product_feed_id": {
+          "type": "string"
+        },
+        "business_agent_id": {
+          "type": "string"
+        },
+        "targeting": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/TargetingParams"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "landing_page_configuration": {
+          "$ref": "#/components/schemas/LandingPageConfigurationParams"
+        },
+        "conversion_event_setting_ids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object",
+      "required": ["name", "status", "budget"]
+    },
+    "CreateConversionApiKeyBody": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 1000,
+          "minLength": 3,
+          "pattern": "^.*\\S.*$"
+        }
+      },
+      "type": "object",
+      "required": ["name"]
+    },
+    "CreateConversionEventSettingBody": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "event_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "custom_event_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "attribution_window_days": {
+          "type": "integer"
+        },
+        "source_ids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "minItems": 1
+        }
+      },
+      "type": "object",
+      "required": ["name", "event_type", "attribution_window_days", "source_ids"]
+    },
+    "CreateConversionSourceBody": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 1000,
+          "minLength": 3,
+          "pattern": "^.*\\S.*$"
+        },
+        "client_type": {
+          "$ref": "#/components/schemas/ClientDataSourceTypeParam"
+        }
+      },
+      "type": "object",
+      "required": ["name", "client_type"]
+    },
+    "CreateCustomAudienceBody": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 1000,
+          "minLength": 3,
+          "pattern": "^.*\\S.*$"
+        },
+        "file_id": {
+          "type": "string"
+        },
+        "identifier_type": {
+          "$ref": "#/components/schemas/CustomAudienceIdentifierTypeParam"
+        },
+        "identifier_resolution": {
+          "$ref": "#/components/schemas/CustomAudienceIdentifierResolutionParam"
+        },
+        "filename": {
+          "type": "string",
+          "maxLength": 255,
+          "minLength": 1
+        },
+        "mimetype": {
+          "type": "string",
+          "maxLength": 255,
+          "minLength": 1
+        },
+        "file_size": {
+          "type": "integer",
+          "maximum": 500000000,
+          "minimum": 1
+        }
+      },
+      "type": "object",
+      "required": ["name"]
+    },
+    "CreateProductFeedBody": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "countries": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object",
+      "required": ["name"]
+    },
+    "CustomAudienceBidMultiplierParams": {
+      "properties": {
+        "custom_audience_id": {
+          "type": "string"
+        },
+        "bid_multiplier_micros": {
+          "type": "integer",
+          "maximum": 10000000,
+          "minimum": 100000
+        }
+      },
+      "type": "object",
+      "required": ["custom_audience_id", "bid_multiplier_micros"]
+    },
+    "CustomAudienceIdentifierResolutionParam": {
+      "type": "string",
+      "enum": ["auto"]
+    },
+    "CustomAudienceIdentifierTypeParam": {
+      "type": "string",
+      "enum": ["email", "phone", "email_sha256", "phone_number_sha256", "gaid"]
+    },
+    "CustomAudienceInlineIdentifierParams": {
+      "properties": {
+        "identifier_type": {
+          "$ref": "#/components/schemas/CustomAudienceIdentifierTypeParam"
+        },
+        "identifier": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "type": "object",
+      "required": ["identifier_type", "identifier"]
+    },
+    "CustomAudienceIntendedUseParam": {
+      "type": "string",
+      "enum": ["inclusion", "exclusion", "bid_multiplier"]
+    },
+    "CustomAudienceMatchedCountGranularityParam": {
+      "type": "string",
+      "enum": ["granular"]
+    },
+    "CustomAudienceMembershipMutationBody": {
+      "properties": {
+        "file_id": {
+          "type": "string"
+        },
+        "identifiers": {
+          "items": {
+            "$ref": "#/components/schemas/CustomAudienceInlineIdentifierParams"
+          },
+          "type": "array"
+        },
+        "identifier_type": {
+          "$ref": "#/components/schemas/CustomAudienceIdentifierTypeParam"
+        },
+        "identifier_resolution": {
+          "$ref": "#/components/schemas/CustomAudienceIdentifierResolutionParam"
+        },
+        "expected_revision": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "type": "object",
+      "required": []
+    },
+    "LandingPageConfigurationParams": {
+      "properties": {
+        "query_string_template": {
+          "type": "string",
+          "maxLength": 2048
+        }
+      },
+      "type": "object",
+      "required": []
+    },
+    "ListOrderParam": {
+      "type": "string",
+      "enum": ["asc", "desc"]
+    },
+    "MergeCustomAudiencesBody": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 1000,
+          "minLength": 3,
+          "pattern": "^.*\\S.*$"
+        },
+        "custom_audience_ids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "maxItems": 64
+        }
+      },
+      "type": "object",
+      "required": ["name", "custom_audience_ids"]
+    },
+    "PatchProductFeedProductsBody": {
+      "properties": {
+        "products": {
+          "items": {
+            "$ref": "#/components/schemas/ProductFeedDeltaProductBodyParam"
+          },
+          "type": "array",
+          "minItems": 1
+        }
+      },
+      "type": "object",
+      "required": ["products"]
+    },
+    "PatchProductFeedSettingsBody": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 255,
+          "minLength": 1
+        },
+        "is_search_eligible_respected": {
+          "type": "boolean"
+        }
+      },
+      "type": "object",
+      "required": []
+    },
+    "PostConversionInsightsBody": {
+      "properties": {
+        "include": {
+          "items": {
+            "$ref": "#/components/schemas/ConversionInsightsIncludeParam"
+          },
+          "type": "array"
+        },
+        "event_names": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "minItems": 1,
+          "maxItems": 500
+        },
+        "attribution_time_basis": {
+          "$ref": "#/components/schemas/AttributionTimeBasisParam"
+        },
+        "aggregation_level": {
+          "type": "string"
+        },
+        "time_granularity": {
+          "$ref": "#/components/schemas/ConversionTimeGranularityParam"
+        },
+        "breakdown": {
+          "$ref": "#/components/schemas/ConversionBreakdownParam"
+        },
+        "time_ranges": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "entity_ids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "group_by_entity": {
+          "type": "boolean"
+        },
+        "include_zero_rows": {
+          "type": "boolean"
+        },
+        "attribution_window_days": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 7,
+              "maximum": 30,
+              "enum": [7, 14, 30]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "view_through_attribution_window_days": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1,
+              "enum": [0, 1]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object",
+      "required": ["aggregation_level", "time_ranges"]
+    },
+    "PostProductFeedSftpAccessBody": {
+      "properties": {
+        "authentication_method": {
+          "$ref": "#/components/schemas/ProductFeedSftpAuthenticationMethodParam"
+        },
+        "ssh_public_key": {
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "required": ["authentication_method"]
+    },
+    "ProductFeedDeltaAvailabilityBodyParam": {
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "required": []
+    },
+    "ProductFeedDeltaPriceBodyParam": {
+      "properties": {
+        "amount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "currency": {
+          "type": "string",
+          "maxLength": 3,
+          "minLength": 3
+        }
+      },
+      "type": "object",
+      "required": ["amount", "currency"]
+    },
+    "ProductFeedDeltaProductBodyParam": {
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "variants": {
+          "items": {
+            "$ref": "#/components/schemas/ProductFeedDeltaVariantBodyParam"
+          },
+          "type": "array",
+          "minItems": 1
+        }
+      },
+      "type": "object",
+      "required": ["id", "variants"]
+    },
+    "ProductFeedDeltaVariantBodyParam": {
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "price": {
+          "$ref": "#/components/schemas/ProductFeedDeltaPriceBodyParam"
+        },
+        "availability": {
+          "$ref": "#/components/schemas/ProductFeedDeltaAvailabilityBodyParam"
+        }
+      },
+      "type": "object",
+      "required": ["id"]
+    },
+    "ProductFeedSftpAuthenticationMethodParam": {
+      "type": "string",
+      "enum": ["password", "ssh_key"]
+    },
+    "ProductFeedsListIncludeParam": {
+      "type": "string",
+      "enum": ["product_count"]
+    },
+    "ProductSetFilterOperatorParam": {
+      "type": "string",
+      "enum": ["in", "not_in", "gt", "gte", "lt", "lte", "contains", "not_contains", "starts_with"]
+    },
+    "ProductSetFilterParams": {
+      "properties": {
+        "field": {
+          "type": "string"
+        },
+        "operator": {
+          "$ref": "#/components/schemas/ProductSetFilterOperatorParam"
+        },
+        "values": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object",
+      "required": ["field", "operator", "values"]
+    },
+    "ProductSetParams": {
+      "properties": {
+        "product_feed_id": {
+          "type": "string"
+        },
+        "filters": {
+          "items": {
+            "$ref": "#/components/schemas/ProductSetFilterParams"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object",
+      "required": ["product_feed_id"]
+    },
+    "QueryProductFeedProductsBody": {
+      "properties": {
+        "filters": {
+          "items": {
+            "$ref": "#/components/schemas/ProductSetFilterParams"
+          },
+          "type": "array"
+        },
+        "limit": {
+          "type": "integer",
+          "maximum": 500,
+          "minimum": 1
+        },
+        "after": {
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "required": []
+    },
+    "ReplaceCustomAudienceMembersBody": {
+      "properties": {
+        "file_id": {
+          "type": "string"
+        },
+        "expected_revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "filename": {
+          "type": "string",
+          "maxLength": 255,
+          "minLength": 1
+        },
+        "mimetype": {
+          "type": "string",
+          "maxLength": 255,
+          "minLength": 1
+        },
+        "file_size": {
+          "type": "integer",
+          "maximum": 500000000,
+          "minimum": 1
+        },
+        "identifier_type": {
+          "$ref": "#/components/schemas/CustomAudienceIdentifierTypeParam"
+        },
+        "identifier_resolution": {
+          "$ref": "#/components/schemas/CustomAudienceIdentifierResolutionParam"
+        }
+      },
+      "type": "object",
+      "required": ["file_id", "expected_revision"]
+    },
+    "TargetingCustomAudiencesParams": {
+      "properties": {
+        "ids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object",
+      "required": []
+    },
+    "TargetingGeoLocationParams": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "country_code": {
+          "type": "string"
+        },
+        "region_code": {
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "required": ["id"]
+    },
+    "TargetingGeoLocationsParams": {
+      "properties": {
+        "countries": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "include": {
+          "items": {
+            "$ref": "#/components/schemas/TargetingGeoLocationParams"
+          },
+          "type": "array",
+          "maxItems": 2500
+        }
+      },
+      "type": "object",
+      "required": []
+    },
+    "TargetingParams": {
+      "properties": {
+        "locations": {
+          "$ref": "#/components/schemas/TargetingGeoLocationsParams"
+        },
+        "excluded_locations": {
+          "$ref": "#/components/schemas/TargetingGeoLocationsParams"
+        },
+        "custom_audiences": {
+          "$ref": "#/components/schemas/TargetingCustomAudiencesParams"
+        },
+        "excluded_custom_audiences": {
+          "$ref": "#/components/schemas/TargetingCustomAudiencesParams"
+        },
+        "platforms": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/TargetingPlatformsParams"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object",
+      "required": []
+    },
+    "TargetingPlatformsParams": {
+      "properties": {
+        "included": {
+          "items": {
+            "$ref": "#/components/schemas/CampaignPlatformParam"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object",
+      "required": []
+    },
+    "UpdateAdBody": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 1000,
+          "minLength": 3,
+          "pattern": "^.*\\S.*$"
+        },
+        "creative": {
+          "$ref": "#/components/schemas/UpdateAdCreativeParams"
+        },
+        "status": {
+          "$ref": "#/components/schemas/ActivePausedArchivedStatusParam"
+        },
+        "landing_page_configuration": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/LandingPageConfigurationParams"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object",
+      "required": []
+    },
+    "UpdateAdCreativeParams": {
+      "properties": {
+        "file_ids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "maxItems": 6,
+          "minItems": 4
+        },
+        "type": {
+          "$ref": "#/components/schemas/AdCreativeTypeParam"
+        },
+        "body": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "price": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "target_url": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "file_id": {
+          "type": "string"
+        },
+        "image_crop": {
+          "$ref": "#/components/schemas/AdImageCropParams"
+        }
+      },
+      "type": "object",
+      "required": ["type", "title", "body"]
+    },
+    "UpdateAdGroupBody": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 1000,
+          "minLength": 3,
+          "pattern": "^.*\\S.*$"
+        },
+        "context_hints": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "maxItems": 2000
+        },
+        "status": {
+          "$ref": "#/components/schemas/ActivePausedArchivedStatusParam"
+        },
+        "bidding_config": {
+          "$ref": "#/components/schemas/BiddingConfigParams"
+        },
+        "product_set": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/ProductSetParams"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "landing_page_configuration": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/LandingPageConfigurationParams"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object",
+      "required": []
+    },
+    "UpdateCampaignBody": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 1000,
+          "minLength": 3,
+          "pattern": "^.*\\S.*$"
+        },
+        "start_time": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "maximum": 4102444800,
+              "minimum": 946684800
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "end_time": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "maximum": 4102444800,
+              "minimum": 946684800
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "$ref": "#/components/schemas/ActivePausedArchivedStatusParam"
+        },
+        "budget": {
+          "$ref": "#/components/schemas/BudgetParams"
+        },
+        "targeting": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/TargetingParams"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "landing_page_configuration": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/LandingPageConfigurationParams"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "conversion_event_setting_ids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object",
+      "required": []
+    },
+    "UploadImageBody": {
+      "properties": {
+        "image_url": {
+          "type": "string"
+        },
+        "file": {
+          "type": "string",
+          "format": "binary"
+        },
+        "purpose": {
+          "$ref": "#/components/schemas/UploadImagePurposeParam"
+        }
+      },
+      "type": "object",
+      "required": []
+    },
+    "UploadImagePurposeParam": {
+      "type": "string",
+      "enum": ["account_favicon"]
+    }
+  }
+}
