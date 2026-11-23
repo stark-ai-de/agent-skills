@@ -20,7 +20,10 @@ const fields = (flow, stage) =>
 const secretInput = `<label for="api-key">Advertiser API key</label><input id="api-key" name="api_key" type="password" required maxlength="4096" autocomplete="off" spellcheck="false" autocapitalize="none">`;
 
 // Call only with the transaction's redirect URI after exact client-allowlist validation.
-// Chromium applies form-action to the subsequent OAuth redirect as well as the form target.
+// Chromium checks form-action at every redirect hop, not only at the form target.
+// The stable ChatGPT callback relays Platform connections to platform.openai.com.
+// This is a fixed additional CSP origin for that exact callback, not a redirect URI
+// or an origin derived from client-supplied state.
 export function oauthFormAction(redirectUri) {
   const callback = new URL(redirectUri);
   const loopback = ["localhost", "127.0.0.1", "[::1]"].includes(callback.hostname);
@@ -32,7 +35,10 @@ export function oauthFormAction(redirectUri) {
     /[\s;*'\\]/.test(callback.origin)
   )
     throw new Error("OAuth callback must have one explicit safe origin.");
-  return `'self' ${callback.origin}`;
+  const sources = ["'self'", callback.origin];
+  if (callback.href === "https://chatgpt.com/connector_platform_oauth_redirect")
+    sources.push("https://platform.openai.com");
+  return sources.join(" ");
 }
 
 function page(title, body, { status = 200, cookie, origin } = {}, formAction = "'self'") {
