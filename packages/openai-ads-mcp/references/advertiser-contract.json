@@ -2256,6 +2256,12 @@
         "type": {
           "$ref": "#/components/schemas/AdCreativeTypeParam"
         },
+        "title": {
+          "type": "string",
+          "maxLength": 50,
+          "minLength": 3,
+          "pattern": "^.*\\S.*$"
+        },
         "body": {
           "type": "string",
           "maxLength": 100
@@ -2288,6 +2294,9 @@
           "maxLength": 1000,
           "minLength": 3,
           "pattern": "^.*\\S.*$"
+        },
+        "description": {
+          "type": "string"
         },
         "context_hints": {
           "items": {
@@ -2326,6 +2335,9 @@
           "maxLength": 1000,
           "minLength": 3,
           "pattern": "^.*\\S.*$"
+        },
+        "description": {
+          "type": "string"
         },
         "start_time": {
           "type": "integer",
@@ -2446,6 +2458,9 @@
           "maxLength": 1000,
           "minLength": 3,
           "pattern": "^.*\\S.*$"
+        },
+        "description": {
+          "type": "string"
         },
         "file_id": {
           "type": "string"
@@ -2759,6 +2774,9 @@
           "type": "string",
           "minLength": 1
         },
+        "title": {
+          "type": "string"
+        },
         "price": {
           "$ref": "#/components/schemas/ProductFeedDeltaPriceBodyParam"
         },
@@ -3001,6 +3019,12 @@
         "type": {
           "$ref": "#/components/schemas/AdCreativeTypeParam"
         },
+        "title": {
+          "type": "string",
+          "maxLength": 50,
+          "minLength": 1,
+          "pattern": "^.*\\S.*$"
+        },
         "body": {
           "type": "string",
           "maxLength": 100
@@ -3030,6 +3054,16 @@
           "maxLength": 1000,
           "minLength": 3,
           "pattern": "^.*\\S.*$"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "context_hints": {
           "items": {
@@ -3075,6 +3109,16 @@
           "maxLength": 1000,
           "minLength": 3,
           "pattern": "^.*\\S.*$"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "start_time": {
           "anyOf": [

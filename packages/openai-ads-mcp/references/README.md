@@ -38,6 +38,25 @@ do not replace it with an arbitrary URL/method proxy. Update the source digest
 and retrieval date only for the reviewed upstream document, then run the client,
 tool-schema, and actual MCP transport tests.
 
+After saving the complete official document locally, generate a candidate with
+the dependency-free helper. It makes no network requests and writes only the
+explicit output path; use a temporary candidate for review before replacing the
+canonical snapshot:
+
+```sh
+node packages/openai-ads-mcp/scripts/refresh-contract.mjs \
+  /tmp/ads-openapi.json /tmp/advertiser-contract.json YYYY-MM-DD
+```
+
+The existing snapshot supplies the fixed operation name/method/path allowlist.
+The helper traverses only those requests and their transitive schema references,
+retains validation constraints and literal defaults, and strips prose only from
+schema annotation positions. Field maps preserve every API property name,
+including `title` and `description`; those names are not removable metadata when
+they occur under `properties`. Review field maps and required-field consistency
+as well as the source digest. Formatting the candidate with the repository
+formatter does not change its contract.
+
 The upstream source is
 <https://developers.openai.com/ads/openapi.json>. The current guide URLs are
 also exported as `CONTRACT.guides`.

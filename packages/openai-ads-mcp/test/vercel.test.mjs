@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { cpSync, mkdtempSync, readFileSync, rmSync, symlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { getTransformedRoutes } from "@vercel/routing-utils";
 import { buildRuntime } from "../build.mjs";
 import { createVercelHandler } from "../src/vercel.mjs";
 import { createDatabasePool } from "../src/storage/postgres.mjs";
@@ -24,6 +25,26 @@ const config = {
   deploymentEnvironment: "development",
   cronSecret: "synthetic-cron-secret-".repeat(3),
 };
+
+function throughVercelRewrites(url, options) {
+  const manifest = JSON.parse(readFileSync(new URL("../vercel.json", import.meta.url), "utf8"));
+  const source = new URL(url);
+  const { routes, error } = getTransformedRoutes({ rewrites: manifest.rewrites });
+  assert.equal(error, null);
+  const route = routes.find(
+    (entry) => typeof entry.src === "string" && new RegExp(entry.src).test(source.pathname),
+  );
+  assert.ok(route, `No Vercel rewrite matches ${source.pathname}`);
+  const destination = new URL(
+    source.pathname.replace(new RegExp(route.src), route.dest),
+    source.origin,
+  );
+  assert.equal(destination.pathname, "/api/index");
+  // Vercel preserves the original pathname and merges the compiled rewrite's
+  // query into the function URL. Unused named captures therefore reach guards.
+  for (const [name, value] of destination.searchParams) source.searchParams.set(name, value);
+  return new Request(source, options);
+}
 
 test("the Vercel adapter shares one warm pool and preserves streams, cookies and trusted client IP", async (t) => {
   let pools = 0;
@@ -111,6 +132,7 @@ test("Vercel rejects spoofed origins before opening a database and never trusts 
   let pools = 0;
   let observed;
   const runtime = createVercelHandler({
+    env: { VERCEL_URL: "synthetic-deployment.vercel.app" },
     configLoader: () => ({ ...config, isVercel: false }),
     poolFactory: () => {
       pools++;
@@ -139,6 +161,16 @@ test("Vercel rejects spoofed origins before opening a database and never trusts 
   assert.equal(
     (await runtime.fetch(new Request(`${origin}/mcp`, { headers: { host: "evil.example" } })))
       .status,
+    400,
+  );
+  assert.equal(
+    (
+      await runtime.fetch(
+        new Request("https://synthetic-deployment.vercel.app/internal/prune", {
+          headers: { authorization: `Bearer ${config.cronSecret}` },
+        }),
+      )
+    ).status,
     400,
   );
   assert.equal(pools, 0);
@@ -186,7 +218,10 @@ test("the native Vercel entry reaches the real PostgreSQL service and protected 
   });
   let pools = 0;
   let attached = 0;
+  const deploymentHost = "synthetic-deployment.vercel.app";
+  const deploymentOrigin = `https://${deploymentHost}`;
   const runtime = createVercelHandler({
+    env: { VERCEL_URL: deploymentHost },
     configLoader: () => ({ ...config, databaseUrl: database.databaseUrl, encryptionKey }),
     poolFactory: (options) => {
       pools++;
@@ -217,6 +252,112 @@ test("the native Vercel entry reaches the real PostgreSQL service and protected 
   );
   assert.equal(pruned.status, 200);
   assert.deepEqual(await pruned.json(), { ok: true });
+  const cronHeaders = { host: deploymentHost, authorization: `Bearer ${config.cronSecret}` };
+  const scheduled = await runtime.fetch(
+    new Request(`${deploymentOrigin}/internal/prune`, { headers: cronHeaders }),
+  );
+  assert.equal(scheduled.status, 200);
+  assert.deepEqual(await scheduled.json(), { ok: true });
+  const unauthenticatedCron = await runtime.fetch(
+    new Request(`${deploymentOrigin}/internal/prune`, { headers: { host: deploymentHost } }),
+  );
+  assert.equal(unauthenticatedCron.status, 401);
+  await unauthenticatedCron.text();
+  for (const [url, method, headers] of [
+    [`${deploymentOrigin}/internal/prune`, "POST", cronHeaders],
+    [`${deploymentOrigin}/internal/prune?caller=value`, "GET", cronHeaders],
+    [`${deploymentOrigin}/internal/prune`, "GET", { ...cronHeaders, host: "evil.example" }],
+    [
+      "https://other-deployment.vercel.app/internal/prune",
+      "GET",
+      {
+        ...cronHeaders,
+        host: "other-deployment.vercel.app",
+      },
+    ],
+    [`${deploymentOrigin}/mcp`, "POST", cronHeaders],
+    [`${deploymentOrigin}/oauth/authorize`, "GET", cronHeaders],
+    [`${deploymentOrigin}/health`, "GET", cronHeaders],
+    [`${deploymentOrigin}/credentials/${"a".repeat(43)}`, "GET", cronHeaders],
+  ]) {
+    const rejected = await runtime.fetch(new Request(url, { method, headers }));
+    assert.equal(rejected.status, 400, `${method} ${url}`);
+    await rejected.text();
+  }
+});
+
+test("compiled Vercel rewrites preserve discovery and OAuth queries and permit one-time credential downloads", async (t) => {
+  const encryptionKey = randomBytes(32);
+  const database = await createTestStore(t, {
+    encryptionKey,
+    deploymentEnvironment: config.deploymentEnvironment,
+  });
+  const runtime = createVercelHandler({
+    configLoader: () => ({ ...config, databaseUrl: database.databaseUrl, encryptionKey }),
+    attachPool: () => {},
+  });
+  t.after(() => runtime.close());
+  for (const path of [
+    "/.well-known/oauth-authorization-server",
+    "/.well-known/oauth-protected-resource/mcp",
+    "/oauth/authorize?state=keep%2Bthis&resource=https%3A%2F%2Fads.example.test%2Fmcp",
+    "/oauth/token",
+    "/oauth/revoke",
+  ])
+    assert.equal(throughVercelRewrites(`${origin}${path}`).url, `${origin}${path}`);
+
+  const clientId = config.oauthClients[0].clientId;
+  const redirectUri = config.oauthClients[0].redirectUris[0];
+  const resource = `${origin}/mcp`;
+  const verifier = "synthetic-verifier-".repeat(4);
+  const apiKey = "synthetic-advertiser-download-key";
+  const code = await database.store.createAuthorizationCode({
+    clientId,
+    redirectUri,
+    resource,
+    codeChallenge: createHash("sha256").update(verifier).digest("base64url"),
+    apiKey,
+    account: { id: "adacct_vercel_download" },
+    scopes: ["ads:read", "ads:write"],
+  });
+  const tokens = await database.store.exchangeCode({
+    code,
+    clientId,
+    redirectUri,
+    resource,
+    codeVerifier: verifier,
+  });
+  const principal = await database.store.authenticate({ token: tokens.access_token, resource });
+  const handoff = await database.store.createSecretHandoff({
+    grantId: principal.grantId,
+    operation: "ads_create_conversion_key",
+    value: { api_key: "synthetic-generated-conversion-key" },
+  });
+  const downloadUrl = `${origin}/credentials/${handoff.id}`;
+  const queried = await runtime.fetch(throughVercelRewrites(`${downloadUrl}?caller=value`));
+  assert.equal(queried.status, 410);
+  await queried.text();
+
+  const page = await runtime.fetch(throughVercelRewrites(downloadUrl));
+  const html = await page.text();
+  assert.equal(page.status, 200, html);
+  assert.match(html, /Download once/);
+  assert.doesNotMatch(html, /synthetic-generated-conversion-key/);
+  const csrf = html.match(/name="csrf" value="([^"]+)"/)[1];
+  const cookie = page.headers.getSetCookie()[0].split(";")[0];
+  const downloaded = await runtime.fetch(
+    throughVercelRewrites(downloadUrl, {
+      method: "POST",
+      headers: { origin, "content-type": "application/x-www-form-urlencoded", cookie },
+      body: new URLSearchParams({ csrf, api_key: apiKey, action: "download" }),
+    }),
+  );
+  assert.equal(downloaded.status, 200);
+  assert.match(downloaded.headers.get("content-disposition"), /^attachment;/);
+  assert.deepEqual(await downloaded.json(), { api_key: "synthetic-generated-conversion-key" });
+  const replay = await runtime.fetch(throughVercelRewrites(downloadUrl));
+  assert.equal(replay.status, 410);
+  await replay.text();
 });
 
 test("the deployment build includes all runtime data and imports without secrets or database initialization", async (t) => {
@@ -238,10 +379,10 @@ test("the deployment build includes all runtime data and imports without secrets
   assert.equal(manifest.functions["api/index.mjs"].maxDuration, 120);
   for (const route of [
     "/mcp",
-    "/oauth/:path*",
+    "/oauth/(.*)",
     "/connections",
-    "/credentials/:path*",
-    "/.well-known/:path*",
+    "/credentials/(.*)",
+    "/.well-known/(.*)",
     "/internal/prune",
   ])
     assert.ok(

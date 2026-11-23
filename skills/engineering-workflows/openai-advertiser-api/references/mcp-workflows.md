@@ -28,7 +28,7 @@ Read the tool schema before constructing arguments. Supply only requested fields
 
 Treat `outcome: accepted` and `verification.status: pending` as unfinished. Poll the documented resource/job status within the user's task, or report the pending state. A readback proves the current returned state, not ad serving or successful processing of every nested operation.
 
-When `pagination.has_more` is true, use the returned `next_after` cursor in the next permitted call; do not claim a complete inventory from one page. For bulk operation results, wait for `snapshot_complete: true` before paginating and reconcile each operation, including earlier successes. `partial_failure: false` stops later operations; it does not roll back earlier successful changes. If no reliable cursor is returned, report the incomplete result.
+When `pagination.has_more` is true, follow `cursor_parameter`: use `next_before` as `before` when paging backward, and otherwise pass `next_after` as the named `after` or `cursor` parameter. Preserve the request's direction and filters, and do not claim a complete inventory from one page. For bulk operation results, wait for `snapshot_complete: true` before paginating and reconcile each operation, including earlier successes. `partial_failure: false` stops later operations; it does not roll back earlier successful changes. If no reliable cursor is returned, report the incomplete result.
 
 On `error.uncertain: true` or a failed readback, inspect resource/job/audit state before considering a retry. A timeout or HTTP error after dispatch can leave a successful write. Do not turn an API permission or feature denial into a workaround through another surface.
 

@@ -14,10 +14,10 @@
   "rewrites": [
     { "source": "/", "destination": "/api/index" },
     { "source": "/mcp", "destination": "/api/index" },
-    { "source": "/oauth/:path*", "destination": "/api/index" },
+    { "source": "/oauth/(.*)", "destination": "/api/index" },
     { "source": "/connections", "destination": "/api/index" },
-    { "source": "/credentials/:path*", "destination": "/api/index" },
-    { "source": "/.well-known/:path*", "destination": "/api/index" },
+    { "source": "/credentials/(.*)", "destination": "/api/index" },
+    { "source": "/.well-known/(.*)", "destination": "/api/index" },
     { "source": "/health", "destination": "/api/index" },
     { "source": "/internal/prune", "destination": "/api/index" }
   ],

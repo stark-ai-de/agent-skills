@@ -26,7 +26,8 @@ const resultSchema = z
         snapshot_complete: z.boolean(),
         has_more: z.boolean(),
         next_after: z.string().nullable(),
-        cursor_parameter: z.enum(["cursor", "after"]),
+        next_before: z.string().nullable().optional(),
+        cursor_parameter: z.enum(["cursor", "after", "before"]),
         warning: z.string().optional(),
       })
       .optional(),

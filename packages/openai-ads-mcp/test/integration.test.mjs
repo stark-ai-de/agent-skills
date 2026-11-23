@@ -210,6 +210,96 @@ test("real OAuth-to-MCP path discovers tools, reads the connected account and en
   assert.equal(calls.filter((call) => call.method === "POST").length, 0);
 });
 
+test("allowed browser origins can preflight and call modern MCP with required metadata headers", async (t) => {
+  const { application: app, calls } = await fixture(t);
+  const browserOrigin = "https://chatgpt.com";
+  const requestedHeaders = [
+    "authorization",
+    "content-type",
+    "mcp-protocol-version",
+    "mcp-method",
+    "mcp-name",
+  ];
+  const preflight = await app.handle(
+    new Request(`${origin}/mcp`, {
+      method: "OPTIONS",
+      headers: {
+        origin: browserOrigin,
+        "access-control-request-method": "POST",
+        "access-control-request-headers": requestedHeaders.join(", "),
+      },
+    }),
+  );
+  assert.equal(preflight.status, 204);
+  assert.equal(preflight.headers.get("access-control-allow-origin"), browserOrigin);
+  const allowedHeaders = preflight.headers
+    .get("access-control-allow-headers")
+    .toLowerCase()
+    .split(/,\s*/);
+  for (const header of requestedHeaders) assert.ok(allowedHeaders.includes(header), header);
+
+  const session = await connect(app, "synthetic-advertiser-key-a", false);
+  async function modern(method, params = {}, headers = {}) {
+    return app.handle(
+      new Request(`${origin}/mcp`, {
+        method: "POST",
+        headers: {
+          origin: browserOrigin,
+          authorization: `Bearer ${session.access_token}`,
+          "content-type": "application/json",
+          accept: "application/json, text/event-stream",
+          "mcp-protocol-version": "2026-07-28",
+          "mcp-method": method,
+          ...(params.name ? { "mcp-name": params.name } : {}),
+          ...headers,
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method,
+          params: {
+            ...params,
+            _meta: {
+              "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+              "io.modelcontextprotocol/clientInfo": { name: "browser-test", version: "1" },
+              "io.modelcontextprotocol/clientCapabilities": {},
+            },
+          },
+        }),
+      }),
+    );
+  }
+  async function result(response) {
+    const text = await response.text();
+    assert.equal(response.status, 200, text);
+    assert.equal(response.headers.get("access-control-allow-origin"), browserOrigin);
+    const line = text.split("\n").find((value) => value.startsWith("data:"));
+    return JSON.parse(line ? line.slice(5).trim() : text).result;
+  }
+  const discovery = await result(await modern("server/discover"));
+  assert.ok(discovery.supportedVersions.includes("2026-07-28"));
+  assert.equal(discovery._meta["io.modelcontextprotocol/serverInfo"].name, "stark-ai-ads");
+  const params = {
+    name: "ads_list_campaigns",
+    arguments: { expected_account_id: "adacct_a" },
+  };
+  const report = await result(await modern("tools/call", params));
+  assert.equal(report.structuredContent.data.data[0].id, "campaign_a");
+  const before = calls.length;
+  const mismatch = await modern("tools/call", params, { "mcp-name": "ads_create_campaign" });
+  assert.equal(mismatch.status, 400);
+  assert.equal((await mismatch.json()).error.code, -32020);
+  assert.equal(calls.length, before);
+  const blocked = await app.handle(
+    new Request(`${origin}/mcp`, {
+      method: "OPTIONS",
+      headers: { origin: "https://untrusted.example", "access-control-request-method": "POST" },
+    }),
+  );
+  assert.equal(blocked.status, 403);
+  assert.equal(blocked.headers.get("access-control-allow-origin"), null);
+});
+
 test("simultaneous MCP calls remain bound to distinct OAuth principals; mismatched account is blocked", async (t) => {
   const { application: app, calls } = await fixture(t);
   const a = await connect(app, "synthetic-advertiser-key-a");

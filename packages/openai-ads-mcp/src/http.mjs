@@ -304,7 +304,7 @@ export async function createApplication({
         headers: {
           "access-control-allow-methods": "POST, OPTIONS",
           "access-control-allow-headers":
-            "Authorization, Content-Type, MCP-Protocol-Version, MCP-Session-Id",
+            "Authorization, Content-Type, MCP-Protocol-Version, MCP-Session-Id, Mcp-Method, Mcp-Name",
           "access-control-max-age": "600",
         },
       });

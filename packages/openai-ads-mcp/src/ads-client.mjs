@@ -225,22 +225,28 @@ function writableTargeting(current) {
   return result;
 }
 
-function pagination(operation, data) {
+function pagination(operation, data, args) {
   if (typeof data?.has_more !== "boolean") return undefined;
   const complete = operation.name === "ads_list_bulk_operations" ? data.complete === true : true;
+  const backward = Boolean(args.query?.before);
+  const first = Array.isArray(data.data) ? data.data[0] : null;
   const last = Array.isArray(data.data) ? data.data.at(-1) : null;
   const next =
     complete && data.has_more
       ? operation.name === "ads_list_bulk_operations"
         ? last?.operation_id
-        : (data.last_id ?? data.next_cursor ?? last?.id)
+        : backward
+          ? (data.first_id ?? first?.id)
+          : (data.last_id ?? data.next_cursor ?? last?.id)
       : null;
   return {
     complete: complete && !data.has_more,
     snapshot_complete: complete,
     has_more: data.has_more,
-    next_after: next ?? null,
-    cursor_parameter: operation.name === "ads_list_audience_operations" ? "cursor" : "after",
+    next_after: backward ? null : (next ?? null),
+    ...(backward ? { next_before: next ?? null } : {}),
+    cursor_parameter:
+      operation.name === "ads_list_audience_operations" ? "cursor" : backward ? "before" : "after",
     ...(data.has_more && complete && !next
       ? {
           warning:
@@ -511,6 +517,19 @@ export function createAdsClient({
       readOnly: operation.readOnly,
       sensitiveResponse: operation.credential === true,
     });
+    if (operation.name === "ads_update_feed_products" && result.data.accepted !== true) {
+      if (result.data.accepted === false)
+        throw new AdsClientError(
+          "upstream_rejected",
+          "The Ads API did not accept the Delta update. Inspect the feed before submitting another update.",
+          { status: result.status, details: sanitize(result.data, [apiKey]) },
+        );
+      throw new AdsClientError(
+        "invalid_response",
+        "The Ads API did not return a valid Delta acceptance result. Inspect feed state before any retry.",
+        { status: result.status, uncertain: true },
+      );
+    }
     let credential;
     if (operation.credential) {
       try {
@@ -533,7 +552,9 @@ export function createAdsClient({
     const pending =
       result.status === 202 ||
       data.accepted === true ||
-      ["pending", "processing", "in_progress"].includes(data.status);
+      ["pending", "processing", "in_progress"].includes(data.status) ||
+      (operation.name === "ads_create_audience" &&
+        ["upload_pending", "rockset_ingest_pending", "publishing"].includes(data.status));
     let verification = {
       status: operation.credential
         ? "securely_stored"
@@ -559,12 +580,13 @@ export function createAdsClient({
         };
       }
     }
+    const page = pagination(operation, data, args);
     return {
       account: { id: account.id, currency_code: account.currency_code, timezone: account.timezone },
       outcome: operation.readOnly ? "read" : pending ? "accepted" : "api_returned_success",
       data: uploadDetails ? { ...data, ...uploadDetails } : data,
       verification,
-      ...(pagination(operation, data) ? { pagination: pagination(operation, data) } : {}),
+      ...(page ? { pagination: page } : {}),
       ...(credential ? { credential } : {}),
     };
   }

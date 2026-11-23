@@ -15,11 +15,21 @@ const proxyHeaders = [
   "x-real-ip",
 ];
 
-function trustedRequest(request, config) {
+function trustedRequest(request, config, env) {
   const url = new URL(request.url);
   const host = request.headers.get("host");
+  // Vercel schedules target the immutable production deployment URL, even when
+  // OAuth uses a custom domain. Only its exact platform-owned host may reach
+  // maintenance; the shared route still authenticates the cron bearer secret.
+  const deploymentCron =
+    config.isVercel &&
+    env.VERCEL_URL &&
+    url.origin === `https://${env.VERCEL_URL}` &&
+    request.method === "GET" &&
+    url.pathname === "/internal/prune" &&
+    !url.search;
   if (
-    url.origin !== config.publicOrigin ||
+    (url.origin !== config.publicOrigin && !deploymentCron) ||
     (host && host.toLowerCase() !== url.host.toLowerCase()) ||
     url.pathname.startsWith("//")
   )
@@ -31,6 +41,14 @@ function trustedRequest(request, config) {
   const headers = new Headers(request.headers);
   for (const name of proxyHeaders) headers.delete(name);
   headers.set("x-ads-client-address", address);
+  if (deploymentCron) {
+    headers.set("host", new URL(config.publicOrigin).host);
+    return new Request(new URL(url.pathname, config.publicOrigin), {
+      method: request.method,
+      headers,
+      signal: request.signal,
+    });
+  }
   return new Request(request, { headers });
 }
 
@@ -92,7 +110,7 @@ export function createVercelHandler({
         // This signal remains valid until a returned SSE/body stream has completed.
         const signal = AbortSignal.any([request.signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]);
         config ||= configLoader(env);
-        const input = trustedRequest(new Request(request, { signal }), config);
+        const input = trustedRequest(new Request(request, { signal }), config, env);
         if (!input) return textResponse("Invalid request host or origin.", 400);
         const { app } = await beforeDeadline(application(), signal);
         signal.throwIfAborted();

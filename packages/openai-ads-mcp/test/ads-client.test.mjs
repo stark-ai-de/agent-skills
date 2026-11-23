@@ -99,6 +99,8 @@ test("report serializes canonical fields, inclusive range, attribution and accou
   assert.equal(calls[1].init.headers.Authorization, `Bearer ${key}`);
   assert.equal(calls[1].init.redirect, "error");
   assert.equal(result.pagination.next_after, "one");
+  assert.equal(result.pagination.cursor_parameter, "after");
+  assert.equal(Object.hasOwn(result.pagination, "next_before"), false);
   assert.equal(result.pagination.complete, false);
   assert.equal(result.data.data[0].campaign_spend, 12.34);
 });
@@ -233,6 +235,93 @@ test("Delta updates preserve price minor units and acceptance remains pending", 
   assert.equal(JSON.parse(calls[1].init.body).products[0].variants[0].price.amount, 7999);
   assert.equal(result.outcome, "accepted");
   assert.equal(result.verification.status, "pending");
+});
+
+test("Delta rejection and missing acceptance cannot be reported as a successful write", async () => {
+  for (const accepted of [false, undefined, "true"]) {
+    const { client, calls } = mockClient([account, { id: "fd_one", accepted }]);
+    await assert.rejects(
+      execute(client, "ads_update_feed_products", {
+        feed_id: "fd_one",
+        body: { products: [{ id: "SKU-001", variants: [{ id: "SKU-001", title: "New title" }] }] },
+      }),
+      (error) => {
+        assert.equal(error.code, accepted === false ? "upstream_rejected" : "invalid_response");
+        assert.equal(error.status, 200);
+        assert.equal(error.uncertain, accepted !== false);
+        return true;
+      },
+    );
+    assert.equal(calls.length, 2, "The write must not be retried automatically.");
+  }
+});
+
+test("audience creation stays pending through every documented processing stage", async () => {
+  for (const status of ["upload_pending", "processing", "rockset_ingest_pending", "publishing"]) {
+    const { client, calls } = mockClient([account, { id: "caud_one", status }]);
+    const result = await execute(client, "ads_create_audience", {
+      body: { name: "Test audience" },
+    });
+    assert.equal(result.outcome, "accepted", status);
+    assert.equal(result.verification.status, "pending", status);
+    assert.equal(calls.length, 2, "Pending creation must not be labeled as a completed readback.");
+  }
+  const ready = { id: "caud_one", status: "ready" };
+  const { client, calls } = mockClient([account, ready, ready]);
+  const result = await execute(client, "ads_create_audience", { body: { name: "Ready audience" } });
+  assert.equal(result.outcome, "api_returned_success");
+  assert.equal(result.verification.status, "read_back");
+  assert.equal(result.verification.resource.status, "ready");
+  assert.equal(calls.length, 3);
+});
+
+test("backward insight pagination keeps before and the first opaque cursor across pages", async () => {
+  const { client, calls } = mockClient([
+    account,
+    {
+      data: [{ campaign_id: "cmpn_first" }, { campaign_id: "cmpn_last" }],
+      first_id: "opaque_first",
+      last_id: "opaque_last",
+      has_more: true,
+    },
+    account,
+    {
+      data: [{ campaign_id: "cmpn_oldest" }],
+      first_id: "opaque_oldest",
+      last_id: "opaque_oldest",
+      has_more: false,
+    },
+  ]);
+  const query = {
+    before: "opaque_prior",
+    fields: ["campaign.id"],
+    time_ranges: [{ type: "date_range", since: "2026-11-01", until: "2026-11-02" }],
+  };
+  const first = await execute(client, "ads_get_account_insights", { query });
+  assert.equal(first.pagination.cursor_parameter, "before");
+  assert.equal(first.pagination.next_before, "opaque_first");
+  assert.equal(first.pagination.next_after, null);
+  assert.equal(first.pagination.complete, false);
+  const second = await execute(client, "ads_get_account_insights", {
+    query: { ...query, before: first.pagination.next_before },
+  });
+  assert.equal(calls[3].url.searchParams.get("before"), "opaque_first");
+  assert.equal(calls[3].url.searchParams.has("after"), false);
+  assert.equal(second.pagination.next_before, null);
+  assert.equal(second.pagination.complete, true);
+});
+
+test("backward pagination without a first cursor stays explicitly incomplete", async () => {
+  const { client } = mockClient([
+    account,
+    { data: [], last_id: "wrong_direction", has_more: true },
+  ]);
+  const result = await execute(client, "ads_list_campaigns", { query: { before: "older" } });
+  assert.equal(result.pagination.cursor_parameter, "before");
+  assert.equal(result.pagination.next_before, null);
+  assert.equal(result.pagination.next_after, null);
+  assert.equal(result.pagination.complete, false);
+  assert.ok(result.pagination.warning);
 });
 
 test("response body bounds and redirects stop safely", async () => {
