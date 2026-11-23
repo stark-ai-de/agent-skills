@@ -204,6 +204,7 @@ export function buildAdsPluginEntries({ root = process.cwd(), serverUrl, oauthCl
                 clientId: deployment.clientId,
                 tokenEndpointAuthMethod: "none",
               },
+              authorizationServerBase: deployment.origin,
               authorizationUrl: `${deployment.origin}/oauth/authorize`,
               tokenUrl: `${deployment.origin}/oauth/token`,
               resource: deployment.serverUrl,

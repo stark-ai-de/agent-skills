@@ -21,7 +21,7 @@ const responseHeaders = {
 const json = (body, status = 200, headers = {}) =>
   Response.json(body, { status, headers: { ...responseHeaders, ...headers } });
 const oauthError = (error, description, status = 400) =>
-  json({ error, error_description: description }, status);
+  json({ error, error_description: description }, status, { "x-ads-oauth-error": error });
 const methodError = (allow) =>
   new Response("Method not allowed", { status: 405, headers: { ...responseHeaders, allow } });
 function uniqueParameters(params) {

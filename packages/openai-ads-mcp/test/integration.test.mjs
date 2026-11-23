@@ -393,6 +393,60 @@ test(
   },
 );
 
+test("public OAuth endpoints accept only allowlisted browser POST preflights", async (t) => {
+  const { application: app, calls } = await fixture(t);
+  const browserOrigin = "https://chatgpt.com";
+  for (const path of ["/oauth/token", "/oauth/revoke"]) {
+    const preflight = (requestOrigin, method = "POST") =>
+      app.handle(
+        new Request(`${origin}${path}`, {
+          method: "OPTIONS",
+          headers: {
+            ...(requestOrigin ? { origin: requestOrigin } : {}),
+            "access-control-request-method": method,
+            "access-control-request-headers": "content-type",
+          },
+        }),
+      );
+    const allowed = await preflight(browserOrigin);
+    assert.equal(allowed.status, 204);
+    assert.equal(allowed.headers.get("access-control-allow-origin"), browserOrigin);
+    assert.equal(allowed.headers.get("access-control-allow-methods"), "POST, OPTIONS");
+    assert.equal(allowed.headers.get("access-control-allow-headers"), "Content-Type");
+    assert.equal(allowed.headers.has("access-control-allow-credentials"), false);
+    assert.match(allowed.headers.get("vary"), /Access-Control-Request-Method/);
+    assert.equal((await preflight(browserOrigin, "DELETE")).status, 400);
+    assert.equal((await preflight(null)).status, 400);
+    for (const requestOrigin of ["null", "https://evil.example"]) {
+      const blocked = await preflight(requestOrigin);
+      assert.equal(blocked.status, 403);
+      assert.equal(blocked.headers.has("access-control-allow-origin"), false);
+    }
+  }
+  const denied = await app.handle(
+    new Request(`${origin}/oauth/token`, {
+      method: "POST",
+      headers: {
+        origin: browserOrigin,
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        grant_type: "authorization_code",
+        client_id: "chatgpt",
+        resource: `${origin}/mcp`,
+        redirect_uri: redirectUri,
+        code: "synthetic-invalid-code",
+        code_verifier: verifier,
+      }),
+    }),
+  );
+  assert.equal(denied.status, 400);
+  assert.equal(denied.headers.get("x-ads-oauth-error"), "invalid_grant");
+  assert.equal(denied.headers.get("access-control-allow-origin"), browserOrigin);
+  assert.equal((await denied.json()).error, "invalid_grant");
+  assert.equal(calls.length, 0);
+});
+
 test("allowed browser origins can preflight and call modern MCP with required metadata headers", async (t) => {
   const { application: app, calls } = await fixture(t);
   const browserOrigin = "https://chatgpt.com";

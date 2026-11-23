@@ -325,7 +325,7 @@ export async function createApplication({
     const origin = request.headers.get("origin");
     if (origin && config.allowedOrigins.includes(origin)) {
       headers.set("access-control-allow-origin", origin);
-      headers.set("vary", "Origin");
+      if (!headers.has("vary")) headers.set("vary", "Origin");
       headers.set("access-control-expose-headers", "WWW-Authenticate, MCP-Protocol-Version");
     }
     return new Response(response.body, {
@@ -342,6 +342,27 @@ export async function createApplication({
     const origin = request.headers.get("origin");
     if (origin && !config.allowedOrigins.includes(origin))
       return textResponse("Origin is not allowed.", 403);
+    if (
+      request.method === "OPTIONS" &&
+      ["/oauth/token", "/oauth/revoke"].includes(url.pathname)
+    ) {
+      // Only public, URL-encoded OAuth requests from the explicit origin allowlist.
+      // Never enable credentialed CORS or allow a wildcard or opaque origin.
+      if (
+        !origin ||
+        request.headers.get("access-control-request-method") !== "POST"
+      )
+        return textResponse("Unsupported OAuth preflight.", 400);
+      return new Response(null, {
+        status: 204,
+        headers: {
+          "access-control-allow-methods": "POST, OPTIONS",
+          "access-control-allow-headers": "Content-Type",
+          "access-control-max-age": "600",
+          vary: "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+        },
+      });
+    }
     if (request.method === "OPTIONS" && url.pathname === "/mcp")
       return new Response(null, {
         status: 204,

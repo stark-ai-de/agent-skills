@@ -97,6 +97,7 @@ test("package copies canonical skill bytes and uses scoped public OAuth without 
   assert.deepEqual(server.extensions["com.openai"].auth, {
     type: "oauth",
     client: { mode: "provided", clientId: "review-client", tokenEndpointAuthMethod: "none" },
+    authorizationServerBase: "https://ads-fixture.stark-ai.de",
     authorizationUrl: "https://ads-fixture.stark-ai.de/oauth/authorize",
     tokenUrl: "https://ads-fixture.stark-ai.de/oauth/token",
     resource: serverUrl,

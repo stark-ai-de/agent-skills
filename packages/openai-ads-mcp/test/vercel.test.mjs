@@ -184,6 +184,64 @@ test("Vercel rejects spoofed origins before opening a database and never trusts 
   await result.text();
 });
 
+test("OAuth request diagnostics log only bounded routes, statuses and safe categories", async (t) => {
+  const events = [];
+  const runtime = createVercelHandler({
+    configLoader: () => config,
+    poolFactory: () => ({ end: async () => {} }),
+    attachPool: () => {},
+    applicationFactory: async () => ({
+      handle: async (request) =>
+        new Response("synthetic-sensitive-response", {
+          status: 400,
+          headers: {
+            "x-ads-oauth-error": "invalid_grant",
+            "set-cookie": "synthetic-sensitive-cookie",
+          },
+        }),
+      close: async () => {},
+    }),
+    oauthLogger: (event) => events.push(event),
+  });
+  t.after(() => runtime.close());
+  const response = await runtime.fetch(
+    new Request(`${origin}/oauth/token?state=synthetic-sensitive-state`, {
+      method: "POST",
+      headers: {
+        origin: "https://chatgpt.com",
+        authorization: "Bearer synthetic-sensitive-bearer",
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      body: "code=synthetic-sensitive-code",
+    }),
+  );
+  assert.equal(response.status, 400);
+  await response.text();
+  const wrongHost = await runtime.fetch(new Request("https://evil.example/oauth/authorize"));
+  assert.equal(wrongHost.status, 400);
+  await wrongHost.text();
+  const health = await runtime.fetch(new Request(`${origin}/health`));
+  await health.text();
+  assert.deepEqual(events, [
+    {
+      event: "ads.oauth.request",
+      route: "/oauth/token",
+      method: "POST",
+      status: 400,
+      originClass: "allowed",
+      error: "invalid_grant",
+    },
+    {
+      event: "ads.oauth.request",
+      route: "/oauth/authorize",
+      method: "GET",
+      status: 400,
+      originClass: "absent",
+    },
+  ]);
+  assert.doesNotMatch(JSON.stringify(events), /synthetic-sensitive|evil\.example/);
+});
+
 test("failed initialization closes its pool, redacts details and retries on a later invocation", async (t) => {
   let attempts = 0;
   let closed = 0;

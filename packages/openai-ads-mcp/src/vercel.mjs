@@ -52,6 +52,44 @@ function trustedRequest(request, config, env) {
   return new Request(request, { headers });
 }
 
+const observedOAuthPaths = new Set([
+  "/oauth/authorize",
+  "/oauth/token",
+  "/oauth/revoke",
+  "/.well-known/oauth-authorization-server",
+  "/.well-known/oauth-protected-resource",
+  "/.well-known/oauth-protected-resource/mcp",
+]);
+const observedOAuthErrors = new Set([
+  "invalid_request",
+  "invalid_client",
+  "invalid_grant",
+  "invalid_target",
+  "unsupported_grant_type",
+]);
+
+function oauthObservation(request, response, config) {
+  const route = new URL(request.url).pathname;
+  if (!observedOAuthPaths.has(route)) return null;
+  const origin = request.headers.get("origin");
+  const method = ["GET", "POST", "OPTIONS"].includes(request.method) ? request.method : "other";
+  const error = response.headers.get("x-ads-oauth-error");
+  return {
+    event: "ads.oauth.request",
+    route,
+    method,
+    status: response.status,
+    originClass: !origin
+      ? "absent"
+      : origin === "null"
+        ? "opaque"
+        : config?.allowedOrigins.includes(origin)
+          ? "allowed"
+          : "denied",
+    ...(observedOAuthErrors.has(error) ? { error } : {}),
+  };
+}
+
 function unavailable() {
   return textResponse("Service configuration or storage is unavailable.", 503, {
     "retry-after": "30",
@@ -81,6 +119,7 @@ export function createVercelHandler({
   poolFactory = createDatabasePool,
   attachPool = attachDatabasePool,
   applicationFactory = createApplication,
+  oauthLogger = (event) => console.info(JSON.stringify(event)),
 } = {}) {
   let config;
   let instance;
@@ -105,13 +144,26 @@ export function createVercelHandler({
   }
   return {
     async fetch(request) {
+      const observe = (response) => {
+        // Record only fixed route names, methods, status and error categories.
+        // Never read or log query strings, headers, form bodies or credentials.
+        const event = oauthObservation(request, response, config);
+        if (event) {
+          try {
+            oauthLogger(event);
+          } catch {
+            // Logging must not interfere with authentication or response delivery.
+          }
+        }
+        return response;
+      };
       try {
         // Include cold-start schema verification in the same total invocation budget.
         // This signal remains valid until a returned SSE/body stream has completed.
         const signal = AbortSignal.any([request.signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]);
         config ||= configLoader(env);
         const input = trustedRequest(new Request(request, { signal }), config, env);
-        if (!input) return textResponse("Invalid request host or origin.", 400);
+        if (!input) return observe(textResponse("Invalid request host or origin.", 400));
         const { app } = await beforeDeadline(application(), signal);
         signal.throwIfAborted();
         const response = await app.handle(input);
@@ -121,14 +173,16 @@ export function createVercelHandler({
           if (!headers.has(name)) headers.set(name, value);
         for (const name of ["cache-control", "cdn-cache-control", "vercel-cdn-cache-control"])
           headers.set(name, "no-store");
-        return new Response(response.body, {
-          status: response.status,
-          statusText: response.statusText,
-          headers,
-        });
+        return observe(
+          new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers,
+          }),
+        );
       } catch {
         // Database/configuration errors can contain credentials or connection URLs.
-        return unavailable();
+        return observe(unavailable());
       }
     },
     async close() {
