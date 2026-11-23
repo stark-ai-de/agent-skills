@@ -86,12 +86,7 @@
     "urls": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "website",
-        "privacyPolicy",
-        "termsOfService",
-        "support"
-      ],
+      "required": ["website", "privacyPolicy", "termsOfService", "support"],
       "properties": {
         "website": {
           "$ref": "#/$defs/url"
@@ -110,12 +105,7 @@
     "assets": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "logo",
-        "logoDark",
-        "composerIcon",
-        "composerIconDark"
-      ],
+      "required": ["logo", "logoDark", "composerIcon", "composerIconDark"],
       "properties": {
         "logo": {
           "type": "string",
@@ -138,10 +128,7 @@
     "skill": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "name",
-        "source"
-      ],
+      "required": ["name", "source"],
       "properties": {
         "name": {
           "const": "openai-advertiser-api"
@@ -168,19 +155,12 @@
     "review": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "test_cases",
-        "commerce",
-        "commerce_description"
-      ],
+      "required": ["test_cases", "commerce", "commerce_description"],
       "properties": {
         "test_cases": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "positive",
-            "negative"
-          ],
+          "required": ["positive", "negative"],
           "properties": {
             "positive": {
               "type": "array",
@@ -213,9 +193,7 @@
     "publication": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "release_notes"
-      ],
+      "required": ["release_notes"],
       "properties": {
         "release_notes": {
           "type": "string",
@@ -235,12 +213,7 @@
     "positiveReviewCase": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "description",
-        "prompt",
-        "tools_triggered",
-        "expected_behavior"
-      ],
+      "required": ["description", "prompt", "tools_triggered", "expected_behavior"],
       "properties": {
         "description": {
           "type": "string",
@@ -267,11 +240,7 @@
     "negativeReviewCase": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "description",
-        "prompt",
-        "expected_behavior"
-      ],
+      "required": ["description", "prompt", "expected_behavior"],
       "properties": {
         "description": {
           "type": "string",
