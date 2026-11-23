@@ -1,6 +1,6 @@
-# stark AI Ads
+# Ads API by stark AI
 
-stark AI Ads combines the canonical `openai-advertiser-api` skill with a separately deployed, authenticated MCP service. It supports documented Advertiser API work when the official Ads Manager plugin is unavailable or lacks a requested operation or parameter. It is an independent integration maintained by servrox solutions UG and is not an OpenAI product.
+Ads API by stark AI combines the canonical `openai-advertiser-api` skill with a separately deployed, authenticated MCP service. It supports documented Advertiser API work when the official Ads Manager plugin is unavailable or lacks a requested operation or parameter. It is an independent integration maintained by servrox solutions UG and is not an OpenAI product.
 
 The implementation and package source are reviewable in this repository. A package build is not evidence of a deployed service, an approved public listing, or a completed Ads operation. The initial implementation does not select a live deployment hostname or submit a plugin to OpenAI.
 
@@ -42,9 +42,9 @@ node scripts/plugin/validate-ads-plugin.mjs \
 
 The ZIP uses the repository's reproducible `zip-store-v1` format. `SOURCE-MANIFEST.json` records the explicit endpoint and OAuth client ID plus file hashes. The archive validator rebuilds the expected bytes from the canonical source and supplied configuration; changed skill files, added entries, changed client IDs or tampered bytes fail validation. Untracked/ignored source files and symlinks are refused as distribution inputs. No service executable, database, environment file, Ads key or OAuth client secret belongs in the plugin ZIP.
 
-The package includes both light- and dark-theme listing logos and composer icons using the existing stark AI artwork. The portal should import all four manifest paths; check the actual rendering in both themes before submission.
+The package includes four dedicated, independently branded PNG assets: 512 × 512 listing logos and 128 × 128 composer icons for light and dark themes. The original chart mark and palette are documented in [the asset directory](../../../plugins/assets/stark-ai-ads/README.md). It deliberately does not use the OpenAI logo. The portal should import all four manifest paths; check actual rendering in both themes before submission.
 
-The default archive is `dist/openai/stark-ai-ads-0.1.0.zip`. Use `--output` for a different file in `dist/openai/` or an explicit external build directory. Changing package metadata or the skill requires a new package version and archive.
+The default archive is `dist/openai/stark-ai-ads-0.1.0.zip`. Use `--output` for a different file in `dist/openai/` or an explicit external build directory. After the first published version, changing package metadata or the skill requires a new package version and archive. The repository release contains the canonical source and assets; the independent Ads ZIP must be built from the exact released tag with the actual selected MCP URL. Do not upload a fixture or placeholder archive.
 
 ## Deployment and public submission
 

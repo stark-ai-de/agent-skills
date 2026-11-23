@@ -160,7 +160,7 @@ export function createAuth({ config, store, verifyAdsKey }) {
     authorization_servers: [origin],
     scopes_supported: ["ads:read", "ads:write"],
     bearer_methods_supported: ["header"],
-    resource_name: "stark AI Ads",
+    resource_name: "Ads API by stark AI",
   });
   const redirect = (flow, parameters) => {
     if (!clients.get(flow.clientId)?.has(flow.redirectUri))

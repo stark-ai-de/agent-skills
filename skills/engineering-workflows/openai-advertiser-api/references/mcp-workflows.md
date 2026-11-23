@@ -1,6 +1,6 @@
 # Connected Advertiser API tools
 
-The independent stark AI Ads plugin can provide authenticated `ads_*` tools for this skill. Inspect the tools actually available in the conversation; installing skill instructions alone does not create an API connection. These tools call the public Advertiser API and are a valid API-only route. The official Ads Manager remains a separate connection and workflow.
+The independent Ads API by stark AI plugin can provide authenticated `ads_*` tools for this skill. Inspect the tools actually available in the conversation; installing skill instructions alone does not create an API connection. These tools call the public Advertiser API and are a valid API-only route. The official Ads Manager remains a separate connection and workflow.
 
 ## Connect and identify
 

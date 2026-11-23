@@ -1,6 +1,6 @@
-# stark AI Ads MCP
+# Ads API by stark AI MCP
 
-An authenticated MCP adapter for the public OpenAI Advertiser API, maintained in this repository as one deployable pnpm package. It supplies the tools used by the independent **stark AI Ads** plugin and the canonical [`openai-advertiser-api` skill](../../skills/engineering-workflows/openai-advertiser-api/).
+An authenticated MCP adapter for the public OpenAI Advertiser API, maintained in this repository as one deployable pnpm package. It supplies the tools used by the independent **Ads API by stark AI** plugin and the canonical [`openai-advertiser-api` skill](../../skills/engineering-workflows/openai-advertiser-api/).
 
 **Selected hosting: native Node.js Vercel Functions with external PostgreSQL.** Neon is the recommended managed PostgreSQL provider; another compatible PostgreSQL service can be used. Docker is optional for self-hosting and local database development. The [service map](../../docs/services.md) explains repository ownership; the [listing guide](../../docs/listing/openai/stark-ai-ads.md) owns packaging and publication.
 

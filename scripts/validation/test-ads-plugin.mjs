@@ -27,8 +27,10 @@ function fixture(t) {
   for (const relative of [
     ADS_PLUGIN_SOURCE,
     "plugins/stark-ai-ads.source.schema.json",
-    "site/public/logo.png",
-    "site/public/logo-dark.png",
+    "plugins/assets/stark-ai-ads/logo.png",
+    "plugins/assets/stark-ai-ads/logo-dark.png",
+    "plugins/assets/stark-ai-ads/composer-icon.png",
+    "plugins/assets/stark-ai-ads/composer-icon-dark.png",
     "LICENSE",
   ]) {
     const target = path.join(root, relative);
@@ -72,6 +74,8 @@ test("package copies canonical skill bytes and uses scoped public OAuth without 
   const manifest = JSON.parse(Buffer.from(files[".codex-plugin/plugin.json"]));
   assert.equal(manifest.name, "stark-ai-ads");
   assert.equal(manifest.version, "0.1.0");
+  assert.equal(manifest.interface.displayName, "Ads API by stark AI");
+  assert.equal(manifest.interface.shortDescription, "OpenAI Ads API integration");
   assert.equal(manifest.mcpServers, "./.mcp.json");
   assert.equal(manifest.skills, "./skills/");
   assert.equal(manifest.requires_local_executor, undefined);
@@ -98,19 +102,31 @@ test("package copies canonical skill bytes and uses scoped public OAuth without 
   for (const [field, asset, source] of [
     ["logo", "logo.png", "logo.png"],
     ["logoDark", "logo-dark.png", "logo-dark.png"],
-    ["composerIcon", "composer-icon.png", "logo.png"],
-    ["composerIconDark", "composer-icon-dark.png", "logo-dark.png"],
+    ["composerIcon", "composer-icon.png", "composer-icon.png"],
+    ["composerIconDark", "composer-icon-dark.png", "composer-icon-dark.png"],
   ]) {
     assert.equal(manifest.interface[field], `./assets/${asset}`);
     assert.deepEqual(
       Buffer.from(files[`assets/${asset}`]),
-      fs.readFileSync(path.join(root, "site/public", source)),
+      fs.readFileSync(path.join(root, "plugins/assets/stark-ai-ads", source)),
     );
   }
   assert.equal(
     Object.keys(files).some((name) => /server|node_modules|\.env/.test(name)),
     false,
   );
+  for (const [asset, size] of [
+    ["logo.png", 512],
+    ["logo-dark.png", 512],
+    ["composer-icon.png", 128],
+    ["composer-icon-dark.png", 128],
+  ]) {
+    const bytes = Buffer.from(files[`assets/${asset}`]);
+    assert.equal(bytes.readUInt32BE(16), size);
+    assert.equal(bytes.readUInt32BE(20), size);
+  }
+  assert.notDeepEqual(files["assets/logo.png"], files["assets/logo-dark.png"]);
+  assert.notDeepEqual(files["assets/composer-icon.png"], files["assets/composer-icon-dark.png"]);
   const sourceManifest = JSON.parse(Buffer.from(files["SOURCE-MANIFEST.json"]));
   assert.equal(sourceManifest.deploymentVerified, false);
   assert.equal(sourceManifest.serverUrl, serverUrl);
@@ -119,9 +135,9 @@ test("package copies canonical skill bytes and uses scoped public OAuth without 
 
 test("source validation rejects missing or invalid theme assets", (t) => {
   const root = fixture(t);
-  fs.rmSync(path.join(root, "site/public/logo-dark.png"));
+  fs.rmSync(path.join(root, "plugins/assets/stark-ai-ads/logo-dark.png"));
   assert.ok(validateAdsPluginSource(root).errors.length);
-  fs.writeFileSync(path.join(root, "site/public/logo-dark.png"), "not a PNG");
+  fs.writeFileSync(path.join(root, "plugins/assets/stark-ai-ads/logo-dark.png"), "not a PNG");
   assert.match(validateAdsPluginSource(root).errors.join("\n"), /PNG/);
 });
 

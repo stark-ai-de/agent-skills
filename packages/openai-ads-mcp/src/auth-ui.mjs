@@ -47,9 +47,9 @@ function page(title, body, { status = 200, cookie, origin } = {}, formAction = "
   };
   if (cookie) headers["set-cookie"] = cookie;
   return new Response(
-    `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escape(title)} · stark AI Ads</title><style nonce="${nonce}">
+    `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escape(title)} · Ads API by stark AI</title><style nonce="${nonce}">
   :root{color-scheme:light dark;font-family:system-ui,sans-serif;background:#10201d;color:#edf6f1}body{margin:0;padding:3rem 1.25rem}main{max-width:38rem;margin:auto}header{color:#9ed0b5;font-weight:650;margin-bottom:2.5rem}h1{font-size:1.8rem;line-height:1.2}p,li{line-height:1.6}label{display:block;font-weight:650;margin-top:1.5rem}input[type=password]{box-sizing:border-box;width:100%;padding:.85rem;margin:.5rem 0 1rem;background:#192d27;color:inherit;border:1px solid #78998a;border-radius:.4rem}button{font:inherit;font-weight:650;padding:.8rem 1.1rem;border:0;border-radius:.4rem;cursor:pointer;background:#b8f2cb;color:#10201d;margin:.5rem .5rem .5rem 0}button.secondary{background:#243c32;color:#eef7f2;border:1px solid #78998a}.box{padding:1rem 1.25rem;margin:1rem 0;border:1px solid #486457;border-radius:.5rem;overflow-wrap:anywhere}.notice{color:#f2d99d}.muted{color:#b3c6bd;font-size:.9rem}dt{margin-top:.6rem;font-weight:650}dd{margin:0}.check{font-weight:400;line-height:1.5}a{color:#b8f2cb}code{overflow-wrap:anywhere}
-  </style></head><body><main><header>stark AI Ads</header><h1>${escape(title)}</h1>${body}<p class="muted">Connection service: ${escape(origin ?? "")}<br><a href="/connections">Manage or disconnect your connections</a></p></main></body></html>`,
+  </style></head><body><main><header>Ads API by stark AI</header><h1>${escape(title)}</h1>${body}<p class="muted">Connection service: ${escape(origin ?? "")}<br><a href="/connections">Manage or disconnect your connections</a></p></main></body></html>`,
     { status, headers },
   );
 }
@@ -73,7 +73,7 @@ export function consentPage(flow, options = {}) {
   return page(
     "Review this connection",
     `
-    <p>Allow <strong>${escape(flow.clientId)}</strong> to use the following account through stark AI Ads?</p>
+    <p>Allow <strong>${escape(flow.clientId)}</strong> to use the following account through Ads API by stark AI?</p>
     <dl class="box"><dt>Account</dt><dd>${escape(account.name || account.id)}</dd><dt>Account ID</dt><dd>${escape(account.id)}</dd>${account.currency ? `<dt>Currency</dt><dd>${escape(account.currency)}</dd>` : ""}${account.timezone ? `<dt>Timezone</dt><dd>${escape(account.timezone)}</dd>` : ""}</dl>
     <p>This connection can read your account, campaigns, ads, reporting, feeds, audiences, and conversion settings through the available tools.</p>
     <form method="post" action="/oauth/authorize">${fields(flow, "consent")}

@@ -1,6 +1,6 @@
 # Plugins
 
-## stark AI Ads
+## Ads API by stark AI
 
 [`stark-ai-ads.source.json`](stark-ai-ads.source.json) defines the independent Ads product. It packages the canonical `openai-advertiser-api` skill with a configured remote OAuth MCP connection. The runtime is maintained under [`packages/openai-ads-mcp`](../packages/openai-ads-mcp/README.md); the [Ads listing guide](../docs/listing/openai/stark-ai-ads.md) describes deployment, reproducible packaging and public qualification.
 

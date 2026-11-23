@@ -215,7 +215,10 @@ export function buildAdsPluginEntries({ root = process.cwd(), serverUrl, oauthCl
     { path: "assets/logo.png", data: regularFile(root, source.assets.logo) },
     { path: "assets/logo-dark.png", data: regularFile(root, source.assets.logoDark) },
     { path: "assets/composer-icon.png", data: regularFile(root, source.assets.composerIcon) },
-    { path: "assets/composer-icon-dark.png", data: regularFile(root, source.assets.composerIconDark) },
+    {
+      path: "assets/composer-icon-dark.png",
+      data: regularFile(root, source.assets.composerIconDark),
+    },
     { path: "LICENSE", data: regularFile(root, "LICENSE") },
     {
       path: "README.md",
@@ -318,7 +321,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     else {
       const result = packageAdsPlugin(args);
       console.log(
-        `Packaged independent stark AI Ads candidate: ${result.output}\nSHA-256: ${result.sha256}\nBytes: ${result.bytes}\nRemote service availability and public submission remain unverified.`,
+        `Packaged independent Ads API by stark AI candidate: ${result.output}\nSHA-256: ${result.sha256}\nBytes: ${result.bytes}\nRemote service availability and public submission remain unverified.`,
       );
     }
   } catch (error) {

@@ -378,7 +378,7 @@ export async function createApplication({
     if (url.pathname === "/")
       return request.method === "GET"
         ? textResponse(
-            "stark AI Ads\nConnect this service through your ChatGPT plugin to use the OpenAI Advertiser API. An Ads Manager Advertiser API key is required. Manage or disconnect access at /connections.\n",
+            "Ads API by stark AI\nConnect this service through your ChatGPT plugin to use the OpenAI Advertiser API. An Ads Manager Advertiser API key is required. Manage or disconnect access at /connections.\n",
           )
         : textResponse("Method not allowed.", 405, { allow: "GET" });
     if (url.pathname !== "/mcp") return textResponse("Not found.", 404);
