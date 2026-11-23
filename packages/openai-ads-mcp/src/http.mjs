@@ -61,11 +61,11 @@ function withSignal(fetchImpl, signal) {
   };
 }
 
-async function acquireLease(store, scope, ownerId) {
+async function acquireLease(store, scope, ownerId, limit = 6) {
   const id = await store.acquireLease({
     scope,
     ownerId,
-    limit: 6,
+    limit,
     globalLimit: 128,
     ttlMs: LEASE_TTL_MS,
   });
@@ -186,12 +186,13 @@ export async function createApplication({
             "Use only the connected account. Inspect before applying authorized changes. A successful submission may still be pending; check operation status. Generated credentials are delivered through an authenticated browser download, never in tool output.",
         },
       );
-      async function executeOperation(...args) {
+      async function executeOperation(operation, input, options) {
         const budget = deadline(
           Math.max(1, Math.min(operationTimeoutMs, context.budget.expiresAt - Date.now())),
           context.budget.signal,
         );
         let release;
+        let releaseTargeting;
         try {
           budget.signal.throwIfAborted();
           release = await acquireLease(store, "ads-operation", principal.grantId);
@@ -202,27 +203,69 @@ export async function createApplication({
               { status: 429 },
             );
           budget.signal.throwIfAborted();
+          if (operation.name === "ads_update_campaign" && input.body?.targeting !== undefined) {
+            releaseTargeting = await acquireLease(
+              store,
+              "campaign-targeting",
+              JSON.stringify([principal.accountId, input.campaign_id]),
+              1,
+            );
+            if (!releaseTargeting)
+              throw new AdsClientError(
+                "targeting_busy",
+                "Campaign targeting is busy. Inspect its current state once the other operation finishes.",
+                { status: 409 },
+              );
+          }
+          const dispatch = withSignal(fetchImpl, budget.signal);
           const client = createAdsClient({
             apiKey: principal.apiKey,
             expectedAccountId: principal.accountId,
-            fetchImpl: withSignal(fetchImpl, budget.signal),
+            async fetchImpl(url, init) {
+              let response;
+              try {
+                await context.authenticate((current) => {
+                  if (
+                    current.grantId !== principal.grantId ||
+                    current.accountId !== principal.accountId ||
+                    current.apiKey !== principal.apiKey ||
+                    !current.scopes.includes(operation.scope)
+                  )
+                    return;
+                  response = Promise.resolve(dispatch(url, init));
+                  // Observe early network failures while the DB commits.
+                  response.catch(() => {});
+                });
+              } catch (error) {
+                // Preserve the operation lease until a dispatched request settles.
+                await response?.catch(() => {});
+                throw error;
+              }
+              if (!response)
+                throw new AdsClientError(
+                  "authorization_changed",
+                  "The Ads connection expired, was disconnected, or no longer authorizes this operation.",
+                  { status: 401 },
+                );
+              return response;
+            },
             maxResponseBytes: ADS_RESPONSE_BYTES,
           });
           // Do not race execute() or release on SSE cancellation. The shared operation
           // lease stays held until the actual upstream work (including readback) settles.
-          const result = await client.execute(...args);
+          const result = await client.execute(operation, input, options);
           if (Buffer.byteLength(JSON.stringify(result)) > ADS_RESPONSE_BYTES)
             throw new AdsClientError(
               "response_too_large",
-              args[0].readOnly
+              operation.readOnly
                 ? "The result is too large for delivery. Reduce the query or page size."
                 : "The Ads API may have applied the write, but the result is too large for delivery. Inspect resource/job state before any retry.",
-              { uncertain: !args[0].readOnly },
+              { uncertain: !operation.readOnly },
             );
           return result;
         } catch (error) {
           if (error instanceof AdsClientError) {
-            if (error.code === "response_too_large" && !args[0].readOnly)
+            if (error.code === "response_too_large" && !operation.readOnly)
               throw new AdsClientError(
                 "response_too_large",
                 "The Ads API may have applied the write, but its response is too large for delivery. Inspect resource/job state before any retry.",
@@ -240,6 +283,7 @@ export async function createApplication({
           throw error;
         } finally {
           budget.dispose();
+          await releaseTargeting?.();
           await release?.();
         }
       }
@@ -369,6 +413,7 @@ export async function createApplication({
         return textResponse("Request nesting exceeds the allowed depth.", 400);
       context.budget.signal.throwIfAborted();
       context.principal = principal;
+      context.authenticate = (beforeUnlock) => auth.authenticate(request, beforeUnlock);
       return await mcp.fetch(request, { parsedBody });
     } catch (error) {
       await release();

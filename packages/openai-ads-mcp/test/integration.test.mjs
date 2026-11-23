@@ -28,6 +28,7 @@ async function fixture(
 ) {
   const calls = [];
   const pending = [];
+  const campaigns = new Map();
   const config = {
     publicOrigin: origin,
     allowedOrigins: [origin, "https://chatgpt.com"],
@@ -56,6 +57,8 @@ async function fixture(
       return Response.json({
         id: `adacct_${suffix}`,
         name: `Account ${suffix}`,
+        legal_name: "Fixture Legal Name",
+        preview_url: "https://preview.example.test/private-preview",
         currency_code: "EUR",
         timezone: "Europe/Berlin",
       });
@@ -67,18 +70,23 @@ async function fixture(
         has_more: false,
       });
     }
-    if (url.pathname === "/v1/campaigns" && options.method === "POST")
-      return Response.json({
+    if (url.pathname === "/v1/campaigns" && options.method === "POST") {
+      const campaign = {
         id: `campaign_${suffix}`,
         ...JSON.parse(options.body),
         ...(responsePadding ? { padding: "x".repeat(responsePadding) } : {}),
-      });
+      };
+      campaigns.set(suffix, campaign);
+      return Response.json(campaign);
+    }
     if (url.pathname === `/v1/campaigns/campaign_${suffix}`)
-      return Response.json({
-        id: `campaign_${suffix}`,
-        status: "paused",
-        ...(responsePadding ? { padding: "x".repeat(responsePadding) } : {}),
-      });
+      return Response.json(
+        campaigns.get(suffix) ?? {
+          id: `campaign_${suffix}`,
+          status: "paused",
+          ...(responsePadding ? { padding: "x".repeat(responsePadding) } : {}),
+        },
+      );
     if (url.pathname === "/v1/conversions/api_keys" && options.method === "POST")
       return Response.json({
         id: "capi_test",
@@ -150,23 +158,30 @@ async function connect(app, key, write = true) {
   return { ...(await exchanged.json()), cookie };
 }
 
-async function rpc(app, token, method, params = {}) {
-  const response = await app.handle(
-    new Request(`${origin}/mcp`, {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${token}`,
-        "content-type": "application/json",
-        accept: "application/json, text/event-stream",
-        "mcp-protocol-version": "2025-11-25",
-      },
-      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
-    }),
-  );
+function rpcRequest(token, body) {
+  return new Request(`${origin}/mcp`, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${token}`,
+      "content-type": "application/json",
+      accept: "application/json, text/event-stream",
+      "mcp-protocol-version": "2025-11-25",
+    },
+    body,
+    ...(body instanceof ReadableStream ? { duplex: "half" } : {}),
+  });
+}
+
+async function readRpc(response) {
   const text = await response.text();
   assert.equal(response.status, 200, text);
   const line = text.split("\n").find((value) => value.startsWith("data:"));
   return JSON.parse(line ? line.slice(5).trim() : text);
+}
+
+async function rpc(app, token, method, params = {}) {
+  const body = JSON.stringify({ jsonrpc: "2.0", id: 1, method, params });
+  return readRpc(await app.handle(rpcRequest(token, body)));
 }
 
 test("real OAuth-to-MCP path discovers tools, reads the connected account and enforces read-only scope", async (t) => {
@@ -189,6 +204,14 @@ test("real OAuth-to-MCP path discovers tools, reads the connected account and en
   const tools = (await rpc(app, session.access_token, "tools/list")).result.tools;
   assert.ok(tools.some((tool) => tool.name === "ads_submit_bulk_job"));
   assert.ok(tools.some((tool) => tool.name === "ads_create_conversion_key"));
+  const summary = (await rpc(app, session.access_token, "tools/call", { name: "ads_get_account" }))
+    .result;
+  const expectedSummary = { id: "adacct_a", currency_code: "EUR", timezone: "Europe/Berlin" };
+  for (const output of [summary.structuredContent, JSON.parse(summary.content[0].text)]) {
+    assert.deepEqual(output.account, expectedSummary);
+    assert.deepEqual(output.data, expectedSummary);
+    assert.doesNotMatch(JSON.stringify(output), /Fixture Legal Name|private-preview/);
+  }
   const report = await rpc(app, session.access_token, "tools/call", {
     name: "ads_list_campaigns",
     arguments: { expected_account_id: "adacct_a" },
@@ -209,6 +232,164 @@ test("real OAuth-to-MCP path discovers tools, reads the connected account and en
   assert.equal(write.result.structuredContent.error.code, "insufficient_scope");
   assert.equal(calls.filter((call) => call.method === "POST").length, 0);
 });
+
+const campaignWrite = {
+  name: "ads_create_campaign",
+  arguments: {
+    expected_account_id: "adacct_a",
+    idempotency_key: "revocation-test-campaign",
+    body: {
+      name: "Test campaign",
+      status: "paused",
+      budget: { daily_spend_limit_micros: 1000000 },
+    },
+  },
+};
+
+async function revokeFromPeer(database, token) {
+  const peer = await database.openStore();
+  await peer.revoke({ token, clientId: "chatgpt" });
+}
+
+test(
+  "revocation during MCP body read prevents every Ads API request",
+  { timeout: 5000 },
+  async (t) => {
+    const { application, database, calls } = await fixture(t);
+    const { access_token: token } = await connect(application, "synthetic-advertiser-key-a");
+    const before = calls.length;
+    const reading = Promise.withResolvers();
+    const resume = Promise.withResolvers();
+    const body = new ReadableStream(
+      {
+        async pull(controller) {
+          reading.resolve();
+          await resume.promise;
+          controller.enqueue(
+            new TextEncoder().encode(
+              JSON.stringify({
+                id: 1,
+                jsonrpc: "2.0",
+                method: "tools/call",
+                params: campaignWrite,
+              }),
+            ),
+          );
+          controller.close();
+        },
+      },
+      { highWaterMark: 0 },
+    );
+    const response = application.handle(rpcRequest(token, body));
+    try {
+      await reading.promise;
+      await revokeFromPeer(database, token);
+    } finally {
+      resume.resolve();
+    }
+    const result = (await readRpc(await response)).result.structuredContent;
+    assert.equal(result.error.code, "authorization_changed");
+    assert.equal(result.error.uncertain, false);
+    assert.equal(calls.length, before);
+  },
+);
+
+test(
+  "revocation can finish during preflight and blocks the following write",
+  { timeout: 10000 },
+  async (t) => {
+    const { application, database, config, fetchImpl, calls } = await fixture(t);
+    const { access_token: token } = await connect(application, "synthetic-advertiser-key-a");
+    const dispatched = Promise.withResolvers();
+    const resume = Promise.withResolvers();
+    const peer = await createApplication({
+      config,
+      store: await database.openStore(),
+      async fetchImpl(url, init) {
+        const response = await fetchImpl(url, init);
+        if (url.pathname === "/v1/ad_account") {
+          dispatched.resolve();
+          await resume.promise;
+        }
+        return response;
+      },
+    });
+    t.after(() => peer.close());
+    const write = rpc(peer, token, "tools/call", campaignWrite);
+    try {
+      await dispatched.promise;
+      await revokeFromPeer(database, token);
+    } finally {
+      resume.resolve();
+    }
+    const result = (await write).result.structuredContent;
+    assert.equal(result.error.code, "authorization_changed");
+    assert.equal(result.error.uncertain, false);
+    assert.equal(calls.filter(({ method }) => method === "POST").length, 0);
+  },
+);
+
+test(
+  "campaign targeting leases cover readback across instances and grants",
+  { timeout: 5000 },
+  async (t) => {
+    const { application, database, config, fetchImpl } = await fixture(t);
+    const first = await connect(application, "synthetic-advertiser-key-a");
+    const second = await connect(application, "synthetic-advertiser-key-a");
+    const readingBack = Promise.withResolvers();
+    const resume = Promise.withResolvers();
+    let campaign = { id: "campaign_a", targeting: { locations: { countries: ["US"] } } };
+    let writes = 0;
+    const fetchCampaign = async (url, init) => {
+      if (url.pathname !== "/v1/campaigns/campaign_a") return fetchImpl(url, init);
+      if (init.method !== "GET") {
+        writes++;
+        campaign = { ...campaign, ...JSON.parse(init.body) };
+      } else if (writes === 1) {
+        readingBack.resolve();
+        await resume.promise;
+      }
+      return Response.json(campaign);
+    };
+    const peers = await Promise.all(
+      [1, 2].map(async () =>
+        createApplication({
+          config,
+          store: await database.openStore(),
+          fetchImpl: fetchCampaign,
+        }),
+      ),
+    );
+    t.after(() => Promise.all(peers.map((peer) => peer.close())));
+    const update = async (peer, session, targeting, replace_targeting = false) =>
+      (
+        await rpc(peer, session.access_token, "tools/call", {
+          name: "ads_update_campaign",
+          arguments: {
+            expected_account_id: "adacct_a",
+            campaign_id: campaign.id,
+            replace_targeting,
+            body: { targeting },
+          },
+        })
+      ).result.structuredContent;
+    const partial = update(peers[0], first, { platforms: { included: ["desktop_web"] } });
+    try {
+      await readingBack.promise;
+      for (const targeting of [{ platforms: { included: ["web"] } }, null]) {
+        const competing = await update(peers[1], second, targeting, true);
+        assert.equal(competing.error.code, "targeting_busy");
+      }
+      assert.equal(writes, 1);
+    } finally {
+      resume.resolve();
+    }
+    assert.equal((await partial).verification.status, "read_back");
+    assert.deepEqual(campaign.targeting.locations, { countries: ["US"] });
+    assert.equal((await update(peers[1], second, null, true)).verification.status, "read_back");
+    assert.equal(campaign.targeting, null);
+  },
+);
 
 test("allowed browser origins can preflight and call modern MCP with required metadata headers", async (t) => {
   const { application: app, calls } = await fixture(t);
@@ -533,7 +714,13 @@ const deadlinePrincipal = {
   apiKey: "synthetic-advertiser-key-a",
   scopes: ["ads:read"],
 };
-const deadlineAuth = { handle: async () => null, authenticate: async () => deadlinePrincipal };
+const deadlineAuth = {
+  handle: async () => null,
+  async authenticate(_request, beforeUnlock) {
+    beforeUnlock?.(deadlinePrincipal);
+    return deadlinePrincipal;
+  },
+};
 const deadlineConfig = { publicOrigin: origin, allowedOrigins: [origin] };
 const deadlineRequest = () =>
   new Request(`${origin}/mcp`, {

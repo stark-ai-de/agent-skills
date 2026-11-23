@@ -256,25 +256,57 @@ function pagination(operation, data, args) {
   };
 }
 
-function verificationPath(operation, args, data) {
+function verificationTarget(operation, args, data, body) {
   for (const [singular, plural, idField] of [
     ["campaign", "campaigns", "campaign_id"],
     ["ad_group", "ad_groups", "ad_group_id"],
     ["ad", "ads", "ad_id"],
+    ["audience", "custom_audiences", "custom_audience_id"],
   ]) {
-    if (
-      new RegExp(`^ads_(create|update|activate|pause|archive)_${singular}$`).test(operation.name)
-    ) {
-      const id = args[idField] ?? data.id;
-      return typeof id === "string" && identityPattern.test(id) ? `/${plural}/${id}` : null;
-    }
+    const action = new RegExp(`^ads_(create|update|activate|pause|archive)_${singular}$`).exec(
+      operation.name,
+    )?.[1];
+    if (!action) continue;
+    const id = args[idField] ?? data.id;
+    const status = { activate: "active", pause: "paused", archive: "archived" }[action];
+    const expected =
+      action === "create" && singular === "audience"
+        ? { ...body, status: "ready" }
+        : status
+          ? { status }
+          : body;
+    return {
+      path: typeof id === "string" && identityPattern.test(id) ? `/${plural}/${id}` : null,
+      identity: { id },
+      expected,
+    };
   }
-  if (operation.name === "ads_update_feed_settings") return `/feeds/${args.feed_id}/settings`;
-  if (["ads_create_audience", "ads_archive_audience"].includes(operation.name)) {
-    const id = args.custom_audience_id ?? data.id;
-    return typeof id === "string" && identityPattern.test(id) ? `/custom_audiences/${id}` : null;
-  }
+  if (operation.name === "ads_update_feed_settings")
+    return {
+      path: `/feeds/${args.feed_id}/settings`,
+      identity: { feed_id: args.feed_id },
+      expected: body,
+    };
   return null;
+}
+
+function matchesRequested(actual, expected, exactObject = false) {
+  if (Array.isArray(expected))
+    return (
+      Array.isArray(actual) &&
+      actual.length === expected.length &&
+      expected.every((value, index) => matchesRequested(actual[index], value))
+    );
+  if (!expected || typeof expected !== "object") return actual === expected;
+  if (!actual || typeof actual !== "object" || Array.isArray(actual)) return false;
+  const entries = Object.entries(expected);
+  if ((exactObject || !entries.length) && Object.keys(actual).length !== entries.length)
+    return false;
+  return entries.every(
+    ([key, value]) =>
+      Object.hasOwn(actual, key) &&
+      matchesRequested(actual[key], value, exactObject || key === "targeting"),
+  );
 }
 
 export function createAdsClient({
@@ -336,7 +368,8 @@ export function createAdsClient({
         redirect: "error",
         signal: AbortSignal.timeout(timeoutMs),
       });
-    } catch {
+    } catch (error) {
+      if (error instanceof AdsClientError && error.code === "authorization_changed") throw error;
       throw new AdsClientError(
         "transport_error",
         readOnly
@@ -457,14 +490,11 @@ export function createAdsClient({
         "Configure a secure credential destination before creating or rotating credentials.",
       );
     checkSemanticInput(operation, args);
-    const account = await getAccount();
+    const { id, currency_code, timezone } = await getAccount();
+    const account = { id, currency_code, timezone };
     if (operation.name === "ads_get_account")
       return {
-        account: {
-          id: account.id,
-          currency_code: account.currency_code,
-          timezone: account.timezone,
-        },
+        account,
         data: account,
         outcome: "read",
         verification: { status: "account_verified" },
@@ -482,6 +512,11 @@ export function createAdsClient({
       body.time_ranges = body.time_ranges.map((range) => conversionRange(range, account.timezone));
     if (operation.name === "ads_update_campaign" && body.targeting && !args.replace_targeting) {
       const current = (await request("GET", path)).data;
+      if (current.id !== args.campaign_id)
+        throw new AdsClientError(
+          "targeting_merge_unverified",
+          "The campaign read did not match the requested campaign. Inspect it before editing targeting.",
+        );
       body.targeting = mergeFields(writableTargeting(current.targeting), body.targeting);
       // Provider-added read-only fields are never copied into a write request.
       const targetingSchema = operation.schema.shape.body.shape.targeting;
@@ -564,25 +599,41 @@ export function createAdsClient({
             ? "pending"
             : "api_response_only",
     };
-    const readbackPath = !operation.readOnly && !pending && verificationPath(operation, args, data);
-    if (readbackPath) {
+    const target =
+      !operation.readOnly && !pending && verificationTarget(operation, args, result.data, body);
+    if (target) {
       try {
+        if (!target.path)
+          throw new AdsClientError(
+            "readback_identity_missing",
+            "Write response lacked a usable ID.",
+          );
+        const resource = (await request("GET", target.path)).data;
+        if (
+          !Object.keys(target.expected ?? {}).length ||
+          !matchesRequested(resource, target.identity) ||
+          !matchesRequested(resource, target.expected)
+        )
+          throw new AdsClientError(
+            "readback_mismatch",
+            "The requested values could not be verified on the expected resource.",
+          );
         verification = {
           status: "read_back",
-          resource: sanitize((await request("GET", readbackPath)).data, [apiKey]),
+          resource: sanitize(resource, [apiKey]),
         };
       } catch (error) {
         verification = {
           status: "unverified",
           error: error.code ?? "readback_failed",
           message:
-            "The write returned success, but readback failed. Inspect state before retrying.",
+            "The write returned success, but readback did not verify the requested state. Inspect state before retrying.",
         };
       }
     }
     const page = pagination(operation, data, args);
     return {
-      account: { id: account.id, currency_code: account.currency_code, timezone: account.timezone },
+      account,
       outcome: operation.readOnly ? "read" : pending ? "accepted" : "api_returned_success",
       data: uploadDetails ? { ...data, ...uploadDetails } : data,
       verification,

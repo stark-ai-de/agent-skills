@@ -144,6 +144,55 @@ test("campaign platform changes preserve existing location/audience siblings and
   assert.equal(result.verification.status, "read_back");
 });
 
+test("campaign writes require matching identity and requested budget and lifecycle state", async () => {
+  const input = {
+    campaign_id: "cmpn_one",
+    body: { budget: { daily_spend_limit_micros: 1000000 } },
+  };
+  const expected = { id: input.campaign_id, ...input.body };
+  for (const resource of [
+    {},
+    { ...expected, id: "cmpn_other" },
+    { ...expected, budget: { daily_spend_limit_micros: 500000 } },
+  ]) {
+    const { client } = mockClient([account, expected, resource]);
+    const result = await execute(client, "ads_update_campaign", input);
+    assert.equal(result.outcome, "api_returned_success");
+    assert.equal(result.verification.status, "unverified");
+  }
+  for (const status of ["active", "paused"]) {
+    const { client } = mockClient([account, { id: expected.id }, { id: expected.id, status }]);
+    const result = await execute(client, "ads_pause_campaign", { campaign_id: expected.id });
+    assert.equal(result.verification.status, status === "paused" ? "read_back" : "unverified");
+  }
+});
+
+test("targeting replacement verifies that omitted rules were cleared", async () => {
+  const stale = { id: "cmpn_one", targeting: { platforms: { included: ["web"] } } };
+  const { client, calls } = mockClient([account, stale, stale]);
+  const result = await execute(client, "ads_update_campaign", {
+    campaign_id: stale.id,
+    replace_targeting: true,
+    body: { targeting: {} },
+  });
+  assert.deepEqual(JSON.parse(calls[1].init.body), { targeting: {} });
+  assert.equal(result.verification.status, "unverified");
+});
+
+test("feed settings readback requires the feed ID and requested settings", async () => {
+  const input = { feed_id: "feed_one", body: { is_full_refresh: true } };
+  const expected = { feed_id: input.feed_id, ...input.body };
+  for (const [resource, status] of [
+    [expected, "read_back"],
+    [{ ...expected, feed_id: "feed_other" }, "unverified"],
+    [{ feed_id: expected.feed_id }, "unverified"],
+  ]) {
+    const { client } = mockClient([account, expected, resource]);
+    const result = await execute(client, "ads_update_feed_settings", input);
+    assert.equal(result.verification.status, status);
+  }
+});
+
 test("timeout during a write is uncertain and is never automatically retried", async () => {
   const { client, calls } = mockClient([account, new Error(`network ${key}`)]);
   await assert.rejects(
@@ -266,7 +315,7 @@ test("audience creation stays pending through every documented processing stage"
     assert.equal(result.verification.status, "pending", status);
     assert.equal(calls.length, 2, "Pending creation must not be labeled as a completed readback.");
   }
-  const ready = { id: "caud_one", status: "ready" };
+  const ready = { id: "caud_one", name: "Ready audience", status: "ready" };
   const { client, calls } = mockClient([account, ready, ready]);
   const result = await execute(client, "ads_create_audience", { body: { name: "Ready audience" } });
   assert.equal(result.outcome, "api_returned_success");

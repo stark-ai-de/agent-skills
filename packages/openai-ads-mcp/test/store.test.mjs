@@ -4,6 +4,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+import { setTimeout as sleep } from "node:timers/promises";
 import { AUTH_TTL, tokenDigest } from "../src/store.mjs";
 import { migrateDatabase, readMigrations } from "../src/storage/migrations.mjs";
 import {
@@ -446,6 +447,61 @@ test("cleanup preserves spent codes/refresh tokens for replay and removes expire
   await f.store.prune();
   for (const table of ["ads_grants", "ads_codes", "ads_tokens"])
     assert.equal((await f.query(`SELECT count(*) FROM ${table}`)).rows[0].count, "0");
+});
+
+test("prune removes abandoned grants and rechecks code redemption after waiting for a grant lock", async (t) => {
+  const f = await fixture(t);
+  const abandoned = await f.store.createAuthorizationCode(authorization);
+  const code = await f.store.createAuthorizationCode(authorization);
+  const input = { code, clientId: "chatgpt", redirectUri, resource, codeVerifier: verifier };
+  const timestamp = (
+    await f.query("SELECT expires_at FROM ads_codes WHERE hash = $1", [tokenDigest(code)])
+  ).rows[0].expires_at;
+  const pruner = await f.openStore({ now: () => Number(timestamp) + 1 });
+  const pool = await f.openPool();
+  const locked = Promise.withResolvers();
+  const release = Promise.withResolvers();
+  const blocker = withTransaction(pool, async (client) => {
+    await client.query("SELECT hash FROM ads_codes WHERE hash = $1 FOR UPDATE", [
+      tokenDigest(code),
+    ]);
+    locked.resolve(client.processID);
+    await release.promise;
+  });
+  const waitForBlocked = async (pid) => {
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const { rows } = await f.query(
+        "SELECT pid FROM pg_stat_activity WHERE $1::integer = ANY(pg_blocking_pids(pid))",
+        [pid],
+      );
+      if (rows.length) return rows[0].pid;
+      await sleep(10);
+    }
+    assert.fail("Expected an independent transaction to be blocked on the row lock.");
+  };
+  const blockerPid = await locked.promise;
+  const exchange = f.store.exchangeCode(input);
+  let prune;
+  try {
+    const exchangePid = await waitForBlocked(blockerPid);
+    prune = pruner.prune();
+    await waitForBlocked(exchangePid);
+  } finally {
+    release.resolve();
+    await blocker;
+    await prune;
+  }
+  const tokens = await exchange;
+  assert.ok(tokens);
+  assert.ok(await principal(f.store, tokens));
+  const { rows } = await f.query("SELECT hash, used_at FROM ads_codes");
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].hash, tokenDigest(code));
+  assert.notEqual(rows[0].hash, tokenDigest(abandoned));
+  assert.notEqual(rows[0].used_at, null);
+  assert.equal((await f.query("SELECT count(*) FROM ads_grants")).rows[0].count, "1");
+  assert.equal(await f.store.exchangeCode(input), null);
+  assert.equal(await principal(f.store, tokens), null);
 });
 
 test("database constraint failures roll back code consumption and token issuance together", async (t) => {

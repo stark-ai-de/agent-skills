@@ -481,10 +481,10 @@ export function createAuth({ config, store, verifyAdsKey }) {
       const session = sessionFrom(request);
       return Boolean(session && (await store.hasBrowserGrant(session, grantId)));
     },
-    async authenticate(request) {
+    async authenticate(request, beforeUnlock) {
       const authorization = request.headers.get("authorization") ?? "";
       const match = /^Bearer ([A-Za-z0-9_-]{43})$/i.exec(authorization);
-      return match ? await store.authenticate({ token: match[1], resource }) : null;
+      return match ? await store.authenticate({ token: match[1], resource }, beforeUnlock) : null;
     },
     async handle(request) {
       const url = new URL(request.url);

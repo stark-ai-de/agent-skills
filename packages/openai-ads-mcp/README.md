@@ -138,7 +138,13 @@ PostgreSQL stores encrypted Advertiser keys, encrypted pending OAuth forms and c
 
 Access tokens last **15 minutes**, authorization transactions **10 minutes**, codes **5 minutes**, browser sessions **1 hour** and generated-credential downloads at most **10 minutes**. Offline grants last at most **30 days** from consent. Refresh rotates tokens without extending that lifetime; reuse revokes the grant. Without offline access the grant lasts 15 minutes. Expiry is enforced on access independently of cleanup. Replay records survive until the grant expiry so cleanup cannot re-enable a spent token.
 
-Disconnect through `/connections` to revoke a grant, remove its encrypted Ads key and invalidate its pending credential downloads. A valid browser session shows only its own grants; after it expires, the same Ads key can unlock matching connections. Revoking the upstream key in Ads Manager independently blocks further API access. In-flight upstream writes may already have reached OpenAI when a connection is revoked; reconcile their outcome before retrying.
+Scheduled cleanup removes abandoned grants and their stored keys after the unused authorization code expires. Redeemed grants and their spent codes remain subject to the grant lifetime.
+
+Disconnect through `/connections` to revoke a grant, remove its encrypted Ads key and invalidate its pending credential downloads. A valid browser session shows only its own grants. After it expires, the same Ads key can unlock matching connections. The service revalidates the grant before each Ads API dispatch. Already-dispatched requests can finish, so reconcile their outcome before retrying a write. Revoking the upstream key in Ads Manager independently blocks further API access.
+
+Campaign targeting edits, replacements, and clears share one lease per account and campaign across service instances through readback. If the operation reports `targeting_busy`, wait for the other operation to finish and inspect current targeting. Changes in Ads Manager, direct API clients, and pending bulk jobs can still race with these edits.
+
+Where the service performs write readback, `read_back` requires matching resource identity and requested state. An accepted write may return `unverified` if the provider has yet to reflect the change or omits a requested field. Inspect the resource before retrying.
 
 Back up PostgreSQL using your provider's snapshots/PITR or consistent database backup tools. Back up the encryption key separately. Restore a matching database/key pair into the intended environment; wrong keys, schema history or environment markers fail closed. Restoring old database state can resurrect previously revoked grants, so revoke affected upstream keys if needed. Define backup retention/deletion, including old encrypted data, with the operator.
 

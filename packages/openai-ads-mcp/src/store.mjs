@@ -334,7 +334,7 @@ export async function createStore({
         return issueTokens(client, grant, next, timestamp);
       });
     },
-    async authenticate({ token, resource }) {
+    async authenticate({ token, resource }, beforeUnlock) {
       return transaction(async (client) => {
         const hash = tokenDigest(token);
         const initial = (
@@ -356,13 +356,17 @@ export async function createStore({
           grant.resource !== resource
         )
           return null;
-        return {
+        const principal = {
           accountId: grant.account_id,
           apiKey: open(grant.credential, `grant:${grant.id}`).apiKey,
           scopes: row.scopes,
           grantId: grant.id,
           clientId: grant.client_id,
         };
+        // Dispatch synchronously under the grant lock. The caller awaits the
+        // upstream response separately so revocation can acquire the lock.
+        beforeUnlock?.(principal);
+        return principal;
       });
     },
     async revoke({ token, clientId }) {
@@ -560,16 +564,23 @@ export async function createStore({
         const timestamp = await clock(client);
         // Grant locks always precede child-row locks, also in maintenance. Child
         // cleanup follows the same browser-before-handoff order as revocation.
-        const expired = (
+        const expiredGrant = `expires_at <= $1 OR EXISTS (
+          SELECT 1 FROM ads_codes
+          WHERE grant_id = ads_grants.id AND used_at IS NULL AND expires_at <= $1
+        )`;
+        const candidates = (
           await client.query(
-            "SELECT id FROM ads_grants WHERE expires_at <= $1 ORDER BY id FOR UPDATE",
+            `SELECT id FROM ads_grants WHERE ${expiredGrant} ORDER BY id FOR UPDATE`,
             [timestamp],
           )
         ).rows;
-        if (expired.length)
-          await client.query("DELETE FROM ads_grants WHERE id = ANY($1::text[])", [
-            expired.map(({ id }) => id),
-          ]);
+        // A concurrent exchange may have redeemed the code while prune waited
+        // for its grant lock. Recheck with a fresh statement snapshot.
+        if (candidates.length)
+          await client.query(
+            `DELETE FROM ads_grants WHERE id = ANY($2::text[]) AND (${expiredGrant})`,
+            [timestamp, candidates.map(({ id }) => id)],
+          );
         await client.query("DELETE FROM ads_flows WHERE expires_at <= $1", [timestamp]);
         await client.query("DELETE FROM ads_browser_sessions WHERE expires_at <= $1", [timestamp]);
         await client.query("DELETE FROM ads_handoffs WHERE expires_at <= $1", [timestamp]);

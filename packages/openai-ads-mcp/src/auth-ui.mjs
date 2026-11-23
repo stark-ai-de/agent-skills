@@ -91,7 +91,7 @@ export function connectionsPage(flow, grants, options = {}) {
   return page(
     "Manage your connections",
     `
-    <p>Disconnecting a grant stops its tools immediately and removes its stored Ads key and pending credential downloads from this service.</p>
+    <p>Disconnecting a grant blocks new Ads API requests and removes its stored Ads key and pending credential downloads from this service. Requests already sent to Ads can still finish.</p>
     ${options.message ? `<p class="notice" role="status">${escape(options.message)}</p>` : ""}
     ${grants.length ? grants.map((grant) => `<section class="box"><strong>${escape(grant.accountId)}</strong><p>Client: ${escape(grant.clientId)}<br>Access: ${grant.scopes.includes("ads:write") ? "Read and requested changes" : "Read only"}<br>Expires: ${escape(new Date(grant.expiresAt).toISOString())}</p><form method="post" action="/connections">${fields(flow, "revoke")}${hidden("grant_id", grant.grantId)}<button type="submit" class="secondary">Disconnect this grant</button></form></section>`).join("") : "<p>No active connections are unlocked in this browser.</p>"}
     <details><summary>Unlock connections with your Ads key</summary><p>Enter the same Advertiser API key that you used to connect. This unlocks only grants created with that key; the key is not displayed or sent to ChatGPT.</p><form method="post" action="/connections" autocomplete="off">${fields(flow, "unlock")}${secretInput}<button type="submit">Unlock connections</button></form></details>
