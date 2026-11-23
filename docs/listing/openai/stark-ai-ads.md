@@ -2,7 +2,7 @@
 
 Ads API by stark AI combines the canonical `openai-advertiser-api` skill with a separately deployed, authenticated MCP service. It supports documented Advertiser API work when the official Ads Manager plugin is unavailable or lacks a requested operation or parameter. It is an independent integration maintained by servrox solutions UG and is not an OpenAI product.
 
-The implementation and package source are reviewable in this repository. A package build is not evidence of a deployed service, an approved public listing, or a completed Ads operation. The initial implementation does not select a live deployment hostname or submit a plugin to OpenAI.
+The production MCP service is hosted at [stark-ai-ads-mcp.vercel.app](https://stark-ai-ads-mcp.vercel.app). The implementation and package source are reviewable in this repository. A package build alone is not evidence of a successful deployment, public listing approval or completed Ads operation.
 
 ## Connect an account
 
@@ -35,7 +35,7 @@ node scripts/plugin/package-ads-plugin.mjs \
 node scripts/plugin/validate-ads-plugin.mjs \
   --server-url "$ADS_PLUGIN_MCP_URL" \
   --oauth-client-id stark-ai-ads-chatgpt \
-  --archive dist/openai/stark-ai-ads-0.1.0.zip
+  --archive dist/openai/stark-ai-ads-0.1.1.zip
 ```
 
 `ADS_PLUGIN_MCP_URL` is a public configuration value, not a credential. It must use HTTPS, a real DNS hostname and the `/mcp` path on the deployed service. The packager rejects credentials in URLs, query strings, fragments, local addresses and example domains. It performs no network calls and does not claim that a syntactically valid hostname is deployed or owned by the publisher.
@@ -44,7 +44,7 @@ The ZIP uses the repository's reproducible `zip-store-v1` format. `SOURCE-MANIFE
 
 The package includes four dedicated, independently branded PNG assets: 512 × 512 listing logos and 128 × 128 composer icons for light and dark themes. The original chart mark and palette are documented in [the asset directory](../../../plugins/assets/stark-ai-ads/README.md). It deliberately does not use the OpenAI logo. The portal should import all four manifest paths; check actual rendering in both themes before submission.
 
-The default archive is `dist/openai/stark-ai-ads-0.1.0.zip`. Use `--output` for a different file in `dist/openai/` or an explicit external build directory. After the first published version, changing package metadata or the skill requires a new package version and archive. The repository release contains the canonical source and assets; the independent Ads ZIP must be built from the exact released tag with the actual selected MCP URL. Do not upload a fixture or placeholder archive.
+The default archive is `dist/openai/stark-ai-ads-0.1.1.zip`. Use `--output` for a different file in `dist/openai/` or an explicit external build directory. After the first published version, changing package metadata or the skill requires a new package version and archive. The repository release contains the canonical source and assets; the independent Ads ZIP must be built from the exact released tag with the actual selected MCP URL. Do not upload a fixture or placeholder archive.
 
 ## Deployment and public submission
 
@@ -52,17 +52,17 @@ Follow the [MCP runtime guide](../../../packages/openai-ads-mcp/README.md) to co
 
 The manifest requests `ads:read` and `offline_access` as base scopes; the default requested scopes also include `ads:write`. Users can decline write consent. Tool authorization is enforced by the service, in addition to ChatGPT's action permissions and the skill's user-intent checks.
 
-Before public submission, the publisher must verify the selected service's domain ownership, exact OAuth callback, reconnection and revocation, read-only consent, authorized write behavior, restart persistence and actual ChatGPT installation. Review the privacy and terms sections below against the deployed operator's configuration and publish accessible policy/contact pages. The source currently points to this document on the repository's `main` branch; those URLs become usable only after the document is merged and public.
+Before public submission, the publisher must verify the selected service's domain ownership, exact OAuth callback, reconnection and revocation, read-only consent, authorized write behavior, restart persistence and actual ChatGPT installation. Review the privacy and terms sections below against the deployed operator's configuration and publish accessible policy/contact pages. The listing points to this public document on the repository's `main` branch. Review the actual deployment disclosures and support routes before submitting.
 
 Upload an initial package that already contains its MCP connection. The current [OpenAI submission guide](https://developers.openai.com/plugins/deploy/submission) does not support adding MCP to an already published skills-only plugin. It also does not provide a fixed API-key connection flow; this package declares a registered OAuth public client rather than embedding a bearer token.
 
-Prepare the required demo recording and exactly five positive and three negative review cases against the deployed service. Suitable positive cases cover account identification, campaign listing, scoped reporting, an authorized write with readback, and completed bulk-job results. Negative cases cover a mismatched account, missing write permission, and an unsupported operation. Run each positive case using the dedicated reviewer account and record the expected tools and observable result; verify the negative cases do not perform an unauthorized operation. Use a dedicated reviewer account and keep its credentials out of public artifacts. No fabricated recording URL, test-account access or publication receipt is included in the package.
+The ZIP imports five positive and three negative review cases, the commerce declaration and release notes from the canonical source manifest. Cases cover account identification, campaign and ad-group listing, scoped reporting, an explicitly authorized name-only change to a paused reviewer campaign, account mismatch, preparation without mutation and an unsupported credential/endpoint. Run the cases with a dedicated reviewer account and record the observed results; verify that a read-only OAuth grant denies writes. The actual reviewer-accessible demo recording and private credentials must be supplied in the OpenAI dashboard. Do not fabricate a recording URL, test-account access or publication receipt or put credentials into the archive.
 
 The [package guide](https://developers.openai.com/plugins/build/plugins), [authentication guide](https://developers.openai.com/plugins/build/auth) and [submission guide](https://developers.openai.com/plugins/deploy/submission) are the live sources. This packaging contract was checked on 2026-11-23. A successful offline build does not replace portal checks, service operation or publication approval.
 
 ## Privacy
 
-This section describes the reference implementation's data handling. The operator of a deployed instance must identify its contact details, hosting region, infrastructure providers and backup retention before making the service available publicly. The repository does not claim that an instance is already operating.
+This section describes the production service operated by servrox solutions UG. The application runs on Vercel Functions in Frankfurt, Germany (`fra1`); the dedicated Neon PostgreSQL database uses AWS Europe Central (Frankfurt, `aws-eu-central-1`). At deployment qualification on 2026-11-23, the database's configured point-in-time restore history window was six hours. That window is not a promise about all infrastructure logs, backups or subprocessors. Contact the publisher using the private support route below for data-access, erasure and privacy inquiries.
 
 The service receives the Ads API key in its HTTPS account-connection form. It verifies the account with OpenAI Ads and stores that key encrypted with AES-256-GCM in its external PostgreSQL database. Each authorization grant binds a key to one Ads account, OAuth client, resource and scope set. OAuth access and refresh tokens are stored as cryptographic hashes. The encryption key is operator-managed configuration and must be kept separate from the database and backups.
 
