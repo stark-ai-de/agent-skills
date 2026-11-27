@@ -154,7 +154,7 @@ Content files are private UTF-8 files in that run directory, without traversal o
 symlinks. The helper reads exact bytes and binds them into the plan.
 
 - `document`: `documentKey` from inspection, title, `coverage: {contentHash,
-allDirectReferencesReviewed:true}` and all `references`. No `contentFile` or URL:
+  allDirectReferencesReviewed:true}` and all `references`. No `contentFile` or URL:
   exact canonical/draft text comes from inspection. Coverage is an agent attestation,
   not automated proof that the prose was understood.
 - `source`: exact HTTP(S) `url`, title, optional `capture: {status,contentHash,reason}`.

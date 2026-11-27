@@ -2,18 +2,18 @@
 
 ID: AC-ADR-013
 Title: Own Language, Package, Build, Lint, and Supply-Chain Tooling Explicitly
-Status: Accepted
+Status: Superseded
 Date: 2026-07-28
 Owner: stark-ai-de
 Scope: target-repository
 Category: stack-tooling
 Tags: typescript, pnpm, monorepo, builds, lint, formatting, oxc, supply-chain
 Applies when: Establishing or changing a JavaScript/TypeScript compiler, package manager, workspace, task orchestration, lint/format toolchain, or dependency trust policy.
-Adoptable: true
+Adoptable: false
 Variant: Short
 Canonical variant: Long
 Supersedes: none
-Superseded by: none
+Superseded by: AC-ADR-069
 Guide verified: 2026-07-30
 Gist: Assign one owner to each tooling responsibility and gate optimization or replacement tools on repository compatibility evidence.
 

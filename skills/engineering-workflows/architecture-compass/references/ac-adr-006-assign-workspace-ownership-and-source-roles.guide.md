@@ -98,7 +98,7 @@ A “no” does not forbid future extraction; it suggests app-local ownership fo
 Use this optional worksheet when the user requests less custom code, fewer
 abstractions, deduplication, or framework/library reuse. It applies the existing
 ownership decision, [runtime boundaries](ac-adr-007-enforce-runtime-safe-module-and-public-package-boundaries.long.md),
-[dependency ownership](ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.long.md),
+[dependency ownership](ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md),
 and [validation contract](ac-adr-049-distinguish-change-risk-from-representative-environment-observation.long.md);
 it is not a new adoptable policy, mandatory optimization pass, or sixth workflow.
 Use target-native languages, tools and accepted decisions. An audit reports

@@ -111,7 +111,7 @@
       "command": "pnpm run validate:jev",
       "owner": "scripts/validation/jev-capability-advisor/validate.mjs",
       "proof": "Offline advisor selection, metadata, bounded cache and transport contracts with injected responses",
-      "cadence": "Pull requests with Jev validation changes; full 3 OS \u00d7 2 Python matrix on matching main pushes and manual dispatch"
+      "cadence": "Pull requests with Jev validation changes; full 3 OS × 2 Python matrix on matching main pushes and manual dispatch"
     },
     {
       "id": "change-impact",
@@ -168,6 +168,13 @@
       "owner": "scripts/plugin/validate-ads-plugin.mjs",
       "proof": "Independent Ads plugin source, canonical ChatGPT skill metadata, scoped OAuth configuration, deterministic ZIP bytes, archive boundaries and refusal of unsafe inputs. Portal review and publication are separate.",
       "cadence": "every aggregate run; hosted Validate owns the aggregate"
+    },
+    {
+      "id": "shared-code-quality",
+      "command": "pnpm run validate:quality",
+      "owner": "scripts/quality/contract.test.mjs",
+      "proof": "Immutable shared package/preset/CI wiring, effective consumer negative controls, complete Oxlint reports and non-increasing migration budgets. Existing native correctness and formatting remain required.",
+      "cadence": "every aggregate run; hosted Validate compares allowances with the pull-request base"
     }
   ]
 }

@@ -29,7 +29,7 @@ Qualification examples: repeated runs with fixed and varied recorded seeds; malf
 
 ## Related decisions
 
-Use AC-ADR-018 for owning-boundary proof and AC-ADR-013/014/058 for applicable toolchain and runtime selection.
+Use AC-ADR-018 for owning-boundary proof and AC-ADR-069/014/058 for applicable toolchain and runtime selection.
 
 ## Sources
 

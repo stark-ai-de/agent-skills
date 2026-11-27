@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "1.3.1"
+  version: "1.3.2"
 ---
 
 # Visual Reports

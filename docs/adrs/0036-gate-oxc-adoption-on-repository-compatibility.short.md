@@ -2,7 +2,7 @@
 
 ID: ADR-0036
 Title: Gate Oxc adoption on repository compatibility
-Status: Accepted
+Status: Superseded
 Date: 2026-07-28
 Owner: stark-ai-de
 Scope: repository
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Short
 Canonical variant: Long
 Supersedes: ADR-0020
-Superseded by: None
+Superseded by: ADR-0080
 Guide verified: 2026-07-28
 Gist: Oxc adoption must preserve the target repository's required coverage.
 

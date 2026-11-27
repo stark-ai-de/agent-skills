@@ -6,7 +6,7 @@ compatibility: Designed for Codex, Cursor, Claude Code, ChatGPT Chat/Work, Codex
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.13.2"
+  version: "0.14.0"
 ---
 
 # Architecture Compass
@@ -59,6 +59,8 @@ Agent-initiated activation may select and announce `audit` without mutation auth
 
 Before selecting references, read [the catalog](references/adr-catalog.md) and [the reading map](references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md#selective-reference-routing). Preserve canonical Long authority, non-normative Guides and the map's internal-policy and testing-promotion boundaries. Select only applicable decisions. Start workflow authority with [AC-ADR-064 Short](references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.short.md).
 
+For JavaScript/TypeScript quality or toolchain work, route through [AC-ADR-069 Short](references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.short.md) · [Long](references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md) · [Guide](references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md). Use [AC-ADR-070 Short](references/ac-adr-070-use-shared-quality-in-the-public-skill-repository-profile.short.md) · [Long](references/ac-adr-070-use-shared-quality-in-the-public-skill-repository-profile.long.md) · [Guide](references/ac-adr-070-use-shared-quality-in-the-public-skill-repository-profile.guide.md) for the selectable public-skill repository profile. Follow their applicability, local mapping, compatibility and migration contracts within the selected route; they add no workflow or foundation decision. For an authorized quality implementation or concrete adoption handoff, read the [new/existing consumer recipes](assets/shared-quality-adoption-recipes.md), including daily commands, CI proof and migration limits.
+
 ## Inputs to inspect
 
 After the route is resolved, inspect only what it needs:
@@ -96,6 +98,7 @@ For requested code simplification, duplication reduction, or library reuse, load
 - For relevant coordinated product/feature planning, propose AC-ADR-067 conditionally and follow its Guide. Resolve local identity, exact supported startup binding, explicit skill preselection, availability and separate provisioning grants. Preserve the seven-decision foundation; missing or experimental skills block only the dependent handoff.
 
 - Use target evidence for `recommended` or evaluate every accepted adoptable target-repository decision for `complete`. Only a new or evidence-empty repository receives AC-ADR-005, 006, 018, 019, 021, 022, and 049 as its initial candidate foundation. Setup never authorizes application refactoring, deployment, publication, or production probes.
+- When AC-ADR-069 is selected, record its compact implementation handoff in the setup report: local mapping, reviewed pin, actual source scope, separate evidence states, existing commands and the next action/owner. Governance acceptance alone is not active enforcement.
 - When AC-ADR-065 is selected, record the repository-native adoption mapping, authorized hosts, and prerequisite gaps through its Guide. Adoption does not activate hooks or authorize TypeSafe processing.
 
 ### `audit`

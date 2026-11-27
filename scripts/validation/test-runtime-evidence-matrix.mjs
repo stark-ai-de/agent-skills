@@ -32,6 +32,10 @@ const adsRootCommands = new Map([
   ],
 ]);
 const internalNodeOwners = new Map([
+  ["scripts/quality/oxlint.mjs", "internal:shared-quality:node-cli"],
+  ["scripts/quality/contract.test.mjs", "internal:shared-quality:node-cli"],
+  ["scripts/quality/usability-fixture.mjs", "internal:shared-quality:node-cli"],
+  ["scripts/quality/adoption-fixture.mjs", "internal:shared-quality:node-cli"],
   [
     "scripts/validation/architecture-compass/portless-guide.test.mjs",
     "internal:portless-guide:node-fixtures",
@@ -444,7 +448,6 @@ function negativeFixtureErrors() {
     findings.push("a matrix winner change without a command change must be rejected");
   }
 
-  // A composed Python/Node command must not assign the Node child to Python.
   const mixedKarakeep = discoverPackageScriptSurfaces(
     {
       ...packageJson.scripts,
@@ -500,8 +503,7 @@ function negativeFixtureErrors() {
     }
   }
 
-  // Each nested pnpm script keeps its own matrix owner, including the intentional
-  // Node fallback reached by the normal Bun aggregate.
+  // Nested pnpm scripts retain their runtime owner, including the aggregate's Node fallback.
   const delegation = discoverPackageScriptSurfaces(
     { ...packageJson.scripts, "validate:skills": 'bun exec "pnpm run validate:memory-curators"' },
     sitePackageJson.scripts,
@@ -658,8 +660,8 @@ requireCondition(
   "Draw.io explicit Node.js ownership must be discovered exactly once",
 );
 requireCondition(
-  requiredSurfaces.size === 24,
-  `current runtime-selection inventory must discover 24 surfaces, found ${requiredSurfaces.size}`,
+  requiredSurfaces.size === 25,
+  `current runtime-selection inventory must discover 25 surfaces, found ${requiredSurfaces.size}`,
 );
 requireCondition(
   seenSurfaces.size === requiredSurfaces.size &&
@@ -667,8 +669,8 @@ requireCondition(
   "matrix surfaces must equal the complete current runtime-selection inventory",
 );
 requireCondition(
-  matrix.boundaries?.length === 23,
-  `current runtime evidence matrix must define 23 boundaries, found ${matrix.boundaries?.length ?? 0}`,
+  matrix.boundaries?.length === 24,
+  `current runtime evidence matrix must define 24 boundaries, found ${matrix.boundaries?.length ?? 0}`,
 );
 errors.push(...runtimeAlignmentErrors(matrix.boundaries ?? [], surfaceOccurrences));
 errors.push(...negativeFixtureErrors());

@@ -5,14 +5,15 @@
   // ⚡ Code quality & formatting
   "editor.defaultFormatter": "oxc.oxc-vscode",
   "editor.formatOnSave": true,
-  "oxc.fmt.configPath": "oxfmt.json",
+  "oxc.fmt.configPath": "oxfmt.config.mjs",
+  "oxc.lint.configPath": "oxlint.config.mjs",
 
   // 🧠 TypeScript 7 native language service
   "js/ts.experimental.useTsgo": true,
 
-  // 🛠️ Apply safe Oxc fixes automatically.
+  // 🛠️ Apply shared lint fixes deliberately with quality:fix during migration.
   "editor.codeActionsOnSave": {
-    "source.fixAll.oxc": "always",
+    "source.fixAll.oxc": "never",
     "source.organizeImports": "explicit"
   },
 

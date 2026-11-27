@@ -34,7 +34,7 @@ development is selection evidence even for one app. Complete setup evaluates
 the decision alongside other adoptable entries. Audit reports without writing;
 refactoring requires accepted local governance and authorized migration scope.
 
-Read AC-ADR-013 for tooling ownership, AC-ADR-014 for runtime/hosting boundaries,
+Read AC-ADR-069 for tooling ownership, AC-ADR-014 for runtime/hosting boundaries,
 AC-ADR-019 for trust, AC-ADR-023 for process lifecycle, AC-ADR-054 for worktrees,
 and AC-ADR-058 where JavaScript tooling execution applies. An existing accepted
 proxy choice needs a local successor/adaptation before replacement. A working

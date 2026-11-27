@@ -15,12 +15,14 @@ wait for component-level adoption choices.
 
 ## Deterministic Assertions
 
-- contains: AC-ADR-040
+- contains: AC-ADR-070
 - contains: public-skill-repository
 - contains: TypeScript 7
 - contains: TypeScript 6 compatibility lane
 - contains: pnpm
 - contains: Oxc
+- contains: AC-ADR-069
+- contains: @servrox/code-quality
 - contains: GitHub
 - contains: Skills CLI
 - contains: adopt, adapt, defer, or reject
@@ -29,11 +31,11 @@ wait for component-level adoption choices.
 
 ## Expected Behavior
 
-- Present AC-ADR-040 as one adoptable target-repository provider, not another
+- Present AC-ADR-070 as one adoptable target-repository provider, not another
   setup coverage choice or a global default.
 - Propose the open skill format, Apache-2.0, pnpm ownership, supported Node.js
-  LTS tooling, stable TypeScript 7, bounded TypeScript 6 compatibility, gated
-  Oxc, portable helpers, external evals, release gates, and GitHub/Skills CLI
+  LTS tooling, stable TypeScript 7, bounded TypeScript 6 compatibility, mandatory
+  shared quality under AC-ADR-069, portable helpers, external evals, release gates, and GitHub/Skills CLI
   publishing.
 - Keep package manager, compiler, lint/format, runtime, orchestration, and host
   concerns independently owned and record each component as adopt, adapt,

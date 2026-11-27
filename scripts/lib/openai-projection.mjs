@@ -328,4 +328,5 @@ export function syncOpenAiProjection({ root = process.cwd(), target, check = fal
   return { ...result, listing, pluginManifest };
 }
 
-export { LISTING_PATH, readOpenAiListing };
+export { LISTING_PATH };
+export { readOpenAiListing };

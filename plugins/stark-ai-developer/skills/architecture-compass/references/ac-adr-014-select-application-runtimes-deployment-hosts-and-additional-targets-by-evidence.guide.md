@@ -57,7 +57,7 @@ Apply the matrix to the concrete executable or deployable. Bun remains the winne
 
 Capture exact framework/runtime/adapter/package-manager versions, platform and architecture, build command, lockfile hash or revision, exercised capabilities, host deployment ID, and unresolved gaps. Repeat the matrix after a major runtime, framework, host, or plugin update.
 
-When the selectable public-skill repository profile in AC-ADR-040 applies, treat its Node.js choice as repository-tooling ownership, not an application-runtime or deployment-host decision. Add Bun, Next.js, Elysia, an orchestrator, a documentation site, or a host only from the deployable evidence required by this ADR.
+When the selectable public-skill repository profile in AC-ADR-070 applies, treat its Node.js choice as repository-tooling ownership, not an application-runtime or deployment-host decision. Add Bun, Next.js, Elysia, an orchestrator, a documentation site, or a host only from the deployable evidence required by this ADR.
 
 ## Decision lineage
 

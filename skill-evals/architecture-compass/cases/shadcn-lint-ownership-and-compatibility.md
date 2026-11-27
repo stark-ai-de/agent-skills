@@ -10,7 +10,7 @@ A Tailwind v4 monorepo has one root Oxlint command running through Bun, pnpm dep
 
 ## Deterministic Assertions
 
-- contains: AC-ADR-013
+- contains: AC-ADR-069
 - contains: AC-ADR-058
 - contains: root
 - contains: components.json

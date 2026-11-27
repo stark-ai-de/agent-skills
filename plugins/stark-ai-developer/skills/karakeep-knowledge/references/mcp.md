@@ -46,12 +46,28 @@ these command arguments. This is a template, not a command to copy unresolved.
 ```toml
 [mcp_servers.karakeep]
 command = "/absolute/path/to/python3"
-args = ["/absolute/path/to/karakeep-knowledge/scripts/mcp_launcher.py", "--env-file", "/absolute/private/karakeep/mcp.env", "--", "/absolute/path/to/official/karakeep-mcp"]
+args = [
+  "/absolute/path/to/karakeep-knowledge/scripts/mcp_launcher.py",
+  "--env-file",
+  "/absolute/private/karakeep/mcp.env",
+  "--",
+  "/absolute/path/to/official/karakeep-mcp",
+]
 enabled = true
 required = false
 startup_timeout_sec = 20
 tool_timeout_sec = 60
-enabled_tools = ["search-bookmarks", "get-bookmark", "get-bookmark-content", "get-bookmark-lists", "get-lists", "get-list", "get-tags", "get-tag", "get-tag-bookmarks"]
+enabled_tools = [
+  "search-bookmarks",
+  "get-bookmark",
+  "get-bookmark-content",
+  "get-bookmark-lists",
+  "get-lists",
+  "get-list",
+  "get-tags",
+  "get-tag",
+  "get-tag-bookmarks",
+]
 ```
 
 When a Nix-managed or previously verified private launcher exists, point `command`

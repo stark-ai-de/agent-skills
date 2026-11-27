@@ -282,3 +282,15 @@ mutate the amended provider Short/Long decisions and the matching repository
 Short/Long decision together in a disposable copy. Their rejection establishes
 that the narrowly approved lock refresh does not permit later decision drift;
 it is not evidence of model behavior or OS sandbox enforcement.
+
+## Shared quality policy successors
+
+AC-ADR-069 supersedes the discretionary tooling policy in AC-ADR-013; AC-ADR-070 retains the public-skill profile with shared quality and supersedes AC-ADR-040. These cases preserve the five workflows, local authority, the seven-decision foundation, consumer-owned scope and truthful migration/install/CI evidence. They are behavioral contracts until separately exercised; structural validation does not claim live-agent qualification.
+
+- `cases/shared-quality-new-repository.md`
+- `cases/shared-quality-existing-baseline.md`
+- `cases/shared-quality-pure-non-js.md`
+- `cases/shared-quality-mixed-language.md`
+- `cases/shared-quality-local-conflict.md`
+- `cases/shared-quality-audit-evidence.md`
+- `cases/shared-quality-framework-scope.md`

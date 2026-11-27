@@ -90,7 +90,7 @@
       "byteLength": 756,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "f00ac72e7de13d390f9f540e7333dfebd22d444a87c8e97a8bc2d5c1db13b7da"
+      "sha256": "c69fecf5b1b646376fe13f066f031abf6b507a8b90b080e91829361d334c66cb"
     },
     {
       "byteLength": 2128,
@@ -291,10 +291,10 @@
       "sha256": "a37e1bc72c46376a710e18cf4c4f863d3a4cc90e22903df55f53f443e3c70f3f"
     },
     {
-      "byteLength": 16529,
+      "byteLength": 17920,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "78c1414471b0a2d6e86a0bf3eeb305795a8ac2fcc67c88b1cf7d02db4926bff1"
+      "sha256": "32e3e56beb56e581ee828acf2dd0594c568f6dcd87c25d920904002cea0977eb"
     },
     {
       "byteLength": 692,
@@ -387,10 +387,16 @@
       "sha256": "dcaf228aedb426b3f8194a2dbc64cd4d01fc2eae2c49704d35a980763e3c3ae4"
     },
     {
-      "byteLength": 15410,
+      "byteLength": 16785,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/setup-report-template.md",
-      "sha256": "8a823d246f5889c871f376d7f119f3990330a293e3df3ad00170f6c0955b3f2c"
+      "sha256": "f0fe2236a73e4643d3c788f484506ac87a06897f881cb32abcac8bc3c145337b"
+    },
+    {
+      "byteLength": 14740,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/shared-quality-adoption-recipes.md",
+      "sha256": "08bc90a8a80f046469d98fbb8870cb725a7a69ee73164d0d500324c8b2c7a2c4"
     },
     {
       "byteLength": 6103,
@@ -495,10 +501,10 @@
       "sha256": "74f7e0fb4be9347b1edd6d461ab3534345dcf7a5cdbb02e1f2a52f0034c7c8d3"
     },
     {
-      "byteLength": 18112,
+      "byteLength": 18106,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-006-assign-workspace-ownership-and-source-roles.guide.md",
-      "sha256": "edcfe62e4c7bfca7ef1493e12fff2022510f639af77436afc83c23d326521d97"
+      "sha256": "f5e1a4a8ab63513ad2d98dcf7c7075be9de11f963b79645567c7940b8e119c3c"
     },
     {
       "byteLength": 5881,
@@ -621,28 +627,28 @@
       "sha256": "b0684259b0e8543b7aae4869ef5f65a0e5bbb2103110648f54aa5c6551dbb164"
     },
     {
-      "byteLength": 6881,
+      "byteLength": 6890,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.guide.md",
-      "sha256": "bd17397ac82c48ba9d474f919bc3b23816efc7aac8ffe4fbd03016dc336eebb5"
+      "sha256": "b05b8a9720388df511072b8a8761071e6fd3081b775863405c5e1d0f1c100906"
     },
     {
-      "byteLength": 5995,
+      "byteLength": 6004,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.long.md",
-      "sha256": "762b06b5ab4b62dc9f575ce4a07d048e3ed6f6eee8c3d993a9c50d4b6f3cd265"
+      "sha256": "370327cc13b520587a1065233cff0213a065fa09fa411d557b8675ffca4b279a"
     },
     {
-      "byteLength": 2319,
+      "byteLength": 2328,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.short.md",
-      "sha256": "6659c17d2973b41251da292887bbedfc9563c91ac32c1548cc24cf62c356019b"
+      "sha256": "75ef011c0b163b42b740d559d269ec304f6d94f12d67d461be5746c4542ee201"
     },
     {
       "byteLength": 6445,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-014-select-application-runtimes-deployment-hosts-and-additional-targets-by-evidence.guide.md",
-      "sha256": "13341834b9f81c3df961446371d02272dab7c9f7cb6d7bc8daf3118cb4afa10e"
+      "sha256": "955dbbeaded28c586b9214d52d2ec00c87be542bfb7b090eedf469c0f99d8fcf"
     },
     {
       "byteLength": 5571,
@@ -1035,10 +1041,10 @@
       "sha256": "22037f24e84ccedd190e0520b0889a262af8f109cb70a7d5286d8a300eaccd8e"
     },
     {
-      "byteLength": 19764,
+      "byteLength": 19768,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md",
-      "sha256": "b3e7f1d5e585e7544f5507b551937cd3f592e1d906fba4da1d7709f2a3665bb7"
+      "sha256": "c7fe243b1df1d36e06c078288912c8fce529388fa6279b546a33d68af96d0a21"
     },
     {
       "byteLength": 4323,
@@ -1107,22 +1113,22 @@
       "sha256": "041400c4700bdfb3453b2adc7fc1cb4e1a50569d88d8c102d0ba319355ae77be"
     },
     {
-      "byteLength": 5554,
+      "byteLength": 5563,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-040-offer-an-opinionated-stack-profile-for-new-public-skill-repositories.guide.md",
-      "sha256": "b48529bda430c85f124039986ca2c785db341864ba990bd962f4a5ecd8adf250"
+      "sha256": "b61f0783d017579ae242ea4e57573cf4f14838c089b47f13b526d8c06ead2b9d"
     },
     {
-      "byteLength": 5604,
+      "byteLength": 5613,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-040-offer-an-opinionated-stack-profile-for-new-public-skill-repositories.long.md",
-      "sha256": "9c6582e34b9a23842f3d1ee44d764784032a26b709a1c3802318c3c91476d3ec"
+      "sha256": "8869ebaa0cb58dd082eb0ce806086148fdf34e10dfd00096abb0846aef6e1cf6"
     },
     {
-      "byteLength": 2170,
+      "byteLength": 2179,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-040-offer-an-opinionated-stack-profile-for-new-public-skill-repositories.short.md",
-      "sha256": "5ab154a271f5799987977b02f27a82103ebe7e447ac8fedc3edf3c2b0119cea0"
+      "sha256": "1b775596537a16dbbc870658502f8f02112f4474e3798f04b20118b32fb9a047"
     },
     {
       "byteLength": 2789,
@@ -1470,7 +1476,7 @@
       "byteLength": 2493,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-060-isolate-test-execution-by-effects-and-runtime-contracts.guide.md",
-      "sha256": "2e62add0ba300c7ee07e2548415cbef0c870b8dc3dd63b2d7400b22a27d911a3"
+      "sha256": "22c77a61af6f9c28340a7d926e26b50165569b0be40279a00cd32b1d6f2aa391"
     },
     {
       "byteLength": 5331,
@@ -1524,13 +1530,13 @@
       "byteLength": 17233,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-063-enforce-tailwind-design-system-contracts-with-shadcn-lint.guide.md",
-      "sha256": "eb3d0dd090132261953ee17fa84849294efc1bb389958ea1be6cfa5a3c47a85d"
+      "sha256": "b457176d858fe9ceeb16c53a763b1ba42a8fe96e1038ec2e0d7776332e5f0ae3"
     },
     {
-      "byteLength": 7427,
+      "byteLength": 7421,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-063-enforce-tailwind-design-system-contracts-with-shadcn-lint.long.md",
-      "sha256": "47bf04a50043c54c78c7603d9d0c9c79521932a0e674fd211743154c7c0e0d42"
+      "sha256": "259b27f54a4162e60920382dd6a1a27e382170449edb6e4d17a8dc1974887adf"
     },
     {
       "byteLength": 2301,
@@ -1578,7 +1584,7 @@
       "byteLength": 27811,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-066-use-portless-for-local-development-endpoints.guide.md",
-      "sha256": "c7d3b1725a9b60f51774c0ffb4199b400a64afe68159a6f3f4442f3b0026b53b"
+      "sha256": "8fbf8080f83a085ec54baae76c1f566a71262333642375b1e51e9587b2a0e996"
     },
     {
       "byteLength": 7109,
@@ -1629,10 +1635,46 @@
       "sha256": "16fba1f41aac19375ce0a32a86067e0770795c784edc2aad9e089d3a6ddbce5c"
     },
     {
-      "byteLength": 56871,
+      "byteLength": 17586,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md",
+      "sha256": "9a419f139f45e6c363033f398005eeb6bc8d6732aec2efcd0aea3ed0c1f3505c"
+    },
+    {
+      "byteLength": 10055,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md",
+      "sha256": "1c52ec9ca7d78293044c30a6b06d86252e85042126cb875ad09f040eb249b4b6"
+    },
+    {
+      "byteLength": 1552,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.short.md",
+      "sha256": "9cd2fcc1ebcf734a4af286a8f33197432e1956c268699a9a2d169daa417e9fff"
+    },
+    {
+      "byteLength": 5373,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-070-use-shared-quality-in-the-public-skill-repository-profile.guide.md",
+      "sha256": "4136ec5d3d0ee76cdfc60ad816a178062d106819392952f197e7a20b7f415fa5"
+    },
+    {
+      "byteLength": 5632,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-070-use-shared-quality-in-the-public-skill-repository-profile.long.md",
+      "sha256": "58fd1d0c3c550561e4c6163df814e5a0adf7e9c7193562431cdbd9733a211edd"
+    },
+    {
+      "byteLength": 1342,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-070-use-shared-quality-in-the-public-skill-repository-profile.short.md",
+      "sha256": "764285242dc5d26a08bd939e6a70e5c77a737a777e78ccdfb82d81a6c6eed1da"
+    },
+    {
+      "byteLength": 58162,
       "mode": "0644",
       "path": "skills/architecture-compass/references/adr-catalog.md",
-      "sha256": "ca2670fb2febae496a553188cf089c67bfa572fb1e1a71b033184c000bdba26e"
+      "sha256": "b9ccf159b42eee913724b5bfe84edf2d44ecf863860163984c60795507d74dd6"
     },
     {
       "byteLength": 6988,
@@ -2376,7 +2418,7 @@
       "byteLength": 12797,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/SKILL.md",
-      "sha256": "788ae8a035546dcdc139ddceaa1c4cd1706f81886b57f261cbb3b5089b680efe"
+      "sha256": "890cb9a4042607caac0917c0030bf5fd0130a2acfe0a06c519fc9d2869dae8f4"
     },
     {
       "byteLength": 488,
@@ -2463,10 +2505,10 @@
       "sha256": "87d2ae9553eee8b3f05f5ddc1b597af7249ad44ade6f02826aff11bbb9af4b29"
     },
     {
-      "byteLength": 17601,
+      "byteLength": 17603,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/references/helper.md",
-      "sha256": "cac8001a5ec66590ea109f3802c174f3349dda9c85869a0d8505e60ad2203031"
+      "sha256": "c91a0d0a0c790784e4f6ac163f00cd0376e46da7259a00cd228f762f3efd5509"
     },
     {
       "byteLength": 5983,
@@ -2475,10 +2517,10 @@
       "sha256": "73011f0fcda95f31baeec588ba4a03f9728714697fbe5a95ac3021aa8fa74a65"
     },
     {
-      "byteLength": 6380,
+      "byteLength": 6414,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/references/mcp.md",
-      "sha256": "bcd501a7bb49f1633c4c698c5cbd4afa896ed01de2d00c0277d326a4d4f3dfa8"
+      "sha256": "1b536660dc3718dd39927f10b76e53b8e8ac5e1d068c047adde787b141774170"
     },
     {
       "byteLength": 5680,
@@ -2634,7 +2676,7 @@
       "byteLength": 11772,
       "mode": "0644",
       "path": "skills/visual-reports/SKILL.md",
-      "sha256": "76c08165ba2a36771298da4a94b0a1b8ae900e1cdff8d73b734db719d52fb3cc"
+      "sha256": "869ba97eec6801b8b0773e56ed5eb629b131448d23ded685c2828a7f94c467d2"
     },
     {
       "byteLength": 779,
@@ -2751,10 +2793,10 @@
       "sha256": "ca0ba7388cdc0d66814547662f448ced5634ee902de2780606d3270b34bd9855"
     },
     {
-      "byteLength": 4034,
+      "byteLength": 4030,
       "mode": "0644",
       "path": "skills/visual-reports/references/markdown-input.md",
-      "sha256": "c679eab0e37014ff3e28c6ec4df553f42d92430c0015f75416409872fe81935b"
+      "sha256": "08d2d5de5bfc4cc6fe3ecbf0ee1d3c9429fa9a15746f3363c0cfe4358869ea2c"
     },
     {
       "byteLength": 10376,
@@ -2799,10 +2841,10 @@
       "sha256": "754d7e6815b956f61558c35aebd2924cba7cd10e0863e7b4b1a266285e9a1dbd"
     },
     {
-      "byteLength": 22199,
+      "byteLength": 22236,
       "mode": "0644",
       "path": "skills/visual-reports/scripts/lib/blocks-v2.mjs",
-      "sha256": "9581c09c9cb3d6b13d73762f233646368b4dfbcfd0b2498f9ec6c6e89295e83c"
+      "sha256": "b4d7b6da90a17dfc22781c7e1168539e77ecf8da4d9e245a284b9a2f88d62469"
     },
     {
       "byteLength": 3818,
@@ -2915,9 +2957,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.23.3"
+    "version": "1.24.0"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "cf11f318eca3ba52e454d369c12b460c1195616eb9cda5f50b71e9447a65e548"
+  "treeHash": "d39015e43c50d739c2adcc33821e29c2a84c51dafd4c667c091c7bcd90dee18d"
 }

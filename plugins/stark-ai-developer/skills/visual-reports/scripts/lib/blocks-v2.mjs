@@ -482,4 +482,5 @@ export function renderExtra(s, sources = []) {
     return `<figure class="product-logo"><img src="${esc(d.src)}" alt="${esc(d.alt)}"><figcaption>${esc(d.label)} · <a href="${esc(d.identityUrl)}">Produkt</a> · <a href="${esc(d.sourceUrl)}">Bildquelle</a>${d.licenseUrl ? ` · <a href="${esc(d.licenseUrl)}">Lizenz</a>` : ""}</figcaption></figure>`;
   throw new TypeError(`Unsupported block ${s.kind}`);
 }
-export { chartText, readerMarkdown } from "./report-state.mjs";
+export { chartText } from "./report-state.mjs";
+export { readerMarkdown } from "./report-state.mjs";

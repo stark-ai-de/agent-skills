@@ -71,15 +71,24 @@ Run the local `pnpm run validate` aggregate for release intent or when another m
 
 Edit bundled skills only under `skills/<category>/<skill>/`. Do not hand-edit `plugins/stark-ai-developer/`. After changing a bundled skill or `plugins/stark-ai-developer.source.json`, run `pnpm run sync:agent-plugin`, then `pnpm run validate:projections` when the portable contract changed.
 
+Architecture Compass payload changes also require `pnpm run validate:product-planning`, whose shared source fingerprint covers Compass, Architecture Zoom and Codex Spec Interviewer. Review changes before maintaining the [public-admission source binding](skill-evals/architecture-zoom/public-admission.json), preserve its recorded authority and limitations, and never turn that maintenance record into a claim of observed native-host behavior.
+
 The pinned `pnpm dlx` discovery command requires network access the first time the CLI is fetched.
 
-Optional Oxc checks:
+Required shared quality checks (also run by hosted Validate):
 
 ```bash
-pnpm install
+pnpm install --frozen-lockfile
 pnpm run format:check
 pnpm run lint
+pnpm run validate:quality
 ```
+
+The formatter and additional lint policy consume the reviewed `@servrox/code-quality` Git dependency. `lint` preserves the existing unsuppressed correctness gate; `quality:check` scans first-party source with the shared core, strict, modularity and Anti-Slop presets and rejects new or increased findings. `quality:baseline:prune` writes only reduced allowances after a successful check; ordinary CI never refreshes the baseline. CI also rejects increases relative to the pull-request base.
+
+Use `pnpm run quality:report` to choose a cleanup target, `pnpm run quality:report -- <files>` to see original diagnostic locations, and `pnpm run quality:fix -- <files>` for deliberate shared-policy fixes. The fix command requires explicit maintained files. VS Code does not apply lint fixes on save during the migration; `lint:fix` remains the separate native correctness-only command. Follow the [daily workflow and upgrade recipes](tools/quality/README.md) to verify and permanently record reduced allowances.
+
+Extend reusable rules/defaults/plugins in [servrox/code-quality](https://github.com/servrox/code-quality), verify there, then adopt the reviewed commit and lockfile here. Keep repository paths, framework selection, deliberate entrypoints and migration data local. See [ADR-0080](docs/adrs/0080-consume-shared-code-quality-policy.short.md) ([Long, canonical](docs/adrs/0080-consume-shared-code-quality-policy.long.md) · [Guide](docs/adrs/0080-consume-shared-code-quality-policy.guide.md)) for compatibility settings, baseline ownership, successor decisions and the full workflow. Changes to the shared pin or gate wiring require `validate:quality`, the existing lint/format gates and a frozen install; upstream tests alone do not prove this consumer's enforcement.
 
 ## Pull Request Checklist
 

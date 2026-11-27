@@ -12,13 +12,13 @@ A shared reference change affects transform caching only. Evaluate recommended s
 
 - contains: AC-ADR-062
 - contains: Short
-- contains: 43
+- contains: 47
 - contains: seven
 - not_contains: adopt internal ADRs
 
 ## Expected Behavior
 
-Read AC-ADR-062 Short then its governing Long and Guide only for mechanics; related owners only when needed. Do not force all four new decisions or internal ADRs into adoption. Complete considers all 43 eligible candidates, foundation remains seven.
+Read AC-ADR-062 Short then its governing Long and Guide only for mechanics; related owners only when needed. Do not force all four new decisions or internal ADRs into adoption. Complete considers all 47 eligible candidates, foundation remains seven.
 
 ## Evidence Stage
 

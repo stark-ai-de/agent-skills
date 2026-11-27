@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "capturedOn": "2026-11-27",
+  "baseSourceRevision": "2267cbcab9605e5f0612abde34d83ec7a85ecbce",
+  "sourceState": "Initial integration candidate after reviewed compatibility changes; only paths present at the base source revision receive allowances.",
+  "provider": {
+    "repository": "servrox/code-quality",
+    "revision": "16aff8c001f380feb9edf9624756fd57e01d9b6e",
+    "packageVersion": "0.1.0",
+    "fixPullRequest": "https://github.com/servrox/code-quality/pull/4"
+  },
+  "tools": {
+    "node": "24.22.3",
+    "packageManager": "pnpm@11.24.0",
+    "oxlint": "1.93.0",
+    "oxfmt": "0.78.0",
+    "ultracite": "8.2.1"
+  },
+  "sourceRoots": [
+    ".github",
+    "docs/listing/openai/review-video",
+    "scripts",
+    "packages",
+    "site",
+    "skills",
+    "incubator",
+    "skill-evals",
+    "oxlint.config.mjs",
+    "oxfmt.config.mjs"
+  ],
+  "sourceIgnores": [
+    "site/public/**",
+    "scripts/vendor/**",
+    "skills/engineering-workflows/visual-reports/assets/vendor/**",
+    "skill-evals/architecture-compass/fixtures/**",
+    "skill-evals/codex-memory-curator/fixtures/**",
+    "skill-evals/codegraph-ast-grep/fixtures/**",
+    "skill-evals/codegraph-ast-grep/behavioral-baseline/**",
+    "skill-evals/skillopt-setup/fixtures/**"
+  ],
+  "findingCount": 34622,
+  "groupCount": 5002,
+  "filesWithFindings": 330,
+  "newFilesWithAllowances": 0,
+  "baselinePath": "tools/quality/lint-baseline.json",
+  "baselineSha256": "9462d8853132b488a22ddd250f9b47eeb86bab3549ce4d812f595797a914d180",
+  "normalizedFindingsSha256": "a4b3cfa473d2a8f5151ed7ef91dc07323bd78a1bc84a1bdc5aa6421711c1e351",
+  "normalization": "Tuples [file, rule, message, value], sorted by their JSON representation using en locale; JSON plus trailing newline.",
+  "configSha256": {
+    "package.json": "fd4c95c5e0c30cc306496e947c7454de23239825dc65fd9e3aa4de46e2cdb0a6",
+    "pnpm-lock.yaml": "04ffa38eb7ce71ece0b64dcc08a694474cfa398c70fab20510789ea563ff0658",
+    "oxlint.config.mjs": "e2a7629b8fa335f80eee4c26c55e20f744000640cc939dea74293032582eb0d2",
+    "oxfmt.config.mjs": "105f9329662c034aab986d5234040c86def0db7bb4317fb5870a318dd15c1c20",
+    "scripts/quality/scope.mjs": "ffe4005d89045e89d8daf43b6d5b1e8cd565aada7fab7637cfff2407884c450a",
+    "scripts/quality/report.mjs": "0a714b08b3cd41714ebe64291aa95a95e1f554f185ab2b932b473f8cd559f3d5"
+  },
+  "owner": "Repository maintainers under ADR-0080",
+  "migrationStatus": "partial",
+  "pruning": "pnpm run quality:baseline:prune",
+  "cleanupCriteria": "Resolve inherited findings and commit reduced allowances; no expanded budget in normal PRs.",
+  "revisitWhen": [
+    "shared package pin changes",
+    "lint configuration changes",
+    "maintained source scope changes",
+    "report wrapper changes"
+  ]
+}
