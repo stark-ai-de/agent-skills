@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -65,6 +65,62 @@ const runFixture = (sources) => {
   }
 };
 
+const commitHistoryFixture = (directory, baseline) => {
+  const git = (args, input) =>
+    execFileSync("git", args, { cwd: directory, input, encoding: "utf-8" }).trim();
+
+  git(["init", "--quiet"]);
+
+  const manifest = git(["hash-object", "-w", "--stdin"], JSON.stringify(actual.manifest));
+  const allowance = git(["hash-object", "-w", "--stdin"], JSON.stringify(baseline, null, 2));
+  const quality = git(["mktree"], `100644 blob ${allowance}\tlint-baseline.json\n`);
+  const tools = git(["mktree"], `040000 tree ${quality}\tquality\n`);
+
+  const tree = git(
+    ["mktree"],
+    `100644 blob ${manifest}\tpackage.json\n040000 tree ${tools}\ttools\n`,
+  );
+
+  return git(
+    [
+      "-c",
+      "user.name=Quality fixture",
+      "-c",
+      "user.email=quality@example.invalid",
+      "commit-tree",
+      tree,
+    ],
+    "Shared quality history fixture\n",
+  );
+};
+
+const runHistoryFixture = (previous, candidate) => {
+  const directory = mkdtempSync(path.join(tmpdir(), "agent-skills-quality-history-"));
+
+  try {
+    const revision = commitHistoryFixture(directory, previous);
+    const history = new URL("baseline.mjs", import.meta.url).href;
+    writeFileSync(path.join(directory, "candidate.json"), JSON.stringify(candidate));
+
+    return spawnSync(
+      process.execPath,
+      [
+        "--input-type=module",
+        "--eval",
+        `import { readFileSync } from "node:fs"; import { checkBaselineHistory } from ${JSON.stringify(history)}; checkBaselineHistory(JSON.parse(readFileSync("candidate.json", "utf-8")));`,
+      ],
+      {
+        cwd: directory,
+        env: { ...process.env, QUALITY_BASE_SHA: revision },
+        encoding: "utf-8",
+        timeout: 30_000,
+      },
+    );
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+};
+
 test("the real consumer imports the required shared policy and keeps its CI gate", () => {
   assertConsumerContract(actual);
 });
@@ -101,6 +157,30 @@ test("the aggregate, PR-base budget comparison and non-optional hosted gate cann
   gate.env.QUALITY_BASE_SHA = `\${{ github.event.pull_request.base.sha }}`;
   gate["continue-on-error"] = true;
   assert.throws(() => assertConsumerContract({ ...actual, workflow }));
+});
+
+test("large committed baselines accept retained or reduced allowances and reject growth", () => {
+  const previous = createBaseline(
+    Array.from({ length: 12_000 }, (_, index) => ({
+      file: `scripts/legacy-${index}.mjs`,
+      rule: "eslint(max-lines)",
+      message: "File has too many lines (<value>). Maximum allowed is 300.",
+      value: 301,
+    })),
+  );
+
+  assert.ok(Buffer.byteLength(JSON.stringify(previous, null, 2)) > 1024 * 1024);
+
+  for (const candidate of [previous, createBaseline([])]) {
+    const result = runHistoryFixture(previous, candidate);
+    assert.equal(result.status, 0, result.stderr);
+  }
+
+  const increased = structuredClone(previous);
+  increased.entries[Object.keys(increased.entries)[0]][0] += 1;
+  const result = runHistoryFixture(previous, increased);
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(result.stderr, /Migration allowances must not grow/u);
 });
 
 test("the actual shared sweep finds excess functions in every maintained source root", () => {

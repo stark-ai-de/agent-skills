@@ -33,7 +33,10 @@ export const checkBaselineHistory = (candidate, baseSha = process.env.QUALITY_BA
     execFileSync("git", ["show", `${baseSha}:package.json`], { encoding: "utf-8" }),
   );
 
-  const result = spawnSync("git", ["show", `${baseSha}:${baselinePath}`], { encoding: "utf-8" });
+  const result = spawnSync("git", ["show", `${baseSha}:${baselinePath}`], {
+    encoding: "utf-8",
+    maxBuffer: 64 * 1024 * 1024,
+  });
 
   if (result.error || result.signal) {
     throw result.error ?? new Error("Could not inspect the PR base baseline");
