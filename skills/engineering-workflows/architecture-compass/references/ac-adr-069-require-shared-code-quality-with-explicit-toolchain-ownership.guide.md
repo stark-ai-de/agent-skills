@@ -49,7 +49,20 @@ pnpm add -D '@servrox/code-quality@git+https://github.com/servrox/code-quality.g
   ultracite@8.2.1 oxlint@1.93.0 oxfmt@0.78.0
 ```
 
-Run installation only when it is within the user's existing authorization. Commit the manifest and lockfile and verify `pnpm install --frozen-lockfile` in a clean disposable consumer. No GitHub or registry token is required for this public Git source. Require the package's Node `>=24.15.0` compatibility without transferring pnpm ownership or replacing unrelated target runtime decisions. The package's own development pnpm pin does not set the consumer's package-manager version.
+Run installation only when it is within the user's existing authorization. In an existing consumer, inspect the resulting manifest: pnpm can retain an existing range such as `^1.93.0` even when the add command names an exact version. Merge these exact entries into `devDependencies`, replacing retained ranges and preserving unrelated dependencies:
+
+```json
+{
+  "devDependencies": {
+    "@servrox/code-quality": "git+https://github.com/servrox/code-quality.git#28e1af8201a2e06692caf1a51c38d8a024899fd2",
+    "ultracite": "8.2.1",
+    "oxlint": "1.93.0",
+    "oxfmt": "0.78.0"
+  }
+}
+```
+
+Run `pnpm install` to synchronize the lockfile after any manifest correction. Verify its importer specifiers match these exact entries, commit both files, and verify `pnpm install --frozen-lockfile` in a clean disposable consumer. Preserve the target's workspace and supply-chain settings. No GitHub or registry token is required for this public Git source. Require the package's Node `>=24.15.0` compatibility without transferring pnpm ownership or replacing unrelated target runtime decisions. The package's own development pnpm pin does not set the consumer's package-manager version.
 
 Keep the exact peer versions above together. Add `oxlint-tsgolint@7.0.2007` only when enabling a separately qualified type-aware scope. Add `dependency-cruiser@18.9.0` only when using its optional export. Dependency Cruiser needs a supported TypeScript compiler API; a TypeScript 7 consumer can keep a bounded TypeScript `6.0.3` tool-specific compatibility lane, with exact pnpm resolution qualified in that consumer. Package archive integrity changes require a reviewed lockfile update; never disable integrity verification.
 

@@ -113,16 +113,19 @@ test("files outside the consumer and symlink escapes cannot be fixed", (context)
   assert.equal(readFixture(external, "scripts/external.mjs"), repairable);
 });
 
-test("parser failures retain their original actionable diagnostic", (context) => {
+test("parser failures retain their actionable diagnostic alongside inherited findings", (context) => {
   const file = "scripts/broken.mjs";
   const source = "export const = ;\n";
-  const directory = createFixture(context, { [file]: source });
-  const result = runQuality(directory, "inspect", ["report", "--", file]);
+  const legacyFile = "scripts/legacy.mjs";
+  const legacySource = "debugger;\n".repeat(30);
+  const directory = createFixture(context, { [legacyFile]: legacySource, [file]: source });
+  const result = runQuality(directory, "inspect", ["report", "--", legacyFile, file]);
 
   assert.notEqual(result.status, 0, result.stdout);
   assert.match(result.stderr, /scripts\/broken\.mjs:1:\d+/u);
   assert.match(result.stderr, /expected|unexpected|parser|syntax/iu);
   assert.equal(readFixture(directory, file), source);
+  assert.equal(readFixture(directory, legacyFile), legacySource);
 });
 
 test("fixing then pruning an allowance prevents the finding from returning", (context) => {

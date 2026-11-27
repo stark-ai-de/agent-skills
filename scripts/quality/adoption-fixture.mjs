@@ -21,6 +21,18 @@ const guideName =
 const recipeName = "assets/shared-quality-adoption-recipes.md";
 const node = execFileSync("node", ["--print", "process.execPath"], { encoding: "utf-8" }).trim();
 
+const assertDocumentedDependencies = (guide, manifest) => {
+  const manifests = [...guide.matchAll(/```json\n(?<code>[\s\S]*?)\n```/gu)];
+
+  assert.equal(manifests.length, 1, "Document the exact provider and peer manifest entries");
+
+  const names = ["@servrox/code-quality", "ultracite", "oxlint", "oxfmt"];
+  const expected = Object.fromEntries(names.map((name) => [name, manifest.devDependencies[name]]));
+  const documented = JSON.parse(manifests[0].groups.code).devDependencies;
+
+  assert.deepEqual(documented, expected, "Keep documented peers pinned to the qualified versions");
+};
+
 const examples = () => {
   const guide = readFileSync(new URL(guideName, skill), "utf-8");
   const recipe = readFileSync(new URL(recipeName, skill), "utf-8");
@@ -50,6 +62,7 @@ const examples = () => {
     manifest.devDependencies["@servrox/code-quality"],
     "Qualify the documented pin against the installed consumer dependency",
   );
+  assertDocumentedDependencies(guide, manifest);
 
   return { configs, wrapper: wrappers[0].groups.code, lintArgs, pin };
 };

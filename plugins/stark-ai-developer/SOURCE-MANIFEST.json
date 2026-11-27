@@ -1635,10 +1635,10 @@
       "sha256": "16fba1f41aac19375ce0a32a86067e0770795c784edc2aad9e089d3a6ddbce5c"
     },
     {
-      "byteLength": 16893,
+      "byteLength": 17586,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md",
-      "sha256": "9fb1f937f74b5918270a321152c87f3f3e15606492bb369415ba6a8b60897845"
+      "sha256": "9a419f139f45e6c363033f398005eeb6bc8d6732aec2efcd0aea3ed0c1f3505c"
     },
     {
       "byteLength": 10055,
@@ -2961,5 +2961,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "4f706f09abac5b83eee7b1a99a277a29bc38df64b615317f27f3c0d21b4dfdef"
+  "treeHash": "d39015e43c50d739c2adcc33821e29c2a84c51dafd4c667c091c7bcd90dee18d"
 }

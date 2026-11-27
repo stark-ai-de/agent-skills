@@ -1,4 +1,16 @@
+import { normalizeLint } from "@servrox/code-quality/baseline";
+
 const findingKey = ({ file, rule, message, value }) => JSON.stringify([file, rule, message, value]);
+
+const isClassified = (diagnostic) => {
+  try {
+    normalizeLint({ diagnostics: [diagnostic], number_of_files: 1 });
+
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 export const diagnosticLocation = (diagnostic) => {
   const span = diagnostic.labels?.find(({ span: location }) => location?.line)?.span;
@@ -9,6 +21,14 @@ export const diagnosticLocation = (diagnostic) => {
 
 export const describeDiagnostic = (diagnostic) =>
   `${diagnosticLocation(diagnostic)}: ${diagnostic.code ?? "parse/configuration error"}: ${diagnostic.message}`;
+
+export const describeReportFailure = (report) => {
+  const diagnostics = Array.isArray(report?.diagnostics) ? report.diagnostics : [];
+  const unclassified = diagnostics.filter((diagnostic) => !isClassified(diagnostic));
+  const relevant = unclassified.length > 0 ? unclassified : diagnostics;
+
+  return relevant.slice(0, 20).map(describeDiagnostic).join("\n");
+};
 
 export const locateFindings = (findings, report) => {
   const queues = new Map();

@@ -1,6 +1,6 @@
 import { normalizeLint } from "@servrox/code-quality/baseline";
 
-import { describeDiagnostic } from "./diagnostics.mjs";
+import { describeReportFailure } from "./diagnostics.mjs";
 import { runOxlint } from "./oxlint.mjs";
 import { sourceRoots } from "./scope.mjs";
 
@@ -19,8 +19,7 @@ const classifyReport = (report) => {
   try {
     return normalizeLint(report);
   } catch (error) {
-    const diagnostics = Array.isArray(report?.diagnostics) ? report.diagnostics : [];
-    const details = diagnostics.slice(0, 20).map(describeDiagnostic).join("\n");
+    const details = describeReportFailure(report);
 
     throw new Error(
       `Oxlint report contains unclassified diagnostics or no selected source files.\n${details}`,

@@ -3,7 +3,28 @@ import test from "node:test";
 
 import { createBaseline, findRegressions } from "@servrox/code-quality/baseline";
 
-import { locateFindings } from "./diagnostics.mjs";
+import { describeReportFailure, locateFindings } from "./diagnostics.mjs";
+
+test("parser failures remain visible after more than twenty classified findings", () => {
+  const diagnostics = Array.from({ length: 30 }, (_, index) => ({
+    filename: "scripts/legacy.mjs",
+    code: "eslint(no-debugger)",
+    message: "`debugger` statement is not allowed",
+    labels: [{ span: { line: index + 1, column: 1 } }],
+  }));
+
+  diagnostics.push({
+    filename: "scripts/broken.mjs",
+    code: undefined,
+    message: "Unexpected token",
+    labels: [{ span: { line: 1, column: 14 } }],
+  });
+
+  const output = describeReportFailure({ diagnostics, number_of_files: 2 });
+
+  assert.match(output, /scripts\/broken\.mjs:1:14:/u);
+  assert.match(output, /Unexpected token/u);
+});
 
 test("numeric regressions keep their original source location after budget sorting", () => {
   const group = {
