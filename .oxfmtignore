@@ -33,3 +33,6 @@ plugins/stark-ai-developer/skills/visual-reports/assets/vendor
 # This is bounded directive input, validated by its parser rather than a Markdown formatter.
 skills/engineering-workflows/visual-reports/assets/completion-example.md
 plugins/stark-ai-developer/skills/visual-reports/assets/completion-example.md
+
+# Shared helper owns the serialized migration budgets; the quality gate validates them.
+tools/quality/lint-baseline.json

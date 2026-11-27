@@ -109,7 +109,7 @@ and hosted results. Missing proof remains unverified.
 
 ## Related decisions
 
-- [AC-ADR-013](ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.long.md): tooling ownership and compatibility.
+- [AC-ADR-069](ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md): tooling ownership and compatibility.
 - [AC-ADR-018](ac-adr-018-validate-behavior-at-the-owning-boundary-and-promote-enforcement-gradually.long.md): gradual enforcement and negative fixtures.
 - [AC-ADR-024](ac-adr-024-meet-an-explicit-accessibility-baseline-with-automated-and-manual-proof.long.md): separate accessibility evidence.
 - [AC-ADR-049](ac-adr-049-distinguish-change-risk-from-representative-environment-observation.long.md): changed-contract validation and fresh receipts.

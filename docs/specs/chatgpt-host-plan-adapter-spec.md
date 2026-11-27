@@ -148,7 +148,7 @@ indeterminate transition contract.
   current host explicitly proves inline prompt support. If needed, separately
   select the individual skill through the `@` menu.
 - Codex CLI: the documented combined form is `/plan Use $<skill> to continue
-this request: <original request>`. Wait for the running turn to finish before
+  this request: <original request>`. Wait for the running turn to finish before
   requesting the transition; the next turn must confirm Plan active.
 - Codex web: an observed slash control permits selection/standalone `/plan`,
   followed by `Use $<skill> to continue this request: <original request>` in

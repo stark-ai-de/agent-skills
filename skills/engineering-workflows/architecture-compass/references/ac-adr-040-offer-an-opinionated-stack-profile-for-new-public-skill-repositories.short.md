@@ -2,18 +2,18 @@
 
 ID: AC-ADR-040
 Title: Offer an Opinionated Stack Profile for New Public Skill Repositories
-Status: Accepted
+Status: Superseded
 Date: 2026-07-28
 Owner: stark-ai-de
 Scope: target-repository
 Category: stack-tooling
 Tags: stack-profile, typescript-7, pnpm, oxc
 Applies when: Architecture Compass sets up a new public skill repository and the user wants a concrete maintained starting stack.
-Adoptable: true
+Adoptable: false
 Variant: Short
 Canonical variant: Long
 Supersedes: none
-Superseded by: none
+Superseded by: AC-ADR-070
 Guide verified: 2026-07-29
 Gist: Offer a concrete public-skill repository stack only through explicit Architecture Compass selection and local adaptation.
 

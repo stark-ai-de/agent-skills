@@ -5,7 +5,8 @@
   // ⚡ Code quality & formatting
   "editor.defaultFormatter": "oxc.oxc-vscode",
   "editor.formatOnSave": true,
-  "oxc.fmt.configPath": "oxfmt.json",
+  "oxc.fmt.configPath": "oxfmt.config.mjs",
+  "oxc.lint.configPath": "oxlint.config.mjs",
 
   // 🧠 TypeScript 7 native language service
   "js/ts.experimental.useTsgo": true,

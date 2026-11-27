@@ -512,4 +512,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
   }
 }
 
-export { ISSUE_TITLE, ISSUE_MARKER_PATTERN, FIRST_AUTOMATED_RELEASE_VERSION };
+export { ISSUE_TITLE };
+export { ISSUE_MARKER_PATTERN };
+export { FIRST_AUTOMATED_RELEASE_VERSION };

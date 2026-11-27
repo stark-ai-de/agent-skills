@@ -155,8 +155,12 @@ const expectedCategories = new Map([
   [66, "stack-tooling"],
   [67, "governance"],
   [68, "governance"],
+  [69, "stack-tooling"],
+  [70, "stack-tooling"],
 ]);
 const expectedStems = new Map([
+  [69, "ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership"],
+  [70, "ac-adr-070-use-shared-quality-in-the-public-skill-repository-profile"],
   [67, "ac-adr-067-coordinate-product-planning-through-intent-bound-skill-contracts"],
   [68, "ac-adr-068-reuse-explicit-skill-preselection-with-separate-provisioning-grants"],
   [1, "ac-adr-001-route-architecture-compass-through-canonical-adr-triplets"],
@@ -313,6 +317,13 @@ const baselineEvalCases = [
   "audit-and-pr-review-routing.md",
 ];
 const routedLibraryEvalCases = [
+  "shared-quality-new-repository.md",
+  "shared-quality-existing-baseline.md",
+  "shared-quality-pure-non-js.md",
+  "shared-quality-mixed-language.md",
+  "shared-quality-local-conflict.md",
+  "shared-quality-audit-evidence.md",
+  "shared-quality-framework-scope.md",
   "simplification-existing-capabilities.md",
   "simplification-contract-mismatch.md",
   "simplification-coverage-and-drift.md",
@@ -1896,6 +1907,33 @@ for (const file of assetFiles) {
       }
     }
   }
+}
+
+const qualityGuideFile = path.join(
+  referencesDir,
+  "ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md",
+);
+const qualityGuideText = readRegularFile(qualityGuideFile);
+const qualityGitPins = [
+  ...qualityGuideText.matchAll(
+    /git\+https:\/\/github\.com\/servrox\/code-quality\.git#([^\s'"`]+)/g,
+  ),
+];
+if (
+  qualityGitPins.length === 0 ||
+  qualityGitPins.some((match) => !/^[a-f0-9]{40}$/.test(match[1]))
+) {
+  fail(
+    `${relative(qualityGuideFile)}: shared-quality installation requires a full immutable Git SHA`,
+  );
+}
+for (const preset of ["core", "strict", "modularity", "anti-slop"]) {
+  if (!qualityGuideText.includes(`from "@servrox/code-quality/oxlint/${preset}"`)) {
+    fail(`${relative(qualityGuideFile)}: missing mandatory shared-quality import ${preset}`);
+  }
+}
+if (!qualityGuideText.includes('from "@servrox/code-quality/oxfmt"')) {
+  fail(`${relative(qualityGuideFile)}: missing mandatory shared-quality formatter import`);
 }
 
 const setupReportFile = path.join(assetsDir, "setup-report-template.md");

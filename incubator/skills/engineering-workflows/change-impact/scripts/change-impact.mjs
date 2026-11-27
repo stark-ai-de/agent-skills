@@ -7,7 +7,8 @@ import { collect, requireValue } from "./collect.mjs";
 import { credential } from "./credentials.mjs";
 import { MODEL, probe, rank } from "./rank.mjs";
 import { queue, report } from "./review.mjs";
-export { queue, report };
+export { queue };
+export { report };
 
 export async function doctor(live = false) {
   const auth = credential();

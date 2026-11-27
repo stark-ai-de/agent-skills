@@ -6,7 +6,7 @@ compatibility: Designed for Codex, Cursor, Claude Code, ChatGPT Chat/Work, Codex
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.13.2"
+  version: "0.14.0"
 ---
 
 # Architecture Compass
@@ -58,6 +58,8 @@ Agent-initiated activation may select and announce `audit` without mutation auth
 ## References
 
 Before selecting references, read [the catalog](references/adr-catalog.md) and [the reading map](references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md#selective-reference-routing). Preserve canonical Long authority, non-normative Guides and the map's internal-policy and testing-promotion boundaries. Select only applicable decisions. Start workflow authority with [AC-ADR-064 Short](references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.short.md).
+
+For JavaScript/TypeScript quality or toolchain work, route through [AC-ADR-069 Short](references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.short.md) · [Long](references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md) · [Guide](references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md). Use [AC-ADR-070 Short](references/ac-adr-070-use-shared-quality-in-the-public-skill-repository-profile.short.md) · [Long](references/ac-adr-070-use-shared-quality-in-the-public-skill-repository-profile.long.md) · [Guide](references/ac-adr-070-use-shared-quality-in-the-public-skill-repository-profile.guide.md) for the selectable public-skill repository profile. Follow their applicability, local mapping, compatibility and migration contracts within the selected route; they add no workflow or foundation decision.
 
 ## Inputs to inspect
 

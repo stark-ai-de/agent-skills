@@ -424,27 +424,27 @@
         "codeBlocks": 0
       },
       "kind": "guidance",
-      "summary": "Stack policy is evidence-bound and Oxc is never selected solely from language choice.",
+      "summary": "Stack policy binds shared quality to applicable adopted source while preserving local authority and compatibility proof.",
       "disposition": "adapted",
-      "rationale": "Stack reconciliation remains, but JavaScript or TypeScript no longer implies universal Oxc adoption; compatibility evidence and confirmed profile scope govern.",
+      "rationale": "Stack reconciliation is retained through mandatory shared quality on adopted applicable JavaScript/TypeScript scope, with compatibility evidence and local authority preserved.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md",
           "heading": "Decision",
           "markers": [
             "### Assign one owner per responsibility The repository records a tooling matrix for: - package installation,"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-040-offer-an-opinionated-stack-profile-for-new-public-skill-repositories.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-070-use-shared-quality-in-the-public-skill-repository-profile.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass offers a named `public-skill-repository` target-repository provider profile for new public skill repositories. The profile"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.guide.md",
-          "heading": "Implementation guide",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md",
+          "heading": "Qualify compatibility and migrate existing debt",
           "markers": ["Before Oxc adoption"]
         }
       ]
@@ -628,26 +628,26 @@
       },
       "kind": "guidance",
       "summary": "The legacy unconditional Oxc default is rejected.",
-      "disposition": "explicitly-rejected",
-      "rationale": "The universal Oxc default is explicitly rejected because language choice alone does not establish compatibility or ownership evidence.",
+      "disposition": "adapted",
+      "rationale": "The old unconditional tool replacement is adapted to the mandatory shared package policy with explicit local adoption, preserved coverage and bounded compatibility exceptions.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md",
           "heading": "Decision",
           "markers": [
             "### Assign one owner per responsibility The repository records a tooling matrix for: - package installation,"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-040-offer-an-opinionated-stack-profile-for-new-public-skill-repositories.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-070-use-shared-quality-in-the-public-skill-repository-profile.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass offers a named `public-skill-repository` target-repository provider profile for new public skill repositories. The profile"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.guide.md",
-          "heading": "Implementation guide",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md",
+          "heading": "Qualify compatibility and migrate existing debt",
           "markers": ["Before Oxc adoption"]
         }
       ]
@@ -1208,7 +1208,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md",
           "heading": "Decision",
           "markers": [
             "### Assign one owner per responsibility The repository records a tooling matrix for: - package installation,"
@@ -1258,7 +1258,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md",
           "heading": "Decision",
           "markers": [
             "### Assign one owner per responsibility The repository records a tooling matrix for: - package installation,"
@@ -2155,25 +2155,25 @@
       "kind": "guidance",
       "summary": "Stack policy is updated only from target evidence and explicit tooling ownership.",
       "disposition": "adapted",
-      "rationale": "The conditional stack-policy mechanic remains, while universal Oxc adoption is replaced by compatibility-gated tooling selection.",
+      "rationale": "Stack scope remains evidence-bound; applicable adopted JavaScript/TypeScript quality now uses the shared package while compatibility and local authority remain explicit.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md",
           "heading": "Decision",
           "markers": [
             "### Assign one owner per responsibility The repository records a tooling matrix for: - package installation,"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-040-offer-an-opinionated-stack-profile-for-new-public-skill-repositories.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-070-use-shared-quality-in-the-public-skill-repository-profile.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass offers a named `public-skill-repository` target-repository provider profile for new public skill repositories. The profile"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.guide.md",
-          "heading": "Oxc and Turbo",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md",
+          "heading": "Qualify compatibility and migrate existing debt",
           "markers": ["Before Oxc adoption"]
         }
       ]
@@ -2548,10 +2548,10 @@
       "kind": "guidance",
       "summary": "Stack checklist",
       "disposition": "adapted",
-      "rationale": "The historical mandatory stack is replaced by requirement- and compatibility-based selection with explicit ownership and deviation evidence.",
+      "rationale": "Independent tooling ownership is retained, with the shared quality package required for applicable adopted JavaScript/TypeScript boundaries and other choices governed by their own evidence.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md",
           "heading": "Decision",
           "markers": [
             "### Assign one owner per responsibility The repository records a tooling matrix for: - package installation,"
@@ -2572,9 +2572,9 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.guide.md",
-          "heading": "Oxc and Turbo",
-          "markers": ["Before Oxc adoption", "Add Turborepo only when"]
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md",
+          "heading": "TypeScript, package, runtime and build ownership",
+          "markers": ["Add Turborepo only when"]
         }
       ]
     },
@@ -4164,16 +4164,19 @@
       "rationale": "The broad TypeScript preference remains a candidate, while preview packages and tsgo syntax were updated to stable TypeScript 7 ownership.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md",
           "heading": "Decision",
           "markers": [
             "### Assign one owner per responsibility The repository records a tooling matrix for: - package installation,"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.guide.md",
-          "heading": "TypeScript",
-          "markers": ["TypeScript 7 is stable", "instead of the former"]
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md",
+          "heading": "TypeScript, package, runtime and build ownership",
+          "markers": [
+            "TypeScript 7 is the primary supported stable compiler lane",
+            "instead of the former"
+          ]
         }
       ]
     },
@@ -4193,15 +4196,15 @@
       "rationale": "The explicit TypeScript 6 compatibility lane remains active for named compiler-API and integration consumers.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md",
           "heading": "Decision",
           "markers": [
             "### Assign one owner per responsibility The repository records a tooling matrix for: - package installation,"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.guide.md",
-          "heading": "TypeScript",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md",
+          "heading": "TypeScript, package, runtime and build ownership",
           "markers": ["Keep a TS6 alias only where a named integration still requires it"]
         }
       ]
@@ -4222,15 +4225,15 @@
       "rationale": "Preview-only editor settings were replaced by current TypeScript 7 LSP or extension support with direct compatibility verification.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md",
           "heading": "Decision",
           "markers": [
             "### Assign one owner per responsibility The repository records a tooling matrix for: - package installation,"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.guide.md",
-          "heading": "TypeScript",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md",
+          "heading": "TypeScript, package, runtime and build ownership",
           "markers": ["VS Code can use the current TypeScript 7 LSP"]
         }
       ]
@@ -4280,15 +4283,15 @@
       "rationale": "pnpm workspace ownership remains eligible, but Turborepo is added only when task-graph or cache evidence justifies it.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md",
           "heading": "Decision",
           "markers": [
             "### Assign one owner per responsibility The repository records a tooling matrix for: - package installation,"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.guide.md",
-          "heading": "Oxc and Turbo",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md",
+          "heading": "TypeScript, package, runtime and build ownership",
           "markers": ["Add Turborepo only when"]
         }
       ]
@@ -4309,16 +4312,16 @@
       "rationale": "The sole package-manager and lockfile ownership rule remains active while Bun runtime commands do not gain install ownership.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md",
           "heading": "Decision",
           "markers": [
             "### Assign one owner per responsibility The repository records a tooling matrix for: - package installation,"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.guide.md",
-          "heading": "pnpm and Bun",
-          "markers": ["one `pnpm-lock.yaml`", "without giving Bun package-manager ownership"]
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md",
+          "heading": "TypeScript, package, runtime and build ownership",
+          "markers": ["one lockfile", "prevents implicit installation"]
         }
       ]
     },
@@ -4338,16 +4341,16 @@
       "rationale": "The supply-chain controls remain candidates, but each option is conditional on the exact supported pnpm version and reviewed lifecycle needs.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md",
           "heading": "Decision",
           "markers": [
             "### Assign one owner per responsibility The repository records a tooling matrix for: - package installation,"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.guide.md",
-          "heading": "pnpm and Bun",
-          "markers": ["Confirm the target's exact pnpm version"]
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md",
+          "heading": "TypeScript, package, runtime and build ownership",
+          "markers": ["target's exact supported version"]
         }
       ]
     },
@@ -4364,19 +4367,19 @@
       "kind": "guidance",
       "summary": "Oxc is a compatibility-gated candidate rather than a default.",
       "disposition": "adapted",
-      "rationale": "The universal Oxc mandate is rejected while its type-aware modes remain eligible only after repository corpus and diagnostics proof.",
+      "rationale": "Oxc guidance is adapted to mandatory shared presets, qualified type-aware scope, retained compiler ownership and explicit compatibility exceptions.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md",
           "heading": "Decision",
           "markers": [
             "### Assign one owner per responsibility The repository records a tooling matrix for: - package installation,"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.guide.md",
-          "heading": "Oxc and Turbo",
-          "markers": ["Before Oxc adoption", "type-aware linting only when"]
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md",
+          "heading": "Configure one policy owner",
+          "markers": ["Set `typeAware: true`"]
         }
       ]
     },

@@ -53,7 +53,7 @@ Architecture Compass setup still establishes governance, not tooling installatio
    Follow existing supply-chain policy and frozen-install verification.
 3. Preserve a compatible existing linter/parser. Do not install a second linter
    simply to follow an example. Resolve missing or incompatible tooling through
-   AC-ADR-013 and the local decision, with a bounded migration or deferral.
+   AC-ADR-069 and the local decision, with a bounded migration or deferral.
 4. Inspect each app's nearest `components.json`, TypeScript paths, and shared
    package exports. Declare CSS imports such as Tailwind, animation utilities,
    and shadcn styles at the package owning that stylesheet. Do not depend on

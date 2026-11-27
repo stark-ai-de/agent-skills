@@ -165,13 +165,17 @@
           "signals": {
             "formatter": "pass",
             "linter": "pass",
-            "javascriptRuntime": "not-applicable"
+            "javascriptRuntime": "pass"
           }
         }
       ],
       "winner": "native",
-      "evidenceRefs": ["package.json#scripts.format", "package.json#scripts.lint"],
-      "rationale": "Oxfmt 0.71.0 and Oxlint 1.92.0 pass the repository formatter and linter on Linux/WSL (2026-11-07). The commands retain their native execution boundary; hosted checks remain separate.",
+      "evidenceRefs": [
+        "package.json#scripts.format",
+        "package.json#scripts.lint",
+        "scripts/quality/report.mjs"
+      ],
+      "rationale": "Oxfmt 0.78.0 and Oxlint 1.93.0 retain their native execution boundary. Node 24 loads shared JavaScript configuration/plugins; the Bun quality parent explicitly invokes the Node wrapper. The existing style is preserved by three consumer overrides; hosted checks remain separate.",
       "fallbackOrder": ["native"],
       "revisit": "Revisit if the installed Oxc entrypoints stop being native executables."
     },
@@ -632,6 +636,30 @@
       "rationale": "The independent Ads plugin packager and node:test fixtures run explicitly on Node.js 24.18 or newer. Local Linux source, OAuth configuration, canonical-byte projection and reproducible-archive fixtures ran on Node 24.22.3 on 2026-11-23. This is deterministic packaging evidence; no deployment, portal acceptance or publication is inferred. Hosted and cross-platform observations remain unknown.",
       "fallbackOrder": ["node"],
       "revisit": "Requalify when package inputs, archive rules, Node runtime or OpenAI submission contracts change."
+    },
+    {
+      "id": "shared-quality-node-cli",
+      "surfaces": ["internal:shared-quality:node-cli"],
+      "candidates": [
+        {
+          "id": "node",
+          "signals": {
+            "representativeFixtures": "pass",
+            "hostedLinux": "unknown",
+            "hostedMacos": "unknown",
+            "hostedWindows": "unknown"
+          }
+        }
+      ],
+      "winner": "node",
+      "evidenceRefs": [
+        "scripts/quality/report.mjs",
+        "scripts/quality/contract.test.mjs",
+        "pnpm run validate:quality"
+      ],
+      "rationale": "Oxlint 1.93.0 JavaScript configuration and ESLint-compatible plugins require the Node wrapper. The Bun-owned quality orchestration explicitly selects Node children for analyzer and isolated consumer fixtures.",
+      "fallbackOrder": ["node"],
+      "revisit": "Requalify when Oxlint changes its JavaScript config/plugin runtime contract."
     }
   ]
 }

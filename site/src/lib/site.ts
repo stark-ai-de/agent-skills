@@ -1,7 +1,9 @@
 import { pluginMarketplaceSource } from "./plugin-listing";
 import { SITE_ORIGIN, SITE_BASE_PATH, SITE_BUILD } from "./site-build.mjs";
 
-export { SITE_ORIGIN, SITE_BASE_PATH, SITE_BUILD };
+export { SITE_ORIGIN };
+export { SITE_BASE_PATH };
+export { SITE_BUILD };
 export const STARK_AI_MARK = "stark AI";
 export const STARK_AI_HAIR_SPACE = "\u200A";
 export const STARK_AI_NAME = `stark${STARK_AI_HAIR_SPACE}AI`;

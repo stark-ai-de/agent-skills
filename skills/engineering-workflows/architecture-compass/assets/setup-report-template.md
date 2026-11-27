@@ -75,7 +75,6 @@ Use `adopt`, `adapt`, `defer`, or `reject`. A defer names a future trigger or ow
 | AC-ADR-010   |             |                 |                     |                        |                     |
 | AC-ADR-011   |             |                 |                     |                        |                     |
 | AC-ADR-012   |             |                 |                     |                        |                     |
-| AC-ADR-013   |             |                 |                     |                        |                     |
 | AC-ADR-014   |             |                 |                     |                        |                     |
 | AC-ADR-015   |             |                 |                     |                        |                     |
 | AC-ADR-016   |             |                 |                     |                        |                     |
@@ -98,7 +97,6 @@ Use `adopt`, `adapt`, `defer`, or `reject`. A defer names a future trigger or ow
 | AC-ADR-035   |             |                 |                     |                        |                     |
 | AC-ADR-037   |             |                 |                     |                        |                     |
 | AC-ADR-038   |             |                 |                     |                        |                     |
-| AC-ADR-040   |             |                 |                     |                        |                     |
 | AC-ADR-041   |             |                 |                     |                        |                     |
 | AC-ADR-049   |             |                 |                     |                        |                     |
 | AC-ADR-054   |             |                 |                     |                        |                     |
@@ -114,8 +112,10 @@ Use `adopt`, `adapt`, `defer`, or `reject`. A defer names a future trigger or ow
 | AC-ADR-065   |             |                 |                     |                        |                     |
 | AC-ADR-066   |             |                 |                     |                        |                     |
 | AC-ADR-067   |             |                 |                     |                        |                     |
+| AC-ADR-069   |             |                 |                     |                        |                     |
+| AC-ADR-070   |             |                 |                     |                        |                     |
 
-AC-ADR-001 through AC-ADR-004, AC-ADR-026, AC-ADR-036, AC-ADR-039, AC-ADR-043 through AC-ADR-046, AC-ADR-048, and AC-ADR-064 plus AC-ADR-068 are skill-runtime controls and remain outside the target adoption matrix. AC-ADR-034, AC-ADR-042, and AC-ADR-047 are superseded target decisions and remain outside the matrix. Historical runtime decisions remain outside target adoption.
+AC-ADR-001 through AC-ADR-004, AC-ADR-026, AC-ADR-036, AC-ADR-039, AC-ADR-043 through AC-ADR-046, AC-ADR-048, and AC-ADR-064 plus AC-ADR-068 are skill-runtime controls and remain outside the target adoption matrix. AC-ADR-013, AC-ADR-034, AC-ADR-040, AC-ADR-042, and AC-ADR-047 are superseded target decisions and remain outside the matrix. Historical runtime decisions remain outside target adoption.
 
 ## Adopted Jev host advice
 

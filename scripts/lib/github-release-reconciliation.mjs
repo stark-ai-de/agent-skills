@@ -1,11 +1,9 @@
 import { automatedReleaseVersionSupported } from "./release-please.mjs";
 import { RELEASE_ASSET_NAMES, releaseAssetNamesForTag } from "./release-assets.mjs";
 
-export {
-  RELEASE_ASSET_NAMES,
-  RELEASE_ZIP_ASSET_NAMES,
-  releaseAssetNamesForTag,
-} from "./release-assets.mjs";
+export { RELEASE_ASSET_NAMES } from "./release-assets.mjs";
+export { RELEASE_ZIP_ASSET_NAMES } from "./release-assets.mjs";
+export { releaseAssetNamesForTag } from "./release-assets.mjs";
 
 export function releaseMutationAllowed(tag) {
   const match = /^v(\d+\.\d+\.\d+)$/.exec(tag ?? "");

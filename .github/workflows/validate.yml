@@ -85,6 +85,8 @@ jobs:
         run: python3 -B -m unittest discover -s skill-evals/hindsight-memory -p 'test_*.py' -v
 
       - name: ✅ Validate repository contracts
+        env:
+          QUALITY_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: pnpm run validate
 
       - name: 🐍 Set up Python 3.10 for Jev validation

@@ -19,6 +19,7 @@ This repository contains public Agent Skills.
 - Move long examples, rubrics, and templates into `references/` or `assets/`.
 - Prefer read-only scripts. Any script that modifies files must be clearly documented.
 - Document repo-level decisions in `docs/adrs/`.
+- Consume `@servrox/code-quality` through its reviewed full Git SHA and exported presets, as required by [ADR-0080](docs/adrs/0080-consume-shared-code-quality-policy.short.md) ([Long, canonical](docs/adrs/0080-consume-shared-code-quality-policy.long.md) · [Guide](docs/adrs/0080-consume-shared-code-quality-policy.guide.md)). Run `pnpm run validate:quality` for shared-policy integration changes. Reusable rules, defaults, plugins and report normalization belong in `servrox/code-quality`; source scopes, framework selection, architecture paths and non-increasing migration baselines belong here. Do not copy shared rules, weaken the existing correctness gate, auto-refresh allowances, or treat an installed dependency as proof of CI enforcement. Follow the [Guide](docs/adrs/0080-consume-shared-code-quality-policy.guide.md) for adoption and extension ownership.
 - Store every repository ADR as linked `.short.md`, `.long.md`, and `.guide.md` files. Long is canonical; Short is a faithful abstraction; Guide is non-normative.
 - Keep one decision per ADR and do not impose numeric word, paragraph, or section limits.
 - Keep accepted ADR IDs, filename stems, and decision text stable; change architecture through a reciprocal successor ADR, not an in-place decision rewrite.

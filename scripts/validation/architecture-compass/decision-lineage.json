@@ -509,6 +509,16 @@
           "sources": ["ADR-0064"]
         }
       ]
+    },
+    {
+      "id": "AC-ADR-069",
+      "disposition": "material",
+      "relations": [{ "type": "adapts", "sources": ["ADR-0080"] }]
+    },
+    {
+      "id": "AC-ADR-070",
+      "disposition": "material",
+      "relations": [{ "type": "generalizes", "sources": ["ADR-0035", "ADR-0080"] }]
     }
   ]
 }

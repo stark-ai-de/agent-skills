@@ -934,17 +934,15 @@ export function fileHash(filePath) {
   return hashBytes(fs.readFileSync(filePath));
 }
 
-export {
-  canonicalJson,
-  comparePosixPaths,
-  compareTrees,
-  directoryModes,
-  enumerateTree,
-  fromPosix,
-  isGeneratedCachePath,
-  listTrackedSourceFiles,
-  normalizedMode,
-  toPosix,
-  assertInside,
-  withTempStage,
-};
+export { canonicalJson };
+export { comparePosixPaths };
+export { compareTrees };
+export { directoryModes };
+export { enumerateTree };
+export { fromPosix };
+export { isGeneratedCachePath };
+export { listTrackedSourceFiles };
+export { normalizedMode };
+export { toPosix };
+export { assertInside };
+export { withTempStage };

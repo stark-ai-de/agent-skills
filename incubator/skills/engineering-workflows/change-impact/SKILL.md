@@ -7,7 +7,7 @@ metadata:
   author: stark-ai-de
   category: engineering-workflows
   internal: true
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # Change Impact

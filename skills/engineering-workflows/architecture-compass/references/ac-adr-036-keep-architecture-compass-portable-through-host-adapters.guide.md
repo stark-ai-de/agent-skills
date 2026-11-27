@@ -113,8 +113,8 @@ Do not apply this ChatGPT/Codex-web observation record to Codex CLI, IDE, or Cod
   command or claim `/plan Use @architecture-compass` is official syntax.
 - **Codex web:** for an observed inactive `/plan`, select the item or provide
   standalone `/plan`, then continue in Plan mode with `Use $architecture-compass
-to continue this request: <original request>`. Combine these into `/plan Use
-$architecture-compass to continue this request: <original request>` only if
+  to continue this request: <original request>`. Combine these into `/plan Use
+  $architecture-compass to continue this request: <original request>` only if
   this same composer also proves inline argument support. A visible `/plan`
   alone does not establish that parser behavior. Never substitute ChatGPT `@`.
 - **Any observed non-slash control:** name that control, request selection, and

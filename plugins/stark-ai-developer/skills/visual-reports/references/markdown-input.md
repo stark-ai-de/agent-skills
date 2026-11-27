@@ -23,8 +23,8 @@ four colons; contained blocks use three. GFM tables require a separator row.
 
 - The main behavior is documented.
 - The open point remains visible.
-  :::
-  ::::
+:::
+::::
 ```
 
 Required report attributes: `id`, `type`, `profile`; optional `style`, `goal`,
