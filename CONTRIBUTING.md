@@ -71,6 +71,8 @@ Run the local `pnpm run validate` aggregate for release intent or when another m
 
 Edit bundled skills only under `skills/<category>/<skill>/`. Do not hand-edit `plugins/stark-ai-developer/`. After changing a bundled skill or `plugins/stark-ai-developer.source.json`, run `pnpm run sync:agent-plugin`, then `pnpm run validate:projections` when the portable contract changed.
 
+Architecture Compass payload changes also require `pnpm run validate:product-planning`, whose shared source fingerprint covers Compass, Architecture Zoom and Codex Spec Interviewer. Review changes before maintaining the [public-admission source binding](skill-evals/architecture-zoom/public-admission.json), preserve its recorded authority and limitations, and never turn that maintenance record into a claim of observed native-host behavior.
+
 The pinned `pnpm dlx` discovery command requires network access the first time the CLI is fetched.
 
 Required shared quality checks (also run by hosted Validate):
