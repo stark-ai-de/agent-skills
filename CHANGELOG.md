@@ -12,6 +12,16 @@
 
 ### Removed
 
+## 0.36.0 (2026-11-27)
+
+## What's Changed
+* fix(ads): complete plugin review metadata and production disclosures by @servrox in https://github.com/stark-ai-de/agent-skills/pull/206
+* fix(ads): permit the OpenAI Platform OAuth relay redirect by @servrox in https://github.com/stark-ai-de/agent-skills/pull/209
+* feat(quality): enforce shared policy and reusable Compass adoption by @servrox in https://github.com/stark-ai-de/agent-skills/pull/210
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.35.0...v0.36.0
+
 ## 0.35.0 (2026-11-23)
 
 ## What's Changed
