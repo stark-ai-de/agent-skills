@@ -1,53 +1,51 @@
 import assert from "node:assert/strict";
-import { readFileSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 
 import { createBaseline, findRegressions } from "@servrox/code-quality/baseline";
 
-import { baselinePath, checkBaselineHistory } from "./baseline.mjs";
+import { baselinePath, readBaseline } from "./baseline.mjs";
 import { assertConsumerContract, readConsumerContract } from "./contract.mjs";
-import { collectFindings } from "./report.mjs";
+import { locateFindings } from "./diagnostics.mjs";
+import { collectReport } from "./report.mjs";
+import { reductionHint, summarizeReport, writeStepSummary } from "./summary.mjs";
 
-const [mode = "--check", ...extra] = process.argv.slice(2);
-
-assert.ok(
-  ["--check", "--prune-baseline"].includes(mode) && extra.length === 0,
-  "Use --check or --prune-baseline",
-);
-
-assertConsumerContract(readConsumerContract());
-
-const baseline = JSON.parse(readFileSync(baselinePath, "utf-8"));
-
-const infrastructureBudget = Object.keys(baseline.entries).filter((identity) => {
-  const [file] = JSON.parse(identity);
-
-  return (
-    file.startsWith("scripts/quality/") || ["oxlint.config.mjs", "oxfmt.config.mjs"].includes(file)
+const checkQuality = () => {
+  const [mode = "--check", ...extra] = process.argv.slice(2);
+  assert.ok(
+    ["--check", "--prune-baseline"].includes(mode) && extra.length === 0,
+    "Use --check or --prune-baseline",
   );
-});
+  assertConsumerContract(readConsumerContract());
 
-assert.equal(
-  infrastructureBudget.length,
-  0,
-  "New quality infrastructure receives no legacy allowance",
-);
+  const baseline = readBaseline();
+  const report = collectReport();
+  const regressions = findRegressions(report.findings, baseline);
+  const locations = locateFindings(regressions, report);
+  const summary = summarizeReport(report, baseline, regressions);
 
-checkBaselineHistory(baseline);
+  for (const [index, finding] of regressions.entries()) {
+    console.error(`${locations[index]} (current ${finding.value}, allowed ${finding.allowed})`);
+  }
 
-const findings = collectFindings();
-const regressions = findRegressions(findings, baseline);
+  writeStepSummary(summary);
 
-for (const finding of regressions) {
-  console.error(
-    `${finding.file}: ${finding.rule}: ${finding.message} (current ${finding.value}, allowed ${finding.allowed})`,
-  );
-}
+  if (regressions.length > 0) {
+    process.exitCode = 1;
+  } else if (mode === "--prune-baseline") {
+    writeFileSync(baselinePath, `${JSON.stringify(createBaseline(report.findings), null, 2)}\n`);
+    console.log("Shared quality baseline pruned; review and commit the reduced allowances.");
+  } else {
+    console.log(`Shared quality: ${report.findings.length} existing findings; no regressions.`);
 
-if (regressions.length > 0) {
+    for (const line of reductionHint(summary.reductions)) {
+      console.log(line);
+    }
+  }
+};
+
+try {
+  checkQuality();
+} catch (error) {
+  console.error(error.message);
   process.exitCode = 1;
-} else if (mode === "--prune-baseline") {
-  writeFileSync(baselinePath, `${JSON.stringify(createBaseline(findings), null, 2)}\n`);
-  console.log("Shared quality baseline pruned; review and commit the reduced allowances.");
-} else {
-  console.log(`Shared quality: ${findings.length} existing findings; no regressions.`);
 }

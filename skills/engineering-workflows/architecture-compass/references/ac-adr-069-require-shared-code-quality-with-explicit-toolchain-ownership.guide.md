@@ -25,6 +25,8 @@ This guide is non-normative. Read Long for obligations; use this sequence within
 
 Contents: [Applicability](#applicability-and-local-mapping) · [Installation](#install-the-reviewed-package) · [Configuration](#configure-one-policy-owner) · [Ownership](#shared-policy-and-consumer-extensions) · [Migration](#qualify-compatibility-and-migrate-existing-debt) · [Toolchain](#typescript-package-runtime-and-build-ownership) · [Proof](#proof-and-update-checklist).
 
+Use [the complete adoption recipes](../assets/shared-quality-adoption-recipes.md) for a new Node consumer, an existing-debt baseline wrapper, required CI, daily report/fix/prune usage, and reviewed policy/path migrations. Record the resulting implementation handoff in the existing setup report; do not create another evidence ledger.
+
 ### Applicability and local mapping
 
 For `setup`, inspect manifests, maintained source and helpers, compiler/linter configuration, CI and accepted local decisions. Map AC-ADR-069 to the repository's own ADR identity; do not copy the provider ID as a local ID. For `audit`, report the same facts and gaps without installation, generated artifacts, baseline updates, or CI changes. Use the already-authorized refactor route for implementation after governance is settled.
@@ -40,10 +42,10 @@ Governance acceptance is not installed or active enforcement. Record source-insp
 
 ### Install the reviewed package
 
-The reviewed public source is [servrox/code-quality at `16aff8c001f380feb9edf9624756fd57e01d9b6e`](https://github.com/servrox/code-quality/tree/16aff8c001f380feb9edf9624756fd57e01d9b6e). The installation below pins this reviewed source commit, including the qualified exported-arrow function-budget fix. The source currently provides package version `0.1.0`, is private/unpublished to npm, and declares `UNLICENSED`; consume its exact Git source without inventing an npm release or changing its license metadata.
+The reviewed public source is [servrox/code-quality at `28e1af8201a2e06692caf1a51c38d8a024899fd2`](https://github.com/servrox/code-quality/tree/28e1af8201a2e06692caf1a51c38d8a024899fd2). The installation below pins this source commit, which retains the exported-arrow function-budget fix and provides package version `0.1.0` under Apache-2.0. Its public npm publication configuration does not prove that a registry release is available; this recipe consumes the exact Git source.
 
 ```sh
-pnpm add -D '@servrox/code-quality@git+https://github.com/servrox/code-quality.git#16aff8c001f380feb9edf9624756fd57e01d9b6e' \
+pnpm add -D '@servrox/code-quality@git+https://github.com/servrox/code-quality.git#28e1af8201a2e06692caf1a51c38d8a024899fd2' \
   ultracite@8.2.1 oxlint@1.93.0 oxfmt@0.78.0
 ```
 
@@ -140,7 +142,7 @@ Use the target's `packageManager`, workspace membership and one lockfile. In an 
 
 ## Official sources
 
-- [Reviewed shared package and installation contract](https://github.com/servrox/code-quality/blob/16aff8c001f380feb9edf9624756fd57e01d9b6e/README.md)
-- [Reviewed package exports and peer versions](https://github.com/servrox/code-quality/blob/16aff8c001f380feb9edf9624756fd57e01d9b6e/package.json)
+- [Reviewed shared package and installation contract](https://github.com/servrox/code-quality/blob/28e1af8201a2e06692caf1a51c38d8a024899fd2/README.md)
+- [Reviewed package exports and peer versions](https://github.com/servrox/code-quality/blob/28e1af8201a2e06692caf1a51c38d8a024899fd2/package.json)
 - [Oxc configuration](https://oxc.rs/docs/guide/usage/linter/config.html)
 - [pnpm frozen installs](https://pnpm.io/cli/install)

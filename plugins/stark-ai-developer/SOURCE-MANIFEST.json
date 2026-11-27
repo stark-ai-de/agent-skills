@@ -291,10 +291,10 @@
       "sha256": "a37e1bc72c46376a710e18cf4c4f863d3a4cc90e22903df55f53f443e3c70f3f"
     },
     {
-      "byteLength": 17437,
+      "byteLength": 17920,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "6d419501965a447ddbb1ab537e55e83ca58f7a6fb0d542d8883a89854094a4f7"
+      "sha256": "32e3e56beb56e581ee828acf2dd0594c568f6dcd87c25d920904002cea0977eb"
     },
     {
       "byteLength": 692,
@@ -387,10 +387,16 @@
       "sha256": "dcaf228aedb426b3f8194a2dbc64cd4d01fc2eae2c49704d35a980763e3c3ae4"
     },
     {
-      "byteLength": 15434,
+      "byteLength": 16785,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/setup-report-template.md",
-      "sha256": "ba8f1336a71e8defa573e3b2c94a1f2a9f3233d8ceb8438364e5422b0e0f5f40"
+      "sha256": "f0fe2236a73e4643d3c788f484506ac87a06897f881cb32abcac8bc3c145337b"
+    },
+    {
+      "byteLength": 14740,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/shared-quality-adoption-recipes.md",
+      "sha256": "08bc90a8a80f046469d98fbb8870cb725a7a69ee73164d0d500324c8b2c7a2c4"
     },
     {
       "byteLength": 6103,
@@ -1629,10 +1635,10 @@
       "sha256": "16fba1f41aac19375ce0a32a86067e0770795c784edc2aad9e089d3a6ddbce5c"
     },
     {
-      "byteLength": 16590,
+      "byteLength": 16893,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md",
-      "sha256": "bb301ab3a46a0256243d928ff9c6148af721d53cca5891354715b578da98ced9"
+      "sha256": "9fb1f937f74b5918270a321152c87f3f3e15606492bb369415ba6a8b60897845"
     },
     {
       "byteLength": 10055,
@@ -2955,5 +2961,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "66c74b490861bdff3947b890c08d40665abffced0e5f56501e07b01ab3c3c08a"
+  "treeHash": "4f706f09abac5b83eee7b1a99a277a29bc38df64b615317f27f3c0d21b4dfdef"
 }

@@ -36,7 +36,7 @@ Repository maintainers own quality-policy updates and migration cleanup. ADR-003
 
 ### Exact package and tool versions
 
-Consume `@servrox/code-quality@git+https://github.com/servrox/code-quality.git#16aff8c001f380feb9edf9624756fd57e01d9b6e` with `ultracite@8.2.1`, `oxlint@1.93.0`, `oxfmt@0.78.0`. Add `oxlint-tsgolint@7.0.2007` only for a separately qualified type-aware scope; this mixed-source repository currently retains its existing compiler checks without claiming repository-wide type-aware coverage. The reviewed source commit includes the exported-arrow function-budget fix qualified by the real consumer fixtures. Commit the resolved lockfile and use `pnpm install --frozen-lockfile` in CI. The public Git source needs no registry token.
+Consume `@servrox/code-quality@git+https://github.com/servrox/code-quality.git#28e1af8201a2e06692caf1a51c38d8a024899fd2` with `ultracite@8.2.1`, `oxlint@1.93.0`, `oxfmt@0.78.0`. Add `oxlint-tsgolint@7.0.2007` only for a separately qualified type-aware scope; this mixed-source repository currently retains its existing compiler checks without claiming repository-wide type-aware coverage. The reviewed source commit includes the exported-arrow function-budget fix qualified by the real consumer fixtures. Commit the resolved lockfile and use `pnpm install --frozen-lockfile` in CI. The public Git source needs no registry token.
 
 Keep repository ownership at pnpm `11.24.0`, Bun `1.4.0` and Node `24.18.0` minimums unless their own accepted runtime/toolchain decision changes. The package's Node `>=24.15.0` requirement fits the existing Node floor; its development pnpm pin does not govern this consumer. Do not change application runtime selection from a lint dependency's engine field.
 
@@ -58,7 +58,11 @@ These are consumer compatibility exceptions; the shared preset remains imported.
 
 ### Migration commands and honest completion
 
+Follow the [daily, upgrade and file-move workflow](../../tools/quality/README.md) for command effects and migration limits.
+
 - `pnpm run lint` preserves the repository's passing native correctness gate.
+- `pnpm run quality:report` shows debt by rule/file; pass explicit files for original messages and locations. Use `pnpm --silent run quality:report -- --json` for machine-readable evidence.
+- `pnpm run quality:fix -- <files>` applies deliberate shared-policy fixes to explicit maintained files. It does not change allowances; saving in the editor does not trigger shared lint fixes.
 - `pnpm run quality:check` executes the full shared core, strict, modularity and anti-slop policy and compares validated findings with reviewed non-increasing allowances.
 - `pnpm run validate:quality` owns the quality configuration/report contract and quality regression proof in required validation.
 - `pnpm run quality:baseline:prune` is an explicit mutating maintenance command that can only preserve or reduce existing allowances. Review and commit its output to make improvements permanent.
@@ -72,8 +76,8 @@ Run the real native lint, shared policy and formatter gates; prove rejection wit
 
 ## Official sources
 
-- [Reviewed shared package](https://github.com/servrox/code-quality/blob/16aff8c001f380feb9edf9624756fd57e01d9b6e/README.md)
-- [Reviewed exports and peer versions](https://github.com/servrox/code-quality/blob/16aff8c001f380feb9edf9624756fd57e01d9b6e/package.json)
+- [Reviewed shared package](https://github.com/servrox/code-quality/blob/28e1af8201a2e06692caf1a51c38d8a024899fd2/README.md)
+- [Reviewed exports and peer versions](https://github.com/servrox/code-quality/blob/28e1af8201a2e06692caf1a51c38d8a024899fd2/package.json)
 
 ## Revisit
 

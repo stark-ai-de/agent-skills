@@ -20,8 +20,8 @@ importers:
         specifier: 1.59.0
         version: 1.59.0
       '@servrox/code-quality':
-        specifier: git+https://github.com/servrox/code-quality.git#16aff8c001f380feb9edf9624756fd57e01d9b6e
-        version: https://codeload.github.com/servrox/code-quality/tar.gz/16aff8c001f380feb9edf9624756fd57e01d9b6e(oxfmt@0.78.0(@astrojs/compiler-rs@0.5.2))(oxlint@1.93.0)(supports-color@7.2.0)(typescript@6.0.3)(ultracite@8.2.1(eslint@10.14.0(supports-color@7.2.0))(oxfmt@0.78.0(@astrojs/compiler-rs@0.5.2))(oxlint@1.93.0))
+        specifier: git+https://github.com/servrox/code-quality.git#28e1af8201a2e06692caf1a51c38d8a024899fd2
+        version: https://codeload.github.com/servrox/code-quality/tar.gz/28e1af8201a2e06692caf1a51c38d8a024899fd2(oxfmt@0.78.0(@astrojs/compiler-rs@0.5.2))(oxlint@1.93.0)(supports-color@7.2.0)(typescript@6.0.3)(ultracite@8.2.1(eslint@10.15.0(supports-color@7.2.0))(oxfmt@0.78.0(@astrojs/compiler-rs@0.5.2))(oxlint@1.93.0))
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -57,7 +57,7 @@ importers:
         version: 7.8.6
       ultracite:
         specifier: 8.2.1
-        version: 8.2.1(eslint@10.14.0(supports-color@7.2.0))(oxfmt@0.78.0(@astrojs/compiler-rs@0.5.2))(oxlint@1.93.0)
+        version: 8.2.1(eslint@10.15.0(supports-color@7.2.0))(oxfmt@0.78.0(@astrojs/compiler-rs@0.5.2))(oxlint@1.93.0)
       unified:
         specifier: 11.0.5
         version: 11.0.5
@@ -1315,8 +1315,8 @@ packages:
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
 
-  '@servrox/code-quality@https://codeload.github.com/servrox/code-quality/tar.gz/16aff8c001f380feb9edf9624756fd57e01d9b6e':
-    resolution: {gitHosted: true, integrity: sha512-h/4YGNMRr2A3xRuSK32dVDHwzXhsQyIN3jEZpTCkDJuq43YuZ2c3dAC2QcLTRnHvApeTEHyg8j2MnndLWgoxQg==, tarball: https://codeload.github.com/servrox/code-quality/tar.gz/16aff8c001f380feb9edf9624756fd57e01d9b6e}
+  '@servrox/code-quality@https://codeload.github.com/servrox/code-quality/tar.gz/28e1af8201a2e06692caf1a51c38d8a024899fd2':
+    resolution: {gitHosted: true, integrity: sha512-/dUZvEaDR2eSpPFcm4EE2I+h/UocsNrT+Z3N72Uzs/D9vucb2lHAeuUinG7porGHBpSOhGloUrQ/GcekzpcnVg==, tarball: https://codeload.github.com/servrox/code-quality/tar.gz/28e1af8201a2e06692caf1a51c38d8a024899fd2}
     version: 0.1.0
     engines: {node: '>=24.15.0'}
     peerDependencies:
@@ -2048,8 +2048,8 @@ packages:
     resolution: {integrity: sha512-/veY75JbMK4j1yjvuUxuVsiS/hr/4iHs9FTT6cgTexxdE0Ly/glccBAkloH/DofkjRbZU3bnoj38mOmhkZ0lHw==}
     engines: {node: '>=12'}
 
-  eslint-plugin-sonarjs@4.2.2:
-    resolution: {integrity: sha512-usNF9GfP89ibwhfxpZaCMW40sC7UEOusDgDCk7lyqAhh4AYdbBaAgLVL5Y/QS0jSed8eJ2ACGH6zzE8ezd/yZQ==}
+  eslint-plugin-sonarjs@4.2.3:
+    resolution: {integrity: sha512-yR0AflB1rmuHUYarKknnSi5Fc5uxwnkE/CdMiGLgQz2XnUt4Aj6oMyB9OfGkgZ+uhhbYxHFtReX0UpH1nZLn5A==}
     peerDependencies:
       eslint: ^8.0.0 || ^9.0.0 || ^10.0.0
 
@@ -2075,8 +2075,8 @@ packages:
     resolution: {integrity: sha512-tD40eHxA35h0PEIZNeIjkHoDR4YjjJp34biM0mDvplBe//mB+IHCqHDGV7pxF+7MklTvighcCPPZC7ynWyjdTA==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
 
-  eslint@10.14.0:
-    resolution: {integrity: sha512-T0pNsxkb9IKmtQjhpK3d7nWOpFv+YHuMbTJnSVMoQblF0onvXfErrtp4V1jHtsQPan7dKaGVD0q1WCXnzMF31A==}
+  eslint@10.15.0:
+    resolution: {integrity: sha512-+5Wg4p+ze3sG1WErYgUO/3H1IQIfFBymVUA0Fo/XTeBOLS6UQIUekpSJ8sdRkn7O7wjh84b55w/roqavH2aScg==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
     hasBin: true
     peerDependencies:
@@ -2823,10 +2823,6 @@ packages:
   min-indent@1.0.1:
     resolution: {integrity: sha512-I9jwMn07Sy/IwOj3zVkVik2JTvgpaykDZEigL6Rx6N9LbMywwUSMtxET+7lVoDLLd3O3IXwJwvuuns8UB/HeAg==}
     engines: {node: '>=4'}
-
-  minimatch@10.2.6:
-    resolution: {integrity: sha512-vpLQEs+VLCr1nU0BXS07maYoFwlDAH0gngQuuttxIwutDFEMHq2blX+8vpgxDdK3J1PwjCJiep77OitTZ4Ll1A==}
-    engines: {node: 18 || 20 || >=22}
 
   minimatch@11.0.1:
     resolution: {integrity: sha512-t+Vn6DX4wPCxS23y03C0uhF7S1jpi1GfqPrnlEipCJaA2ykiNbMkVlDutZtmvLfRcUN6R8AYVlzTsQrT4RZoLQ==}
@@ -4172,9 +4168,9 @@ snapshots:
   '@esbuild/win32-x64@0.28.2':
     optional: true
 
-  '@eslint-community/eslint-utils@4.10.1(eslint@10.14.0(supports-color@7.2.0))':
+  '@eslint-community/eslint-utils@4.10.1(eslint@10.15.0(supports-color@7.2.0))':
     dependencies:
-      eslint: 10.14.0(supports-color@7.2.0)
+      eslint: 10.15.0(supports-color@7.2.0)
       eslint-visitor-keys: 3.4.3
 
   '@eslint-community/regexpp@4.12.3': {}
@@ -4695,15 +4691,15 @@ snapshots:
 
   '@sec-ant/readable-stream@0.4.1': {}
 
-  '@servrox/code-quality@https://codeload.github.com/servrox/code-quality/tar.gz/16aff8c001f380feb9edf9624756fd57e01d9b6e(oxfmt@0.78.0(@astrojs/compiler-rs@0.5.2))(oxlint@1.93.0)(supports-color@7.2.0)(typescript@6.0.3)(ultracite@8.2.1(eslint@10.14.0(supports-color@7.2.0))(oxfmt@0.78.0(@astrojs/compiler-rs@0.5.2))(oxlint@1.93.0))':
+  '@servrox/code-quality@https://codeload.github.com/servrox/code-quality/tar.gz/28e1af8201a2e06692caf1a51c38d8a024899fd2(oxfmt@0.78.0(@astrojs/compiler-rs@0.5.2))(oxlint@1.93.0)(supports-color@7.2.0)(typescript@6.0.3)(ultracite@8.2.1(eslint@10.15.0(supports-color@7.2.0))(oxfmt@0.78.0(@astrojs/compiler-rs@0.5.2))(oxlint@1.93.0))':
     dependencies:
-      eslint: 10.14.0(supports-color@7.2.0)
-      eslint-plugin-sonarjs: 4.2.2(eslint@10.14.0(supports-color@7.2.0))
-      eslint-plugin-unicorn: 79.0.0(eslint@10.14.0(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3)
+      eslint: 10.15.0(supports-color@7.2.0)
+      eslint-plugin-sonarjs: 4.2.3(eslint@10.15.0(supports-color@7.2.0))
+      eslint-plugin-unicorn: 79.0.0(eslint@10.15.0(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3)
       oxfmt: 0.78.0(@astrojs/compiler-rs@0.5.2)
       oxlint: 1.93.0
       oxlint-plugin-eslint: 1.93.0
-      ultracite: 8.2.1(eslint@10.14.0(supports-color@7.2.0))(oxfmt@0.78.0(@astrojs/compiler-rs@0.5.2))(oxlint@1.93.0)
+      ultracite: 8.2.1(eslint@10.15.0(supports-color@7.2.0))(oxfmt@0.78.0(@astrojs/compiler-rs@0.5.2))(oxlint@1.93.0)
       zod: 4.6.7
     transitivePeerDependencies:
       - jiti
@@ -5411,27 +5407,28 @@ snapshots:
 
   escape-string-regexp@5.0.0: {}
 
-  eslint-plugin-sonarjs@4.2.2(eslint@10.14.0(supports-color@7.2.0)):
+  eslint-plugin-sonarjs@4.2.3(eslint@10.15.0(supports-color@7.2.0)):
     dependencies:
       '@eslint-community/regexpp': 4.12.3
       '@sonarsource/analyzer-commons-configurations': 2.31.0-5284
+      aria-query: 5.3.2
       builtin-modules: 3.3.0
       bytes: 3.1.2
-      eslint: 10.14.0(supports-color@7.2.0)
+      eslint: 10.15.0(supports-color@7.2.0)
       functional-red-black-tree: 1.0.1
       globals: 17.14.0
       jsx-ast-utils-x: 0.1.0
       lodash.merge: 4.6.2
-      minimatch: 10.2.6
+      minimatch: 11.0.9
       scslre: 0.3.0
       semver: 7.8.6
       ts-api-utils: 2.5.0(typescript@6.0.3)
       typescript: 6.0.3
       yaml: 2.9.1
 
-  eslint-plugin-unicorn@79.0.0(eslint@10.14.0(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3):
+  eslint-plugin-unicorn@79.0.0(eslint@10.15.0(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3):
     dependencies:
-      '@eslint-community/eslint-utils': 4.10.1(eslint@10.14.0(supports-color@7.2.0))
+      '@eslint-community/eslint-utils': 4.10.1(eslint@10.15.0(supports-color@7.2.0))
       '@eslint/css-tree': 4.1.4
       browserslist: 4.29.6
       change-case: 5.4.4
@@ -5439,7 +5436,7 @@ snapshots:
       core-js-compat: 3.51.0
       detect-indent: 7.0.2
       entities: 8.1.0
-      eslint: 10.14.0(supports-color@7.2.0)
+      eslint: 10.15.0(supports-color@7.2.0)
       find-up-simple: 1.0.1
       globals: 17.14.0
       identifier-regex: 1.1.0
@@ -5470,9 +5467,9 @@ snapshots:
 
   eslint-visitor-keys@5.0.1: {}
 
-  eslint@10.14.0(supports-color@7.2.0):
+  eslint@10.15.0(supports-color@7.2.0):
     dependencies:
-      '@eslint-community/eslint-utils': 4.10.1(eslint@10.14.0(supports-color@7.2.0))
+      '@eslint-community/eslint-utils': 4.10.1(eslint@10.15.0(supports-color@7.2.0))
       '@eslint-community/regexpp': 4.12.3
       '@eslint/config-array': 0.23.6(supports-color@7.2.0)
       '@eslint/config-helpers': 0.7.0
@@ -5499,7 +5496,7 @@ snapshots:
       imurmurhash: 0.1.4
       is-glob: 4.0.3
       json-stable-stringify-without-jsonify: 1.0.1
-      minimatch: 10.2.6
+      minimatch: 11.0.9
       natural-compare: 1.4.0
       optionator: 0.9.4
     transitivePeerDependencies:
@@ -6390,10 +6387,6 @@ snapshots:
 
   min-indent@1.0.1: {}
 
-  minimatch@10.2.6:
-    dependencies:
-      brace-expansion: 5.0.12
-
   minimatch@11.0.1:
     dependencies:
       '@isaacs/nonrecursive-glob-match': 1.1.0
@@ -7227,7 +7220,7 @@ snapshots:
   uglify-js@3.19.3:
     optional: true
 
-  ultracite@8.2.1(eslint@10.14.0(supports-color@7.2.0))(oxfmt@0.78.0(@astrojs/compiler-rs@0.5.2))(oxlint@1.93.0):
+  ultracite@8.2.1(eslint@10.15.0(supports-color@7.2.0))(oxfmt@0.78.0(@astrojs/compiler-rs@0.5.2))(oxlint@1.93.0):
     dependencies:
       '@clack/prompts': 1.8.1
       cli-truncate: 6.2.0
@@ -7249,7 +7242,7 @@ snapshots:
       yaml: 2.9.1
       zod: 4.6.7
     optionalDependencies:
-      eslint: 10.14.0(supports-color@7.2.0)
+      eslint: 10.15.0(supports-color@7.2.0)
       oxfmt: 0.78.0(@astrojs/compiler-rs@0.5.2)
       oxlint: 1.93.0
 

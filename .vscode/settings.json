@@ -11,9 +11,9 @@
   // 🧠 TypeScript 7 native language service
   "js/ts.experimental.useTsgo": true,
 
-  // 🛠️ Apply safe Oxc fixes automatically.
+  // 🛠️ Apply shared lint fixes deliberately with quality:fix during migration.
   "editor.codeActionsOnSave": {
-    "source.fixAll.oxc": "always",
+    "source.fixAll.oxc": "never",
     "source.organizeImports": "explicit"
   },
 

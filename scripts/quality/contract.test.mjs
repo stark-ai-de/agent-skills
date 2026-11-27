@@ -247,7 +247,8 @@ test("review-video React policy is scoped and preserves the shared function budg
 test("a real parser failure cannot become an empty passing report", () => {
   const result = runFixture({ "scripts/broken.mjs": "export const = ;" });
   assert.equal(result.status, 1, result.stdout);
-  assert.match(result.stderr, /ZodError/u);
+  assert.match(result.stderr, /scripts\/broken\.mjs:1:\d+:/u);
+  assert.match(result.stderr, /Expected|Unexpected/u);
 });
 
 test("facade exceptions preserve explicit export and physical file budgets", () => {

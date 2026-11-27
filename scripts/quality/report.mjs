@@ -1,36 +1,44 @@
-import { spawnSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
-
 import { normalizeLint } from "@servrox/code-quality/baseline";
 
+import { describeDiagnostic } from "./diagnostics.mjs";
+import { runOxlint } from "./oxlint.mjs";
 import { sourceRoots } from "./scope.mjs";
 
-export const collectFindings = () => {
-  const binary = fileURLToPath(new URL("../bin/oxlint", import.meta.resolve("oxlint")));
-
-  // JS configs/plugins require Oxlint's Node wrapper, even when Bun owns this parent.
-  const result = spawnSync(
-    "node",
-    [
-      binary,
-      "--config",
-      "oxlint.config.mjs",
-      "--disable-nested-config",
-      "--format=json",
-      ...sourceRoots,
-    ],
-    { encoding: "utf-8", maxBuffer: 64 * 1024 * 1024, timeout: 120_000 },
-  );
-
-  if (result.error || result.signal || ![0, 1].includes(result.status)) {
-    throw result.error ?? new Error(`Oxlint failed (${result.status}): ${result.stderr}`);
+const readReport = (result) => {
+  try {
+    return JSON.parse(result.stdout);
+  } catch (error) {
+    throw new Error(
+      `Could not read Oxlint JSON report: ${result.stderr.slice(0, 2000)}\n${result.stdout.slice(0, 2000)}`,
+      { cause: error },
+    );
   }
+};
 
-  const findings = normalizeLint(JSON.parse(result.stdout));
+const classifyReport = (report) => {
+  try {
+    return normalizeLint(report);
+  } catch (error) {
+    const diagnostics = Array.isArray(report?.diagnostics) ? report.diagnostics : [];
+    const details = diagnostics.slice(0, 20).map(describeDiagnostic).join("\n");
+
+    throw new Error(
+      `Oxlint report contains unclassified diagnostics or no selected source files.\n${details}`,
+      { cause: error },
+    );
+  }
+};
+
+export const collectReport = (files = sourceRoots, options = {}) => {
+  const result = runOxlint(files, options);
+  const report = readReport(result);
+  const findings = classifyReport(report);
 
   if (result.status === 1 && findings.length === 0) {
     throw new Error(`Oxlint failed without classified findings: ${result.stderr}`);
   }
 
-  return findings;
+  return { findings, diagnostics: report.diagnostics, numberOfFiles: report.number_of_files };
 };
+
+export const collectFindings = () => collectReport().findings;

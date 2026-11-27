@@ -117,6 +117,22 @@ Use `adopt`, `adapt`, `defer`, or `reject`. A defer names a future trigger or ow
 
 AC-ADR-001 through AC-ADR-004, AC-ADR-026, AC-ADR-036, AC-ADR-039, AC-ADR-043 through AC-ADR-046, AC-ADR-048, and AC-ADR-064 plus AC-ADR-068 are skill-runtime controls and remain outside the target adoption matrix. AC-ADR-013, AC-ADR-034, AC-ADR-040, AC-ADR-042, and AC-ADR-047 are superseded target decisions and remain outside the matrix. Historical runtime decisions remain outside target adoption.
 
+## Shared quality implementation handoff
+
+Include only when AC-ADR-069 is selected. Link existing mappings and validation receipts; do not repeat them or create a second ledger.
+
+- Applicability and evidence: `JavaScript/TypeScript | mixed | not applicable | unresolved`
+- Repository-native ADR mapping and accepted/conflicting authority:
+- Reviewed provider revision, manifest/lockfile and compatible tools:
+- Maintained source/test/helper scope, native checks and exact exception record:
+- Evidence states: `source-inspected`, `installed`, `configured`, `locally exercised`, `hosted` — report each separately with its receipt link or missing prerequisite.
+- Adoption state: `not installed | configured but unqualified | partial migration | enforced without legacy allowance`
+- Actual read-only check/report commands; existing deliberate fix/prune commands and their write effects:
+- Baseline/cleanup owner, promotion criteria and revisit trigger, if applicable:
+- Next authorized action, exact target/command, remaining prerequisite and owner:
+
+Use [the new/existing consumer recipes](shared-quality-adoption-recipes.md) for the implementation handoff. `setup` records these facts without installing tools, changing source/CI or creating a baseline; an already-authorized implementation request can continue through its selected execution route.
+
 ## Adopted Jev host advice
 
 - Provider candidate: `AC-ADR-065`; disposition and target evidence:

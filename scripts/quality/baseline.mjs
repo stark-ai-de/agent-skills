@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 
 import { findRegressions } from "@servrox/code-quality/baseline";
 
@@ -54,4 +55,27 @@ export const checkBaselineHistory = (candidate, baseSha = process.env.QUALITY_BA
   }
 
   assertBaselineDoesNotGrow(candidate, JSON.parse(result.stdout));
+};
+
+export const readBaseline = () => {
+  const baseline = JSON.parse(readFileSync(baselinePath, "utf-8"));
+  findRegressions([], baseline);
+
+  const infrastructureBudget = Object.keys(baseline.entries).filter((identity) => {
+    const [file] = JSON.parse(identity);
+
+    return (
+      file.startsWith("scripts/quality/") ||
+      ["oxlint.config.mjs", "oxfmt.config.mjs"].includes(file)
+    );
+  });
+
+  assert.equal(
+    infrastructureBudget.length,
+    0,
+    "New quality infrastructure receives no legacy allowance",
+  );
+  checkBaselineHistory(baseline);
+
+  return baseline;
 };

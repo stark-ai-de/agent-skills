@@ -92,13 +92,15 @@ const assertOverrides = (config) => {
 const assertCommands = (manifest, workflow) => {
   assert.equal(manifest.scripts.lint, "oxlint --config oxlint.json scripts");
   assert.equal(manifest.scripts["quality:check"], "bun --bun scripts/quality/check.mjs");
+  assert.equal(manifest.scripts["quality:report"], "bun --bun scripts/quality/inspect.mjs report");
+  assert.equal(manifest.scripts["quality:fix"], "bun --bun scripts/quality/inspect.mjs fix");
   assert.equal(
     manifest.scripts["quality:baseline:prune"],
     "bun --bun scripts/quality/check.mjs --prune-baseline",
   );
   assert.equal(
     manifest.scripts["validate:quality"],
-    'bun exec "bun --bun test scripts/quality/contract.test.mjs && pnpm run quality:check"',
+    'bun exec "bun --bun test --timeout 60000 scripts/quality/*.test.mjs && pnpm run quality:check"',
   );
   assert.ok(manifest.scripts.validate.startsWith('bun exec "pnpm run validate:quality && '));
 
