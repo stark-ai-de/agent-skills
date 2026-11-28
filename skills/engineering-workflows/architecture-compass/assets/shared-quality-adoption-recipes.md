@@ -4,7 +4,32 @@
 
 Use these non-normative recipes with [AC-ADR-069 Long](../references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md) and its [installation/configuration Guide](../references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md). Select the authorized workflow first. `setup` records governance and the handoff; implementation uses an already-authorized `refactor`. `audit` remains read-only.
 
-Contents: [New repository](#new-repository) · [Existing debt](#existing-repository-with-debt) · [Consumer wrapper](#minimal-baseline-wrapper) · [CI](#ci-and-rejecting-proof) · [Daily use](#daily-use) · [Updates and moves](#policy-updates-and-file-moves).
+Contents: [Copyable setup prompt](#copyable-setup-prompt) · [New repository](#new-repository) · [Existing debt](#existing-repository-with-debt) · [Consumer wrapper](#minimal-baseline-wrapper) · [CI](#ci-and-rejecting-proof) · [Daily use](#daily-use) · [Updates and moves](#policy-updates-and-file-moves).
+
+## Copyable setup prompt
+
+For a new JavaScript/TypeScript repository, install Architecture Compass for your coding agent, open the target repository and submit this German prompt. It requests local governance setup followed by the authorized implementation. Resolve the qualified provider pin and exact peer versions from the AC-ADR-069 Guide linked above. For inherited debt, use the [existing-repository recipe](#existing-repository-with-debt).
+
+```text
+Nutze Architecture Compass, um die gemeinsame Codequalität in diesem Repository vollständig einzurichten.
+
+Der Auftrag umfasst die passende lokale Governance und anschließend die technische Umsetzung.
+
+- Lies AC-ADR-069 einschließlich Guide und die „Shared quality adoption recipes“.
+- Prüfe Stack, Quellverzeichnisse, Tests, Hilfsskripte und vorhandene Prüfungen.
+- Installiere `@servrox/code-quality` mit dem qualifizierten unveränderlichen Pin und den passenden exakten Peer-Versionen aus der Anleitung.
+- Erstelle die gemeinsame Oxlint- und Oxfmt-Konfiguration. Aktiviere Framework-Regeln nur für tatsächlich verwendete Frameworks und passende Dateien.
+- Richte `quality:check` und `format:check` ein. Dokumentiere außerdem einen Befehl für die gezielte Diagnose bearbeiteter Dateien.
+- Verankere den Arbeitsablauf in `AGENTS.md` beziehungsweise der vorhandenen Agentenanweisung: Regeln vor Änderungen beachten, bearbeitete Dateien zwischendurch prüfen, vor Abschluss vollständige Quality-, Format- und vorhandene Verhaltenstests ausführen.
+- Integriere die Prüfungen verbindlich in die vorhandene CI.
+- Erhalte Projektlaufzeit, Paketmanager, Typechecks und bestehende Tests.
+- Führe für dieses neue Repository keine automatische Baseline ein. Behebe neue Regelverstöße.
+- Weise in einer temporären Kopie nach, dass erlaubter Code besteht und ein echter Regelverstoß zuverlässig abgelehnt wird. Prüfe dabei auch die tatsächliche Quellabdeckung.
+
+Setze die Einrichtung um. Berichte abschließend kurz: geänderte Dateien, installierte Versionen, verfügbare Befehle sowie getrennte lokale und CI-Ergebnisse.
+
+Der gemeinsame Provider-Runner bleibt im Backlog.
+```
 
 ## New repository
 

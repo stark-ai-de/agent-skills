@@ -90,7 +90,7 @@
       "byteLength": 756,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "c69fecf5b1b646376fe13f066f031abf6b507a8b90b080e91829361d334c66cb"
+      "sha256": "8a0cb361ff2a507211fb07b5643f8c2e95d05b1ef7ed6248d4bc250c9a5dd5c3"
     },
     {
       "byteLength": 2128,
@@ -294,7 +294,7 @@
       "byteLength": 17920,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "32e3e56beb56e581ee828acf2dd0594c568f6dcd87c25d920904002cea0977eb"
+      "sha256": "4d30fd1bf373a3dc39840c8377d4e79e28f7c19a9f5896acde6094da479b7878"
     },
     {
       "byteLength": 692,
@@ -393,10 +393,10 @@
       "sha256": "f0fe2236a73e4643d3c788f484506ac87a06897f881cb32abcac8bc3c145337b"
     },
     {
-      "byteLength": 14740,
+      "byteLength": 16943,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/shared-quality-adoption-recipes.md",
-      "sha256": "08bc90a8a80f046469d98fbb8870cb725a7a69ee73164d0d500324c8b2c7a2c4"
+      "sha256": "863bea7c9a1b68150ab70db21e6a4f6548ac08b74cc31aa19cfd707ff162ad89"
     },
     {
       "byteLength": 6103,
@@ -2957,9 +2957,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.24.0"
+    "version": "1.24.1"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "d39015e43c50d739c2adcc33821e29c2a84c51dafd4c667c091c7bcd90dee18d"
+  "treeHash": "2f0986ca18961cfc6666fcf6bd8c52c0e237bb2e7d132f91105de09d33121cbc"
 }
