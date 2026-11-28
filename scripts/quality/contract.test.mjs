@@ -127,8 +127,19 @@ test("the real consumer imports the required shared policy and keeps its CI gate
 
 test("mutable pins, missing presets, local weakening and skipped roots fail the consumer contract", () => {
   const manifest = structuredClone(actual.manifest);
-  manifest.devDependencies["@servrox/code-quality"] = "github:servrox/code-quality#main";
-  assert.throws(() => assertConsumerContract({ ...actual, manifest }));
+
+  for (const pin of [
+    "latest",
+    "*",
+    "^0.2.0",
+    "~0.2.0",
+    "0.2.0-rc.1",
+    "github:servrox/code-quality#main",
+  ]) {
+    manifest.devDependencies["@servrox/code-quality"] = pin;
+    assert.throws(() => assertConsumerContract({ ...actual, manifest }));
+  }
+
   assert.throws(() =>
     assertConsumerContract({
       ...actual,
@@ -142,6 +153,33 @@ test("mutable pins, missing presets, local weakening and skipped roots fail the 
     assertConsumerContract({ ...actual, lint: { ...actual.lint, overrides: [] } }),
   );
   assert.throws(() => assertConsumerContract({ ...actual, roots: ["scripts"] }));
+});
+
+test("npm pins reject installed-version drift, lock mismatches and missing integrity", () => {
+  const manifest = structuredClone(actual.manifest);
+  manifest.devDependencies["@servrox/code-quality"] = "99.0.0";
+  assert.throws(() => assertConsumerContract({ ...actual, manifest }), /Installed provider/u);
+
+  for (const field of ["specifier", "version"]) {
+    const lock = structuredClone(actual.lock);
+    lock.importers["."].devDependencies["@servrox/code-quality"][field] = "99.0.0";
+    assert.throws(() => assertConsumerContract({ ...actual, lock }));
+  }
+
+  const key = `@servrox/code-quality@${actual.manifest.devDependencies["@servrox/code-quality"]}`;
+
+  for (const resolution of [
+    {},
+    { integrity: "sha512-invalid" },
+    {
+      integrity: actual.lock.packages[key].resolution.integrity,
+      tarball: "https://example.invalid/package.tgz",
+    },
+  ]) {
+    const lock = structuredClone(actual.lock);
+    lock.packages[key].resolution = resolution;
+    assert.throws(() => assertConsumerContract({ ...actual, lock }));
+  }
 });
 
 test("the aggregate, PR-base budget comparison and non-optional hosted gate cannot be removed", () => {

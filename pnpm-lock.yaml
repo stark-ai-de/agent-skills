@@ -20,8 +20,8 @@ importers:
         specifier: 1.59.0
         version: 1.59.0
       '@servrox/code-quality':
-        specifier: git+https://github.com/servrox/code-quality.git#28e1af8201a2e06692caf1a51c38d8a024899fd2
-        version: https://codeload.github.com/servrox/code-quality/tar.gz/28e1af8201a2e06692caf1a51c38d8a024899fd2(oxfmt@0.78.0(@astrojs/compiler-rs@0.5.2))(oxlint@1.93.0)(supports-color@7.2.0)(typescript@6.0.3)(ultracite@8.2.1(eslint@10.15.0(supports-color@7.2.0))(oxfmt@0.78.0(@astrojs/compiler-rs@0.5.2))(oxlint@1.93.0))
+        specifier: 0.2.0
+        version: 0.2.0(oxfmt@0.78.0(@astrojs/compiler-rs@0.5.2))(oxlint@1.93.0)(supports-color@7.2.0)(typescript@6.0.3)(ultracite@8.2.1(eslint@10.15.0(supports-color@7.2.0))(oxfmt@0.78.0(@astrojs/compiler-rs@0.5.2))(oxlint@1.93.0))
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -1315,17 +1315,20 @@ packages:
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
 
-  '@servrox/code-quality@https://codeload.github.com/servrox/code-quality/tar.gz/28e1af8201a2e06692caf1a51c38d8a024899fd2':
-    resolution: {gitHosted: true, integrity: sha512-/dUZvEaDR2eSpPFcm4EE2I+h/UocsNrT+Z3N72Uzs/D9vucb2lHAeuUinG7porGHBpSOhGloUrQ/GcekzpcnVg==, tarball: https://codeload.github.com/servrox/code-quality/tar.gz/28e1af8201a2e06692caf1a51c38d8a024899fd2}
-    version: 0.1.0
+  '@servrox/code-quality@0.2.0':
+    resolution: {integrity: sha512-/Dg/ZYNWlnIAqpLBd3o9+DzQRO2HYRUcar742Mz9zspE2KuSExA8orgmlQouatbsAHoU6HAJEvA54nCvzqCyyg==}
     engines: {node: '>=24.15.0'}
+    hasBin: true
     peerDependencies:
       dependency-cruiser: 18.9.0
+      jscpd: 5.4.3
       oxfmt: 0.78.0
       oxlint: 1.93.0
       ultracite: 8.2.1
     peerDependenciesMeta:
       dependency-cruiser:
+        optional: true
+      jscpd:
         optional: true
 
   '@shikijs/core@4.6.0':
@@ -4691,7 +4694,7 @@ snapshots:
 
   '@sec-ant/readable-stream@0.4.1': {}
 
-  '@servrox/code-quality@https://codeload.github.com/servrox/code-quality/tar.gz/28e1af8201a2e06692caf1a51c38d8a024899fd2(oxfmt@0.78.0(@astrojs/compiler-rs@0.5.2))(oxlint@1.93.0)(supports-color@7.2.0)(typescript@6.0.3)(ultracite@8.2.1(eslint@10.15.0(supports-color@7.2.0))(oxfmt@0.78.0(@astrojs/compiler-rs@0.5.2))(oxlint@1.93.0))':
+  '@servrox/code-quality@0.2.0(oxfmt@0.78.0(@astrojs/compiler-rs@0.5.2))(oxlint@1.93.0)(supports-color@7.2.0)(typescript@6.0.3)(ultracite@8.2.1(eslint@10.15.0(supports-color@7.2.0))(oxfmt@0.78.0(@astrojs/compiler-rs@0.5.2))(oxlint@1.93.0))':
     dependencies:
       eslint: 10.15.0(supports-color@7.2.0)
       eslint-plugin-sonarjs: 4.2.3(eslint@10.15.0(supports-color@7.2.0))

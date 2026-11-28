@@ -87,13 +87,15 @@ test("historical reference coverage cannot target a superseded Long decision", (
   );
 });
 
-test("installation recipes reject a moving source branch", () => {
-  rejects(
-    guide,
-    (text) => text.replace(/code-quality\.git#[a-f0-9]{40}/u, "code-quality.git#main"),
-    /shared-quality installation requires a full immutable Git SHA/u,
-  );
-});
+for (const pin of ["latest", "^0.2.0", "0.2.0-rc.1", "github:servrox/code-quality#main"]) {
+  test(`installation recipes reject the manifest pin ${pin}`, () => {
+    rejects(
+      guide,
+      (text) => text.replace(/(?<prefix>"@servrox\/code-quality":\s*")[^"]+/u, `$<prefix>${pin}`),
+      /shared-quality installation requires an exact stable npm version/u,
+    );
+  });
+}
 
 test("installation recipes cannot omit the modularity preset", () => {
   rejects(

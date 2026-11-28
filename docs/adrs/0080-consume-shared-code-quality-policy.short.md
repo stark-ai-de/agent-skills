@@ -14,7 +14,7 @@ Variant: Short
 Canonical variant: Long
 Supersedes: ADR-0036
 Superseded by: None
-Guide verified: 2026-11-27
+Guide verified: 2026-11-28
 Gist: Consume pinned shared quality policy with preserved correctness, explicit compatibility and non-increasing migration allowances.
 
 Variants: **Short** · [Long, canonical](0080-consume-shared-code-quality-policy.long.md) · [Guide](0080-consume-shared-code-quality-policy.guide.md)

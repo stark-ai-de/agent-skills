@@ -14,7 +14,7 @@ Variant: Short
 Canonical variant: Long
 Supersedes: AC-ADR-013
 Superseded by: none
-Guide verified: 2026-11-27
+Guide verified: 2026-11-28
 Gist: Require shared quality presets while retaining explicit consumer ownership, compatibility exceptions and measured migration.
 
 Variants: **Short** · [Long, canonical](ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md) · [Guide](ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md)

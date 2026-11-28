@@ -8,7 +8,7 @@ This is a partial migration of existing source. A passing baseline gate means no
 
 - Base source: `2267cbcab9605e5f0612abde34d83ec7a85ecbce`.
 - Initial capture: real Node-owned Oxlint command in `scripts/quality/report.mjs`, using the candidate's shared package pin, config and source scope.
-- Shared source and versions: exact Git commit and peers in `package.json`; resolved archive and integrity in `pnpm-lock.yaml`.
+- Initial shared source and versions: the capture-time Git pin and peers remain in `initial-capture.json`; current qualified dependency and archive integrity are recorded in `package.json` and `pnpm-lock.yaml`.
 - Baseline: `lint-baseline.json`, generated through the provider's `normalizeLint` and `createBaseline` helpers from source paths already present at the base revision.
 - New quality orchestration, configurations and governance test: no initial allowance.
 - Coverage: maintained JavaScript/TypeScript under the roots in `scripts/quality/scope.mjs`, including the separate review-video authoring workspace; generated/vendor/invalid-fixture exclusions remain explicit there.
@@ -56,13 +56,21 @@ Successful full checks identify **removed occurrences** and **lowered numeric al
 
 ## Upgrade and move workflow
 
-1. Keep the source revision fixed while comparing the old and proposed provider pins. Save the reports outside maintained source, and inspect changes by file, rule, normalized message and metric.
-2. Install the reviewed full SHA and its exact required peers; update the lockfile through pnpm. Preserve the original `initial-capture.json` as historical evidence.
+1. During an authorized update, resolve the newest stable npm `latest` release, inspect its exact peers, engines, integrity and publication source, and record the lookup time. Keep the source revision fixed while comparing the old and proposed provider pins. Save reports outside maintained source and inspect changes by file, rule, normalized message and metric.
+2. Install the qualified exact npm version and required peers; update the lockfile through pnpm. Ordinary installs and CI remain frozen. If compatibility or supply-chain policy blocks the latest release, preserve the qualified state and document the blocker, owner and revisit condition. Preserve the original `initial-capture.json` as historical evidence.
 3. Run the real consumer tests, full comparison, native correctness gate, formatter and a frozen install. Document the exact revision and results in this file or the change PR.
 4. For a file move, first resolve its inherited findings, then move it and prune the old path's allowances. A clean new path passes without carrying debt into a new baseline key.
 5. If an upstream message change or unavoidable move requires transferring existing debt, stop the ordinary upgrade and prepare a separate, explicit migration: old/new identity mapping, unchanged source evidence, bounded allowances, owner approval and rejecting tests. The current history guard intentionally rejects new identities; editing both source and baseline is not an approved transfer mechanism.
 
-The shared package owns reusable policy and normalization. This adapter owns this repository's paths, command experience and CI integration. A future generic runner needs a separate provider change qualified with a second consumer; this PR does not advertise an export that does not exist.
+The shared package owns reusable policy and normalization. This adapter owns this repository's paths, command experience and CI integration. The npm package now exports `code-quality-check` and `code-quality-duplicates`; migrating existing consumer commands to the shared runner remains a separate backlog task requiring installed-package qualification.
+
+### npm adoption on 2026-11-28
+
+- Selected `@servrox/code-quality@0.2.0` from public npm `latest`; published at `2026-11-28T00:00:49Z` from source `651582f77fecf1904bc84787b6d8a9d78394162e`.
+- Verified the downloaded tarball's SHA-512 against registry metadata. Inspected publication provenance; no independent signature-chain verification is claimed.
+- Compared with the previous Git pin `28e1af8201a2e06692caf1a51c38d8a024899fd2`: the existing presets, formatter, baseline APIs and license are byte-identical. The release adds optional helpers and updates package metadata/documentation.
+- Keep `ultracite@8.2.1`, `oxlint@1.93.0`, `oxfmt@0.78.0` and existing consumer commands. Preserve both the initial capture and baseline bytes.
+- The exact release-age exception, owner and removal condition are recorded in the [ADR-0080 Guide](../../docs/adrs/0080-consume-shared-code-quality-policy.guide.md#exact-package-and-tool-versions). It does not cover later versions.
 
 ## Extensions and review triggers
 

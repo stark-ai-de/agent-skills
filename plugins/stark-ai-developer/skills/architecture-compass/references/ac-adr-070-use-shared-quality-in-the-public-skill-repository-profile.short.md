@@ -14,7 +14,7 @@ Variant: Short
 Canonical variant: Long
 Supersedes: AC-ADR-040
 Superseded by: none
-Guide verified: 2026-11-27
+Guide verified: 2026-11-28
 Gist: Retain independent public-skill stack choices and require the shared quality policy on applicable source.
 
 Variants: **Short** · [Long, canonical](ac-adr-070-use-shared-quality-in-the-public-skill-repository-profile.long.md) · [Guide](ac-adr-070-use-shared-quality-in-the-public-skill-repository-profile.guide.md)

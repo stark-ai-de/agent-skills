@@ -14,7 +14,7 @@ Variant: Guide
 Canonical variant: Long
 Supersedes: AC-ADR-040
 Superseded by: none
-Guide verified: 2026-11-27
+Guide verified: 2026-11-28
 Gist: Retain independent public-skill stack choices and require the shared quality policy on applicable source.
 
 Variants: [Short](ac-adr-070-use-shared-quality-in-the-public-skill-repository-profile.short.md) · [Long, canonical](ac-adr-070-use-shared-quality-in-the-public-skill-repository-profile.long.md) · **Guide**
@@ -38,7 +38,7 @@ Record one disposition (`adopt`, `adapt`, `defer`, or `reject`) and repository-n
 
 ### Apply shared quality to actual source
 
-Use [AC-ADR-069 Short](ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.short.md) · [Long](ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md) · [Guide](ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md) for the mandatory core, strict, modularity, anti-slop and formatter exports, the retained Git pin and compatible tool versions. Keep project paths, environment globals, optional framework presets, entrypoints and baselines in the consumer. Do not copy rule bodies or add an extra ESLint runner.
+Use [AC-ADR-069 Short](ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.short.md) · [Long](ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md) · [Guide](ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md) for the mandatory core, strict, modularity, anti-slop and formatter exports, latest-stable npm discovery followed by an exact qualified package pin and compatible tool versions. Keep project paths, environment globals, optional framework presets, entrypoints and baselines in the consumer. Do not copy rule bodies or add an extra ESLint runner.
 
 A pure non-JavaScript/TypeScript skill repository records non-applicability and keeps its native checks. A repository with Python skills and JavaScript maintenance helpers applies shared quality to those helpers while retaining Python proof. Do not infer React, Playwright, a documentation generator or an application host from the profile.
 
@@ -55,5 +55,5 @@ An unresolved accepted local conflict blocks only its affected replacement. Reco
 ## Official sources
 
 - [Agent Skills specification](https://agentskills.io/specification)
-- [Shared quality package](https://github.com/servrox/code-quality/blob/16aff8c001f380feb9edf9624756fd57e01d9b6e/README.md)
+- [Shared quality package](https://github.com/servrox/code-quality/blob/651582f77fecf1904bc84787b6d8a9d78394162e/README.md)
 - [pnpm documentation](https://pnpm.io/)
