@@ -14,7 +14,7 @@ Variant: Guide
 Canonical variant: Long
 Supersedes: ADR-0036
 Superseded by: None
-Guide verified: 2026-11-27
+Guide verified: 2026-11-28
 Gist: Consume pinned shared quality policy with preserved correctness, explicit compatibility and non-increasing migration allowances.
 
 Variants: [Short](0080-consume-shared-code-quality-policy.short.md) · [Long, canonical](0080-consume-shared-code-quality-policy.long.md) · **Guide**
@@ -36,7 +36,13 @@ Repository maintainers own quality-policy updates and migration cleanup. ADR-003
 
 ### Exact package and tool versions
 
-Consume `@servrox/code-quality@git+https://github.com/servrox/code-quality.git#28e1af8201a2e06692caf1a51c38d8a024899fd2` with `ultracite@8.2.1`, `oxlint@1.93.0`, `oxfmt@0.78.0`. Add `oxlint-tsgolint@7.0.2007` only for a separately qualified type-aware scope; this mixed-source repository currently retains its existing compiler checks without claiming repository-wide type-aware coverage. The reviewed source commit includes the exported-arrow function-budget fix qualified by the real consumer fixtures. Commit the resolved lockfile and use `pnpm install --frozen-lockfile` in CI. The public Git source needs no registry token.
+During authorized setup and dependency updates, resolve the public npm `latest` tag for `@servrox/code-quality`, inspect that exact release's metadata, source and packed exports, and qualify the newest stable release. `latest` is a movable publisher tag, not proof of stability or compatibility; reject prereleases and deprecated releases. Record the registry check time and selected version. Save an exact `x.y.z` dependency, its exact required peers and the generated lockfile integrity. Do not persist `latest`, a range, a Git URL or a tarball override. Ordinary installs and CI use `pnpm install --frozen-lockfile`; they do not query npm to decide whether unchanged source passes.
+
+The reviewed selection on 2026-11-28 is `@servrox/code-quality@0.2.0`, published at `2026-11-28T00:00:49Z`, with `ultracite@8.2.1`, `oxlint@1.93.0` and `oxfmt@0.78.0`. This is a dated qualification snapshot, not a permanent version ceiling. Follow the reusable [registry discovery and installation sequence](../../skills/engineering-workflows/architecture-compass/references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md#install-the-reviewed-package) for the next update. The published tarball's SHA-512 matches its registry integrity, and the existing presets, formatter and baseline APIs are byte-identical to the previously reviewed Git pin. Preserve the historical initial-capture record and migration allowances. Add `oxlint-tsgolint@7.0.2007` only for separately qualified type-aware scope; existing compiler checks remain authoritative. This public npm package needs no registry token.
+
+If the newest stable release cannot satisfy runtime, peer, behavior or supply-chain requirements, retain the qualified installation and record the candidate, blocker, owner and revisit condition. Do not silently downgrade the target to an older candidate or claim the update is complete. Re-evaluate during the next authorized dependency update; a provider release does not itself authorize rewriting every consumer.
+
+The repository keeps `minimumReleaseAge: 1440`, `minimumReleaseAgeStrict: true`, `trustPolicy: no-downgrade` and its lifecycle guards. The maintainer-requested npm adoption uses one reviewed, version-specific age exception: `@servrox/code-quality@0.2.0`. Repository maintainers own it; justification is the verified tarball identity, inspected publication provenance and byte-identical already-consumed policy. Remove the exception once this release is at least 1440 minutes old and a frozen install without it passes. It grants no exception to later releases or other dependencies. Provenance metadata was inspected; this receipt does not claim independent cryptographic verification of its signature chain.
 
 Keep repository ownership at pnpm `11.24.0`, Bun `1.4.0` and Node `24.18.0` minimums unless their own accepted runtime/toolchain decision changes. The package's Node `>=24.15.0` requirement fits the existing Node floor; its development pnpm pin does not govern this consumer. Do not change application runtime selection from a lint dependency's engine field.
 
@@ -72,12 +78,14 @@ The initial baseline records measured legacy debt and is not a clean-code claim.
 
 ## Verification
 
-Run the real native lint, shared policy and formatter gates; prove rejection with a meaningful source violation, a baseline regression and a tool/report failure. Verify clean frozen installation and imports from the exact Git package, not a local checkout or undeclared dependency. Run `validate:adrs`, `validate:architecture-compass`, runtime-matrix, ownership and projection checks for their changed contracts, and follow ADR-0041 for mandatory aggregate obligations. Record hosted results separately from local observations.
+Run the real native lint, shared policy and formatter gates; prove rejection with a meaningful source violation, a baseline regression and a tool/report failure. Verify clean frozen installation and imports from the exact published npm package, not a local checkout or undeclared dependency. Run `validate:adrs`, `validate:architecture-compass`, runtime-matrix, ownership and projection checks for their changed contracts, and follow ADR-0041 for mandatory aggregate obligations. Record hosted results separately from local observations.
 
 ## Official sources
 
-- [Reviewed shared package](https://github.com/servrox/code-quality/blob/28e1af8201a2e06692caf1a51c38d8a024899fd2/README.md)
-- [Reviewed exports and peer versions](https://github.com/servrox/code-quality/blob/28e1af8201a2e06692caf1a51c38d8a024899fd2/package.json)
+- [Published npm release and metadata](https://registry.npmjs.org/@servrox%2fcode-quality/0.2.0)
+- [Reviewed release source](https://github.com/servrox/code-quality/tree/651582f77fecf1904bc84787b6d8a9d78394162e)
+- [npm distribution-tag semantics](https://docs.npmjs.com/cli/v11/commands/npm-dist-tag/)
+- [pnpm version-scoped release-age exceptions](https://pnpm.io/blog/releases/10.19)
 
 ## Revisit
 

@@ -151,7 +151,7 @@
   },
   "devDependencies": {
     "@lucide/icons": "1.59.0",
-    "@servrox/code-quality": "git+https://github.com/servrox/code-quality.git#28e1af8201a2e06692caf1a51c38d8a024899fd2",
+    "@servrox/code-quality": "0.2.0",
     "ajv": "^8.20.0",
     "beautiful-mermaid": "1.1.3",
     "fflate": "^0.8.3",

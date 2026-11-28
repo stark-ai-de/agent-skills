@@ -4,12 +4,37 @@
 
 Use these non-normative recipes with [AC-ADR-069 Long](../references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md) and its [installation/configuration Guide](../references/ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md). Select the authorized workflow first. `setup` records governance and the handoff; implementation uses an already-authorized `refactor`. `audit` remains read-only.
 
-Contents: [New repository](#new-repository) · [Existing debt](#existing-repository-with-debt) · [Consumer wrapper](#minimal-baseline-wrapper) · [CI](#ci-and-rejecting-proof) · [Daily use](#daily-use) · [Updates and moves](#policy-updates-and-file-moves).
+Contents: [Copyable setup prompt](#copyable-setup-prompt) · [New repository](#new-repository) · [Existing debt](#existing-repository-with-debt) · [Consumer wrapper](#minimal-baseline-wrapper) · [CI](#ci-and-rejecting-proof) · [Daily use](#daily-use) · [Updates and moves](#policy-updates-and-file-moves).
+
+## Copyable setup prompt
+
+For a new JavaScript/TypeScript repository, install Architecture Compass for your coding agent, open the target repository and submit this German prompt. It requests local governance setup followed by the authorized implementation. Follow the AC-ADR-069 Guide to resolve the newest stable npm release, qualify it and save exact provider/peer pins. For inherited debt, use the [existing-repository recipe](#existing-repository-with-debt).
+
+```text
+Nutze Architecture Compass, um die gemeinsame Codequalität in diesem Repository vollständig einzurichten.
+
+Der Auftrag umfasst die passende lokale Governance und anschließend die technische Umsetzung.
+
+- Lies AC-ADR-069 einschließlich Guide und die „Shared quality adoption recipes“.
+- Prüfe Stack, Quellverzeichnisse, Tests, Hilfsskripte und vorhandene Prüfungen.
+- Ermittle die neueste stabile npm-Veröffentlichung von `@servrox/code-quality` über den `latest`-Tag. Prüfe Kompatibilität und Paketmetadaten. Installiere diese Version mit den passenden exakten Peer-Versionen des Releases. Speichere konkrete Versionen und Lockfile; halte normale Installationen und CI reproduzierbar. Dokumentiere blockierte Updates, ohne Schutzvorgaben stillschweigend zu lockern.
+- Erstelle die gemeinsame Oxlint- und Oxfmt-Konfiguration. Aktiviere Framework-Regeln nur für tatsächlich verwendete Frameworks und passende Dateien.
+- Richte `quality:check` und `format:check` ein. Dokumentiere außerdem einen Befehl für die gezielte Diagnose bearbeiteter Dateien.
+- Verankere den Arbeitsablauf in `AGENTS.md` beziehungsweise der vorhandenen Agentenanweisung: Regeln vor Änderungen beachten, bearbeitete Dateien zwischendurch prüfen, vor Abschluss vollständige Quality-, Format- und vorhandene Verhaltenstests ausführen.
+- Integriere die Prüfungen verbindlich in die vorhandene CI.
+- Erhalte Projektlaufzeit, Paketmanager, Typechecks und bestehende Tests.
+- Führe für dieses neue Repository keine automatische Baseline ein. Behebe neue Regelverstöße.
+- Weise in einer temporären Kopie nach, dass erlaubter Code besteht und ein echter Regelverstoß zuverlässig abgelehnt wird. Prüfe dabei auch die tatsächliche Quellabdeckung.
+
+Setze die Einrichtung um. Berichte abschließend kurz: geänderte Dateien, installierte Versionen, verfügbare Befehle sowie getrennte lokale und CI-Ergebnisse.
+
+Die Umstellung auf den gemeinsamen Provider-Runner bleibt im Backlog.
+```
 
 ## New repository
 
 1. Map the provider decision to accepted local governance. Inventory all maintained source, tests and helpers.
-2. Install the Guide's reviewed full Git SHA and exact peers. Create its shared Oxlint and Oxfmt configurations.
+2. Resolve the newest stable npm release and qualify its exact provider/peer pins using the Guide. Create its shared Oxlint and Oxfmt configurations.
 3. Keep the target's package manager, runtime, compiler and existing checks. The example below assumes a Node-owned JavaScript repository whose application source is `src`; the gate also includes its executable quality configs. Replace that scope with the complete inspected inventory.
 4. Add these scripts to the existing manifest:
 
@@ -265,11 +290,11 @@ During migration, keep shared fixes deliberate. Do not run them on implicit focu
 
 ## Policy updates and file moves
 
-1. Compare the old and proposed immutable provider pins on the same source revision. Record changes by file, rule, normalized message, count and numeric value.
+1. Resolve npm `latest`, verify it is a stable release, then compare the old and proposed exact provider pins on the same source revision. Record the registry check time, versions, integrity and changes by file, rule, normalized message, count and numeric value. If compatibility or supply-chain policy blocks the update, retain the qualified installation and record the blocker, owner and revisit condition.
 2. Re-run clean install, consumer fixtures, exceptions and required gates. Review new rules, peer/plugin versions, parser behavior and license metadata separately from source edits.
 3. Prune removed findings only after the new policy passes. Keep initial-capture provenance historical; record the update's evidence in the current receipt.
 4. For a move, identify the exact old/new path pair and prove source identity separately (for example, Git's rename diff plus content digests). The baseline key includes the path: an allowance does not transfer automatically.
 5. Prefer fixing the moved file's remaining findings before the move. If unchanged debt must move, stop the affected migration at the no-growth gate and prepare a narrowly reviewed mapping with before/after counts and metrics under the target's accepted migration governance.
 6. Do not delete the baseline, disable history validation or introduce an unrestricted refresh flag to make a rename or update pass. Re-run fix → prune → reintroduce proof after an approved comparator/mapping change.
 
-Keep generic rules, normalization and future reusable runner capabilities in the shared package. Keep source inventories, entrypoints, CI authority and migration data in the consumer. Add reusable execution APIs only with a real second consumer and passing installed-package fixtures.
+Keep generic rules, normalization and reusable runner capabilities in the shared package. Keep source inventories, entrypoints, CI authority and migration data in the consumer. The npm package now provides `code-quality-check`; migrating the existing consumer commands to that runner remains a separate backlog task with installed-package qualification.

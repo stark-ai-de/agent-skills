@@ -31,6 +31,8 @@ const assertDocumentedDependencies = (guide, manifest) => {
   const documented = JSON.parse(manifests[0].groups.code).devDependencies;
 
   assert.deepEqual(documented, expected, "Keep documented peers pinned to the qualified versions");
+
+  return documented["@servrox/code-quality"];
 };
 
 const examples = () => {
@@ -47,22 +49,11 @@ const examples = () => {
 
   assert.equal(lintArgs.shift(), "oxlint");
 
-  const pin = guide.match(
-    /git\+https:\/\/github\.com\/servrox\/code-quality\.git#[a-f\d]{40}/u,
-  )?.[0];
-
-  assert.ok(pin, "The consumer example needs the documented immutable provider pin");
-
   const manifest = JSON.parse(
     readFileSync(new URL("../../package.json", import.meta.url), "utf-8"),
   );
 
-  assert.equal(
-    pin,
-    manifest.devDependencies["@servrox/code-quality"],
-    "Qualify the documented pin against the installed consumer dependency",
-  );
-  assertDocumentedDependencies(guide, manifest);
+  const pin = assertDocumentedDependencies(guide, manifest);
 
   return { configs, wrapper: wrappers[0].groups.code, lintArgs, pin };
 };

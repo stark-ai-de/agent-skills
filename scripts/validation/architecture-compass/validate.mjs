@@ -1914,17 +1914,17 @@ const qualityGuideFile = path.join(
   "ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.guide.md",
 );
 const qualityGuideText = readRegularFile(qualityGuideFile);
-const qualityGitPins = [
-  ...qualityGuideText.matchAll(
-    /git\+https:\/\/github\.com\/servrox\/code-quality\.git#([^\s'"`]+)/g,
-  ),
+const qualityManifestPins = [
+  ...qualityGuideText.matchAll(/"@servrox\/code-quality":\s*"(?<pin>[^"]+)"/g),
 ];
 if (
-  qualityGitPins.length === 0 ||
-  qualityGitPins.some((match) => !/^[a-f0-9]{40}$/.test(match[1]))
+  qualityManifestPins.length !== 1 ||
+  qualityManifestPins.some(
+    (match) => !/^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/.test(match.groups.pin),
+  )
 ) {
   fail(
-    `${relative(qualityGuideFile)}: shared-quality installation requires a full immutable Git SHA`,
+    `${relative(qualityGuideFile)}: shared-quality installation requires an exact stable npm version`,
   );
 }
 for (const preset of ["core", "strict", "modularity", "anti-slop"]) {

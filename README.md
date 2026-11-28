@@ -73,6 +73,8 @@ Install one skill into the agent detected for the current project:
 npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass
 ```
 
+For a new JavaScript/TypeScript repository, use the [copyable shared-quality setup prompt (German)](skills/engineering-workflows/architecture-compass/assets/shared-quality-adoption-recipes.md#copyable-setup-prompt) to configure local agent guidance, shared linting/formatting and required CI checks.
+
 Update installed skills:
 
 ```bash

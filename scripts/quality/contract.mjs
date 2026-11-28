@@ -20,18 +20,20 @@ import { sourceIgnores, sourceRoots } from "./scope.mjs";
 const assertDependency = (manifest, lock) => {
   const source = manifest.devDependencies?.["@servrox/code-quality"];
 
-  const match =
-    /^git\+https:\/\/github\.com\/servrox\/code-quality\.git#(?<sha>[a-f\d]{40})$/u.exec(source);
+  assert.match(
+    source ?? "",
+    /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/u,
+    "Use an exact reviewed stable npm version of @servrox/code-quality",
+  );
+  assert.equal(provider.version, source, "Installed provider must match the exact manifest pin");
 
-  assert.ok(match, "Use a full reviewed Git SHA from servrox/code-quality");
-
-  const archive = `https://codeload.github.com/servrox/code-quality/tar.gz/${match.groups.sha}`;
   const entry = lock.importers["."].devDependencies["@servrox/code-quality"];
-  const resolved = lock.packages[`@servrox/code-quality@${archive}`];
+  const resolved = lock.packages[`@servrox/code-quality@${source}`];
   assert.equal(entry.specifier, source, "Manifest and lockfile must share the pin");
-  assert.ok(entry.version.startsWith(archive), "Lockfile must install the approved archive");
-  assert.equal(resolved.resolution.tarball, archive);
-  assert.match(resolved.resolution.integrity, /^sha512-/u);
+  assert.equal(entry.version.split("(")[0], source, "Lockfile must resolve the exact npm version");
+  assert.ok(resolved, "Lockfile must contain the selected npm package");
+  assert.equal(resolved.resolution.tarball, undefined, "Do not override the registry tarball");
+  assert.match(resolved.resolution.integrity, /^sha512-[A-Za-z\d+/]{86}==$/u);
 
   for (const [name, version] of Object.entries(provider.peerDependencies)) {
     if (!provider.peerDependenciesMeta?.[name]?.optional) {

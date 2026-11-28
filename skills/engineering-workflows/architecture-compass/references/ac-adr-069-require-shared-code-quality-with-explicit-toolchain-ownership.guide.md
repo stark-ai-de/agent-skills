@@ -14,7 +14,7 @@ Variant: Guide
 Canonical variant: Long
 Supersedes: AC-ADR-013
 Superseded by: none
-Guide verified: 2026-11-27
+Guide verified: 2026-11-28
 Gist: Require shared quality presets while retaining explicit consumer ownership, compatibility exceptions and measured migration.
 
 Variants: [Short](ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.short.md) · [Long, canonical](ac-adr-069-require-shared-code-quality-with-explicit-toolchain-ownership.long.md) · **Guide**
@@ -42,10 +42,20 @@ Governance acceptance is not installed or active enforcement. Record source-insp
 
 ### Install the reviewed package
 
-The reviewed public source is [servrox/code-quality at `28e1af8201a2e06692caf1a51c38d8a024899fd2`](https://github.com/servrox/code-quality/tree/28e1af8201a2e06692caf1a51c38d8a024899fd2). The installation below pins this source commit, which retains the exported-arrow function-budget fix and provides package version `0.1.0` under Apache-2.0. Its public npm publication configuration does not prove that a registry release is available; this recipe consumes the exact Git source.
+For each authorized setup or dependency update, resolve the newest stable public npm release of `@servrox/code-quality`. Read the registry's `latest` tag, then inspect that exact version's peers, engines, license, deprecation state, integrity and published source. `latest` is a movable publisher tag: reject a prerelease or deprecated candidate rather than assuming the tag guarantees stability. Record the lookup time and version; do not perform this discovery inside an ordinary quality gate or frozen CI install.
 
 ```sh
-pnpm add -D '@servrox/code-quality@git+https://github.com/servrox/code-quality.git#28e1af8201a2e06692caf1a51c38d8a024899fd2' \
+quality_version="$(pnpm view @servrox/code-quality dist-tags.latest)"
+pnpm view "@servrox/code-quality@$quality_version" \
+  version peerDependencies peerDependenciesMeta engines license deprecated dist --json
+```
+
+Review compatibility and the target's supply-chain policy before installing. A blocked candidate remains an incomplete update: retain the qualified installation, record the exact blocker, owner and revisit condition, and do not silently change the runtime, weaken guards or fall back to an older release. Any permitted exception must be justified, owned and scoped to the reviewed package version under local governance.
+
+The executable examples below are the qualified **2026-11-28 snapshot**, `0.2.0` under Apache-2.0, from [published release source `651582f77fecf1904bc84787b6d8a9d78394162e`](https://github.com/servrox/code-quality/tree/651582f77fecf1904bc84787b6d8a9d78394162e). They retain the exported-arrow function-budget fix. For a later setup/update, replace the provider and peer values together with the exact versions qualified from the resolved release; this snapshot does not freeze future consumers at `0.2.0`.
+
+```sh
+pnpm add -D -E @servrox/code-quality@0.2.0 \
   ultracite@8.2.1 oxlint@1.93.0 oxfmt@0.78.0
 ```
 
@@ -54,7 +64,7 @@ Run installation only when it is within the user's existing authorization. In an
 ```json
 {
   "devDependencies": {
-    "@servrox/code-quality": "git+https://github.com/servrox/code-quality.git#28e1af8201a2e06692caf1a51c38d8a024899fd2",
+    "@servrox/code-quality": "0.2.0",
     "ultracite": "8.2.1",
     "oxlint": "1.93.0",
     "oxfmt": "0.78.0"
@@ -62,9 +72,9 @@ Run installation only when it is within the user's existing authorization. In an
 }
 ```
 
-Run `pnpm install` to synchronize the lockfile after any manifest correction. Verify its importer specifiers match these exact entries, commit both files, and verify `pnpm install --frozen-lockfile` in a clean disposable consumer. Preserve the target's workspace and supply-chain settings. No GitHub or registry token is required for this public Git source. Require the package's Node `>=24.15.0` compatibility without transferring pnpm ownership or replacing unrelated target runtime decisions. The package's own development pnpm pin does not set the consumer's package-manager version.
+Run `pnpm install` to synchronize the lockfile after any manifest correction. Verify its importer specifiers match the selected exact entries and its npm package resolution retains SHA-512 integrity; commit both files and verify `pnpm install --frozen-lockfile` in a clean disposable consumer. Do not persist `latest`, version ranges or a Git/tarball override as the ordinary dependency. Preserve the target's workspace and supply-chain settings. No registry token is required for this public npm package. Require the package's Node `>=24.15.0` compatibility without transferring pnpm ownership or replacing unrelated target runtime decisions. The package's own development pnpm pin does not set the consumer's package-manager version.
 
-Keep the exact peer versions above together. Add `oxlint-tsgolint@7.0.2007` only when enabling a separately qualified type-aware scope. Add `dependency-cruiser@18.9.0` only when using its optional export. Dependency Cruiser needs a supported TypeScript compiler API; a TypeScript 7 consumer can keep a bounded TypeScript `6.0.3` tool-specific compatibility lane, with exact pnpm resolution qualified in that consumer. Package archive integrity changes require a reviewed lockfile update; never disable integrity verification.
+Keep the selected release's exact required peer versions together; the package metadata, rather than independently chosen tool latest tags, defines their compatibility. For this snapshot, add `oxlint-tsgolint@7.0.2007` only for separately qualified type-aware scope, `dependency-cruiser@18.9.0` only when using its optional export, or `jscpd@5.4.3` only for qualified duplication analysis. Dependency Cruiser needs a supported TypeScript compiler API; a TypeScript 7 consumer can keep a bounded TypeScript `6.0.3` tool-specific compatibility lane, with exact pnpm resolution qualified in that consumer. Package archive integrity changes require a reviewed lockfile update; never disable integrity verification.
 
 ### Configure one policy owner
 
@@ -118,7 +128,7 @@ The shared formatter selects 100-column width. Qualify it on representative sour
 
 These optional analyses are selected from repository evidence; their package exports do not install tools or establish coverage. For dependency graphs, retain external dependency edges with `doNotFollow` when checking boundaries into tooling packages; fully excluding those targets removes the evidence. Exclude erased type-only edges before cycle detection, and use the actual TypeScript configuration. Native type-stripping runtimes normally need `verbatimModuleSyntax: true` to preserve unused value-import edges.
 
-The reviewed modularity defaults are eight top-level functions, five explicit ESM exports or CommonJS object properties, and 300 physical lines per file (500 for test/spec files). They are team policy and syntax-based signals, not proof of cohesion. Change a reusable threshold or fix a missed syntax case upstream with failing/passing fixtures and the package's verification gate. Keep a deliberate package entrypoint exception local and exact, preserving unrelated function/file limits. Adopt the resulting immutable commit and lockfile only after consumer fixtures prove the rule executes and each exception stays bounded.
+The reviewed modularity defaults are eight top-level functions, five explicit ESM exports or CommonJS object properties, and 300 physical lines per file (500 for test/spec files). They are team policy and syntax-based signals, not proof of cohesion. Change a reusable threshold or fix a missed syntax case upstream with failing/passing fixtures and the package's verification gate. Keep a deliberate package entrypoint exception local and exact, preserving unrelated function/file limits. Adopt the resulting published npm version and lockfile only after consumer fixtures prove the rule executes and each exception stays bounded.
 
 ### Qualify compatibility and migrate existing debt
 
@@ -142,12 +152,12 @@ Use the target's `packageManager`, workspace membership and one lockfile. In an 
 
 ### Proof and update checklist
 
-- Inspect the packed/installed exports from a clean consumer and the immutable source pin; verify one frozen lockfile and no implicit runtime installation.
+- Resolve npm `latest` during the authorized update, inspect the selected stable release's packed/installed exports and publication source, and verify exact version/peer pins, one frozen lockfile and no implicit runtime installation.
 - Run actual lint/format commands over all declared maintained source boundaries, compiler checks, framework/build checks and applicable behavior tests.
 - Exercise a real forbidden source example and an allowed example; for migrations also prove new findings, increasing metrics, malformed reports and process failures reject through the wrapper.
 - Verify compatibility exceptions, generated/vendor exclusions, entrypoints and framework scopes explicitly.
 - Record local and hosted CI evidence separately with exact candidate, commands, source scope, tool/config/lockfile identity and limitations.
-- Update the shared package in its own reviewed change, then update each consumer pin/lockfile and prune reviewed baselines in a separate consumer PR. No automatic cross-repository upgrade is implied.
+- Verify and publish the shared package in its own reviewed change, then qualify the latest stable npm release and update each consumer's exact pin/lockfile in a separate consumer PR. Prune only after a passing gate; no automatic baseline refresh, CI-time version switch or cross-repository upgrade is implied.
 
 ## Decision lineage
 
@@ -155,7 +165,9 @@ Use the target's `packageManager`, workspace membership and one lockfile. In an 
 
 ## Official sources
 
-- [Reviewed shared package and installation contract](https://github.com/servrox/code-quality/blob/28e1af8201a2e06692caf1a51c38d8a024899fd2/README.md)
-- [Reviewed package exports and peer versions](https://github.com/servrox/code-quality/blob/28e1af8201a2e06692caf1a51c38d8a024899fd2/package.json)
+- [Published npm snapshot and peer metadata](https://registry.npmjs.org/@servrox%2fcode-quality/0.2.0)
+- [Reviewed release source and installation contract](https://github.com/servrox/code-quality/blob/651582f77fecf1904bc84787b6d8a9d78394162e/README.md)
+- [npm distribution tags](https://docs.npmjs.com/cli/v11/commands/npm-dist-tag/)
+- [npm package-version immutability](https://docs.npmjs.com/policies/unpublish/)
 - [Oxc configuration](https://oxc.rs/docs/guide/usage/linter/config.html)
 - [pnpm frozen installs](https://pnpm.io/cli/install)
